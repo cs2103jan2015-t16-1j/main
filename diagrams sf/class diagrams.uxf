@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="13.2">
+  <zoom_level>10</zoom_level>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>0</x>
+      <y>0</y>
+      <w>290</w>
+      <h>550</h>
+    </coordinates>
+    <panel_attributes>Task
+--
+- _name: String
+- _description: String
+- _priority: String
+- _dueDate: Calendar
+- _startDate: Calendar
+- _isCompleted: boolean
+- _isOverDue: boolean
+- _shouldSync: boolean
+--
++ getName(): String
++ getDesciption(): String
++ getPriority(): String
++ getPriorityInt(): int
++ getDueDate(): Calendar
++ getDueDateString(): String
++ getStartDate(): Calendar
++ getStartDateString(): String
++ getDuration(): int
++ getIsCompleted(): boolean
++ getIsOverDue(): boolean
++ getShouldSync(): boolean
++ setName(name: String)
++ setDescription(description: String)
++ setPriority(String: priority)
++ setDueDate(String: dueDateString)
++ setDueDate(Calendar: dueDate)
++ setDueDate(String: dueDateString)
++ setDueDate(Calendar: dueDate)
++ setIsCompleted(boolean: isCompleted)
++ setIsShouldSync(boolean: shouldsync)
++ updateIsOverdue();
++ clone(): Task</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>360</x>
+      <y>220</y>
+      <w>520</w>
+      <h>190</h>
+    </coordinates>
+    <panel_attributes>CommandParser
+--
++ splitCommandAndFields(String: instruction): String[]
++ processFieldLine(String:fieldLine): LinkedList&lt;String&gt;
++ extractTaskName(String: fieldLineWithName): String
++ extractTaskNumberString(String: fieldLineWithTaskNumber): String
++ isValidTaskNumber(String: taskNumberString, StringBuilder: feedback): boolean
++ isValidPriorityLevel(String: priorityLevelString, StringBuilder:feedback): boolean
++ isValidYesNo(String: yesNoString, StringBuilder: feedback): boolean
++ isValidTaskName(String: taskName, StringBuilder: feedback): boolean
++ getSortingCriteria(LinkedList&lt;String&gt;: fields): LinkedList&lt;char[]&gt;</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>360</x>
+      <y>60</y>
+      <w>440</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>DateHandler
+--
++ changFromDateStringToDateInt(String: date): int
++ changFromDateStringToDateCalendar(String: date): Calendar
++ isValidDateFormat(String: date, StringBuilder: feedback): boolean
++ formatDateIntToDDMMYYYY(int: dateInt): int
++ decodeYearFromDateInt(int: dateInt): int
++ decodeMonthFromDateInt(int: dateInt): int
++ decodeDayFromDateInt(int: dateInt): int</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>350</x>
+      <y>440</y>
+      <w>540</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>QLLogic
+--
+- _workingList: LinkedList&lt;Task&gt;
+- _workingListMaster: LinkedList&lt;Task&gt;
+- _undoStack: Stack&lt;Task&gt;
+- _redoStack: Stack&lt;Task&gt;
+- _fileName: String
+--
++ setup(String: fileName): LinkedList&lt;Task&gt;
++ executeCommand(String: command, StringBuilder: feedback): LinkedList&lt;Task&gt;
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLFrame</id>
+    <coordinates>
+      <x>1600</x>
+      <y>350</y>
+      <w>230</w>
+      <h>100</h>
+    </coordinates>
+    <panel_attributes>optional</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLSpecialState</id>
+    <coordinates>
+      <x>20</x>
+      <y>20</y>
+      <w>20</w>
+      <h>20</h>
+    </coordinates>
+    <panel_attributes>type=termination</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLSpecialState</id>
+    <coordinates>
+      <x>1220</x>
+      <y>120</y>
+      <w>20</w>
+      <h>20</h>
+    </coordinates>
+    <panel_attributes>type=termination</panel_attributes>
+    <additional_attributes/>
+  </element>
+</diagram>
