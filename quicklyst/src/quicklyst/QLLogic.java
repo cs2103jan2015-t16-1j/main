@@ -106,6 +106,8 @@ public class QLLogic {
 
 		updateUndoStack();
 
+		QLStorage.saveFile(_workingListMaster, _filepath);
+
 		return _workingList;
 	}
 
@@ -160,7 +162,7 @@ public class QLLogic {
 		_undoStack.push(_workingListMaster);
 		_undoStack.push(_workingList);
 
-		QLStorage.saveFile(_workingListMaster, _filepath);
+		//QLStorage.saveFile(_workingListMaster, _filepath);
 	}
 
 	private static void redo(StringBuilder feedback) {
@@ -178,7 +180,7 @@ public class QLLogic {
 		_undoStack.push(_workingListMaster);
 		_undoStack.push(_workingList);
 
-		QLStorage.saveFile(_workingListMaster, _filepath);
+		//QLStorage.saveFile(_workingListMaster, _filepath);
 	}
 
 	/** Main method **/
