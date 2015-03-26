@@ -84,12 +84,14 @@ public class QLLogic {
 		if (command.trim().equalsIgnoreCase("undo")
 				|| command.trim().equalsIgnoreCase("u")) {
 			undo(feedback);
+			QLStorage.saveFile(_workingListMaster, _filepath);
 			return _workingList;
 		}
 
 		if (command.trim().equalsIgnoreCase("redo")
 				|| command.trim().equalsIgnoreCase("r")) {
 			redo(feedback);
+			QLStorage.saveFile(_workingListMaster, _filepath);
 			return _workingList;
 		}
 
