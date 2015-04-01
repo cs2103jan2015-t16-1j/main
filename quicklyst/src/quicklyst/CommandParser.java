@@ -2,6 +2,7 @@ package quicklyst;
 
 import java.util.Calendar;
 import java.util.LinkedList;
+import java.util.regex.Pattern;
 
 public class CommandParser {
 
@@ -12,6 +13,9 @@ public class CommandParser {
 	private ActionType _actionType;
 	private LinkedList<Field> _fields;
 	private FieldCriteria _yesNo;
+	
+	private boolean _dateParsed;
+	private boolean _timeParsed;
 
 	public CommandParser(String command) {
 		_feedback = new StringBuilder();
@@ -77,7 +81,7 @@ public class CommandParser {
 				return;
 			}
 			actionAndFields[1] = actionAndFields[1].trim()
-					.replaceFirst(_taskName, "").trim();
+					.replaceFirst(Pattern.quote(_taskName), "").trim();
 			break;
 		case EDIT:
 		case DELETE:
@@ -92,16 +96,16 @@ public class CommandParser {
 		default:
 			break;
 		}
-		
+
 		if (actionAndFields.length == 1 || actionAndFields[1].trim().isEmpty()) {
-			/* unnecessary
-			_feedback.append("No fields entered. ");
-			*/
+			/*
+			 * unnecessary _feedback.append("No fields entered. ");
+			 */
 			return;
 		}
 
 		fieldsString = actionAndFields[1].trim();
-
+		
 		if (fieldsString.charAt(0) != '-' && fieldsString.charAt(0) != ' '
 				&& !fieldsString.equalsIgnoreCase("all")
 				&& !fieldsString.equalsIgnoreCase("y")
@@ -140,7 +144,7 @@ public class CommandParser {
 	}
 
 	private void extractTaskName(String fieldsString) {
-		int indexOfDash = fieldsString.indexOf("-");
+		int indexOfDash = fieldsString.indexOf(" -");
 		String taskName;
 		if (indexOfDash == -1) {
 			taskName = fieldsString;
@@ -190,7 +194,6 @@ public class CommandParser {
 	}
 
 	private void determineFieldsPrim(String fieldsString) {
-		System.out.println(fieldsString);
 
 		if (fieldsString.trim().equalsIgnoreCase("all")) {
 			_fields.add(new Field(FieldType.ALL));
@@ -235,6 +238,7 @@ public class CommandParser {
 		if (spaceAftFieldType != ' ') {
 			_feedback.append("Invalid field type \""
 					+ fieldString.split(" ", 2)[0].trim() + "\". ");
+			return null;
 		}
 
 		String fieldContentString = fieldString.substring(1).trim();
@@ -267,39 +271,63 @@ public class CommandParser {
 				break;
 			}
 
-			String criteriaAndDate[] = fieldContentString.split(" ", 2);
+			if (_actionType == ActionType.FIND) {
+				String criteriaAndDate[] = fieldContentString.split(" ", 2);
 
-			String dateString;
-			String criteriaString;
+				String dateString;
+				String criteriaString;
 
-			if (criteriaAndDate.length == 2) {
-				dateString = criteriaAndDate[1].trim();
-				criteriaString = criteriaAndDate[0].trim();
-				fieldCriteria = determineFieldCriteria(criteriaString);
-			} else {
-				dateString = criteriaAndDate[0].trim();
-			}
-
-			if (fieldCriteria == FieldCriteria.BETWEEN) {
-				String fromAndTo[] = dateString.split(":", 2);
-				if (fromAndTo.length == 1) {
-					_feedback.append("Date range not valid");
+				if (criteriaAndDate.length == 2) {
+					dateString = criteriaAndDate[1].trim();
+					criteriaString = criteriaAndDate[0].trim();
+					fieldCriteria = determineFieldCriteria(criteriaString);
 				} else {
-					Calendar[] dateRange = {
-							DateHandler.convertToDateCalendar(fromAndTo[0]
-									.trim()),
-							DateHandler.convertToDateCalendar(fromAndTo[1]
-									.trim()) };
-					fieldContent = dateRange;
+					dateString = criteriaAndDate[0].trim();
 				}
-			} else if (dateString.equalsIgnoreCase("clr")) {
+
+				if (fieldCriteria == FieldCriteria.BETWEEN) {
+					String fromAndTo[] = dateString.split("&", 2);
+					if (fromAndTo.length == 1) {
+						_feedback.append("Date range not valid");
+					} else {
+
+						DateParser fromDateParser = new DateParser(
+								fromAndTo[0].trim());
+						DateParser toDateParser = new DateParser(
+								fromAndTo[1].trim());
+						Calendar fromDate = fromDateParser.getDateTime();
+						Calendar toDate = toDateParser.getDateTime();
+
+						_feedback.append(fromDateParser.getFeedback());
+						_feedback.append(toDateParser.getFeedback());
+
+						if (fromDate != null && toDate != null) {
+							Calendar[] dateRange = {
+									fromDateParser.getDateTime(),
+									toDateParser.getDateTime() };
+							fieldContent = dateRange;
+						}
+					}
+				}
+				break;
+			}
+				
+			String dateString = fieldContentString;
+
+			if (dateString.equalsIgnoreCase("clr")) {
 				fieldCriteria = FieldCriteria.CLEAR_DATE;
-			} else if (dateString.equalsIgnoreCase("a") || dateString.equalsIgnoreCase("d")) {
+			} else if (dateString.equalsIgnoreCase("a")
+					|| dateString.equalsIgnoreCase("d")) {
 				fieldCriteria = determineFieldCriteria(dateString);
 			} else {
-				if(DateHandler.isValidDateFormat(dateString, _feedback)) {
-					fieldContent = DateHandler.convertToDateCalendar(dateString);
-				} 
+				DateParser dateParser = new DateParser(dateString);
+				Calendar dateTime = dateParser.getDateTime();
+				_dateParsed = dateParser.isDateParsed();
+				_timeParsed = dateParser.isTimeParsed();
+				_feedback.append(dateParser.getFeedback());
+				if (dateTime != null) {
+					fieldContent = dateTime;
+				}
 			}
 			break;
 
@@ -348,7 +376,10 @@ public class CommandParser {
 		}
 
 		// field always has valid field type
-		return new Field(fieldType, fieldContent, fieldCriteria);
+		Field field = new Field(fieldType, fieldContent, fieldCriteria);
+		field.setDateParsed(_dateParsed);
+		field.setTimeParsed(_timeParsed);
+		return field;
 	}
 
 	private String determinePriority(String fieldContentString) {

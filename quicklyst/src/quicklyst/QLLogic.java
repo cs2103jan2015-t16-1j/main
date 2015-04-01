@@ -38,6 +38,27 @@ public class QLLogic {
 		_undoStack.push(new LinkedList<Task>());
 	}
 
+	// stub
+	private static void printStack(Stack<LinkedList<Task>> stack) {
+		Stack<LinkedList<Task>> buffer = new Stack<LinkedList<Task>>();
+		int stackCount = 0;
+		while (!stack.isEmpty()) {
+			stackCount++;
+			buffer.push(stack.pop());
+			LinkedList<Task> list = buffer.peek();
+			if (stackCount % 2 != 0) {
+				System.out.println("Stack " + stackCount);
+				for (Task task : list) {
+					System.out.println(task.getName());
+				}
+			}
+		}
+
+		while (!buffer.isEmpty()) {
+			stack.push(buffer.pop());
+		}
+	}
+
 	// Stub
 	public static void displayStub(StringBuilder feedback) {
 		System.out.println("Feedback: " + feedback.toString());
@@ -46,12 +67,12 @@ public class QLLogic {
 			System.out.print(_workingList.get(i).getName() + " ");
 			try {
 				System.out
-						.print(_workingList.get(i).getStartDateString() + " ");
+						.print(_workingList.get(i).getStartDateTimeString() + " ");
 			} catch (NullPointerException e) {
 				System.out.print("        ");
 			}
 			try {
-				System.out.print(_workingList.get(i).getDueDateString() + " ");
+				System.out.print(_workingList.get(i).getDueDateTimeString() + " ");
 			} catch (NullPointerException e) {
 				System.out.print("        ");
 			}
@@ -84,18 +105,19 @@ public class QLLogic {
 		if (command.trim().equalsIgnoreCase("undo")
 				|| command.trim().equalsIgnoreCase("u")) {
 			undo(feedback);
-			QLStorage.saveFile(_workingListMaster, _filepath);
+			printStack(_undoStack);
 			return _workingList;
 		}
 
 		if (command.trim().equalsIgnoreCase("redo")
 				|| command.trim().equalsIgnoreCase("r")) {
 			redo(feedback);
-			QLStorage.saveFile(_workingListMaster, _filepath);
+			printStack(_undoStack);
 			return _workingList;
 		}
 
 		CommandParser cp = new CommandParser(command);
+		
 		feedback.append(cp.getFeedback().toString());
 
 		Action action = cp.getAction();
@@ -104,11 +126,15 @@ public class QLLogic {
 		}
 
 		action.execute(_workingList, _workingListMaster);
+		
 		feedback.append(action.getFeedback().toString());
-
-		updateUndoStack();
-
-		QLStorage.saveFile(_workingListMaster, _filepath);
+		
+		if(action.isSuccess()) {
+			QLStorage.saveFile(_workingListMaster, _filepath);
+			updateUndoStack();
+		}
+		
+		//printStack(_undoStack);
 
 		return _workingList;
 	}
@@ -160,11 +186,19 @@ public class QLLogic {
 
 		_workingList = _undoStack.pop();
 		_workingListMaster = _undoStack.pop();
+		LinkedList<Task> updatedWL = new LinkedList<Task>();
+		LinkedList<Task> updatedWLM = new LinkedList<Task>();
+
+		copyListsForUndoStack(_workingList, _workingListMaster, updatedWL,
+				updatedWLM);
 
 		_undoStack.push(_workingListMaster);
 		_undoStack.push(_workingList);
 
-		//QLStorage.saveFile(_workingListMaster, _filepath);
+		_workingList = updatedWL;
+		_workingListMaster = updatedWLM;
+
+		QLStorage.saveFile(_workingListMaster, _filepath);
 	}
 
 	private static void redo(StringBuilder feedback) {
@@ -172,17 +206,23 @@ public class QLLogic {
 			feedback.append(MESSAGE_NOTHING_TO_REDO);
 			return;
 		}
+		
+		_workingList = _redoStack.pop();
+		_workingListMaster = _redoStack.pop();
+		
+		LinkedList<Task> updatedWL = new LinkedList<Task>();
+		LinkedList<Task> updatedWLM = new LinkedList<Task>();
 
-		_undoStack.push(_redoStack.pop());
-		_undoStack.push(_redoStack.pop());
-
-		_workingList = _undoStack.pop();
-		_workingListMaster = _undoStack.pop();
+		copyListsForUndoStack(_workingList, _workingListMaster, updatedWL,
+				updatedWLM);
 
 		_undoStack.push(_workingListMaster);
 		_undoStack.push(_workingList);
+		
+		_workingList = updatedWL;
+		_workingListMaster = updatedWLM;
 
-		//QLStorage.saveFile(_workingListMaster, _filepath);
+		QLStorage.saveFile(_workingListMaster, _filepath);
 	}
 
 	/** Main method **/

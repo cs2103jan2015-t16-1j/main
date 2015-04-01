@@ -24,10 +24,12 @@ public class DeleteAction extends Action {
 			Task taskToDel = workingList.get(_taskIndex);
 			workingList.remove(taskToDel);
 			workingListMaster.remove(taskToDel);
+			this._isSuccess = true;
 			this._feedback.append("Task #" + 
 					(_taskIndex + 1) +
 					" deleted. ");
 		} else {
+			this._isSuccess = false;
 			this._feedback.append("Task # out of range. ");
 			return;
 		}

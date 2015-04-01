@@ -8,11 +8,13 @@ public class Field {
 
 	private String _taskName;
 	private Calendar _date;
-	private boolean _shouldClearDate;
 	private String _priority;
 	private Calendar[] _dateRange;
 
 	private FieldCriteria _fieldCriteria;
+
+	private boolean _dateParsed = false;
+	private boolean _timeParsed = false;
 
 	public Field(FieldType fieldType) {
 		_fieldType = fieldType;
@@ -46,18 +48,12 @@ public class Field {
 		case START_DATE:
 		case DUE_DATE:
 		case REMINDER:
-			if (_fieldCriteria == FieldCriteria.CLEAR_DATE) {
-				_shouldClearDate = true;
-				break;
-			} else {
-				_shouldClearDate = false;
-				try {
-					_date = (Calendar) content;
-				} catch (ClassCastException e) {
-					_dateRange = (Calendar[]) content;
-				}
-				break;
+			try {
+				_date = (Calendar) content;
+			} catch (ClassCastException e) {
+				_dateRange = (Calendar[]) content;
 			}
+			break;
 		case DATE_RANGE:
 			_dateRange = (Calendar[]) content;
 			break;
@@ -74,6 +70,14 @@ public class Field {
 
 	private void updateFieldCriteria(FieldCriteria fieldCriteria) {
 		_fieldCriteria = fieldCriteria;
+	}
+	
+	public void setDateParsed(boolean yesNo) {
+		_dateParsed = yesNo;
+	}
+	
+	public void setTimeParsed(boolean yesNo) {
+		_timeParsed = yesNo;
 	}
 
 	public FieldType getFieldType() {
@@ -99,8 +103,20 @@ public class Field {
 	public FieldCriteria getCriteria() {
 		return _fieldCriteria;
 	}
+	
+	public boolean isDateParsed() {
+		return _dateParsed;
+	}
+	
+	public boolean isTimeParsed() {
+		return _timeParsed;
+	}
 
 	public boolean shouldClearDate() {
-		return _shouldClearDate;
+		if (_fieldCriteria == FieldCriteria.CLEAR_DATE) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 }

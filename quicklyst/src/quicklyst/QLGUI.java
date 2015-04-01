@@ -36,6 +36,9 @@ public class QLGUI extends JFrame implements Observer {
     private static final String TITLE = "Quicklyst";
     private static final int WINDOW_WIDTH = 800;
     private static final int WINDOW_HEIGHT = 600;
+    
+    private static final String UNDO = "Undo action key";
+    private static final String REDO = "Redo action key";
 
     private final static Logger LOGGER = Logger
             .getLogger(QLGUI.class.getName());
@@ -117,8 +120,6 @@ public class QLGUI extends JFrame implements Observer {
         setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
         setVisible(true);
 
-        String UNDO = "Undo action key";
-        String REDO = "Redo action key";
         Action undoAction = new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
                 // undo();

@@ -23,16 +23,21 @@ public class Task {
 	private String _name; 
 	private String _description;
 	private String _priority;
+	private String _googleID;
 	private Calendar _startDate; 
 	private Calendar _dueDate; 
 	private boolean _isCompleted;
 	private boolean _isOverdue;
 	private boolean _shouldSync;
+	private boolean _hasStartTime;
+	private boolean _hasDueTime;
 	
 	/* Constructors */
 	public Task(String name) {
 		_name = new String(name);
 		_isCompleted = false;
+		_hasDueTime = false;
+		_hasStartTime = false;
 	}
 	
 	/* Mutators */
@@ -46,6 +51,10 @@ public class Task {
 	
 	public void setPriority(String priority) {
 		_priority = priority;
+	}
+	
+	public void setGoogleID(String ID) {
+		_googleID = ID;
 	}
 	
 	public void setStartDate (String startDateString) {
@@ -107,6 +116,14 @@ public class Task {
 		updateIsOverdue();
 	}
 	
+	public void setHasStartTime(boolean hasTime) {
+		_hasStartTime = hasTime;
+	}
+	
+	public void setHasDueTime(boolean hasTime) {
+		_hasDueTime = hasTime;
+	}
+	
 	public void setIsCompleted(boolean isCompleted) {
 		_isCompleted = isCompleted;
 	}
@@ -129,6 +146,9 @@ public class Task {
 	
 	public void updateIsOverdue() {
 		Calendar today = new GregorianCalendar();
+		today.set(Calendar.HOUR_OF_DAY, 23);
+		today.set(Calendar.MINUTE, 59);
+		today.set(Calendar.SECOND, 59);
 		if(_dueDate == null || 
 				_isCompleted == true || 
 				_dueDate.compareTo(today) > 0)
@@ -177,6 +197,10 @@ public class Task {
 		return null;
 	}
 	
+	public String getGoogleID() {
+		return _googleID;
+	}
+	
 	public int getPriorityInt() {
 		if(_priority == null) {
 			return 0;
@@ -209,12 +233,36 @@ public class Task {
 		return sdf.format(_startDate.getTime());
 	}
 	
+	public String getStartDateTimeString() {
+		if(_startDate == null) {
+			return "no start date";
+		}
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+		return sdf.format(_startDate.getTime());
+	}
+	
 	public String getDueDateString() {
 		if(_dueDate == null) {
 			return "no due date";
 		}
 		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 		return sdf.format(_dueDate.getTime());
+	}
+	
+	public String getDueDateTimeString() {
+		if(_dueDate == null) {
+			return "no due date";
+		}
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+		return sdf.format(_dueDate.getTime());
+	}
+	
+	public boolean getHasStartTime() {
+		return _hasStartTime;
+	}
+	
+	public boolean getHasDueTime() {
+		return _hasDueTime;
 	}
 	
 	public boolean getIsCompleted() {

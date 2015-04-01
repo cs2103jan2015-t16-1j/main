@@ -27,12 +27,14 @@ public class AddAction extends Action {
 
 		if (_newTask == null) {
 			this._feedback.append("Nothing is added. ");
+			this._isSuccess = false;
 			return;
 		}
 
 		workingList.add(_newTask);
 		workingListMaster.add(_newTask);
-
+		
+		this._isSuccess = true;
 		this._feedback.append("Task: \"" + _newTask.getName() + "\" added. ");
 
 		if (_editAction != null) {
