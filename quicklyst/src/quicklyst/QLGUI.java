@@ -8,6 +8,8 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
@@ -32,7 +34,7 @@ import javax.swing.border.LineBorder;
 
 import java.util.logging.Logger;
 
-public class QLGUI extends JFrame implements Observer {
+public class QLGUI extends JFrame implements Observer, MouseListener {
     private static final String TITLE = "Quicklyst";
     private static final int WINDOW_WIDTH = 800;
     private static final int WINDOW_HEIGHT = 600;
@@ -70,6 +72,7 @@ public class QLGUI extends JFrame implements Observer {
         JPanel overviewPane = new JPanel(new BorderLayout());
         overviewPane.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1,
                 Color.BLACK));
+
 
         _overview = new JLabel();
         _overview.setBorder(BorderFactory.createEmptyBorder(3, 3, 3, 3));
@@ -122,15 +125,32 @@ public class QLGUI extends JFrame implements Observer {
 
         Action undoAction = new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
-                // undo();
-                _feedback.append(UNDO + "\r\n");
+                LOGGER.info("Undo.");
+                StringBuilder fb = new StringBuilder();
+                List<Task> tasks = QLLogic.executeCommand("undo",
+                        fb);
+                assert tasks != null;
+                
+                if (!fb.toString().isEmpty()) {
+                    _feedback.append(fb.toString() + "\r\n");
+                }
+                updateUIWithTaskList(tasks);
             }
         };
+        
         Action redoAction = new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
-                // redo();
-                _feedback.append(REDO + "\r\n");
+            LOGGER.info("Redo.");
+            StringBuilder fb = new StringBuilder();
+            List<Task> tasks = QLLogic.executeCommand("redo",
+                    fb);
+            assert tasks != null;
+
+            if (!fb.toString().isEmpty()) {
+                _feedback.append(fb.toString() + "\r\n");
             }
+            updateUIWithTaskList(tasks);
+          }
         };
 
         _command.getActionMap().put(UNDO, undoAction);
@@ -144,7 +164,7 @@ public class QLGUI extends JFrame implements Observer {
             i.put(KeyStroke.getKeyStroke("control Z"), UNDO);
             i.put(KeyStroke.getKeyStroke("control Y"), REDO);
         }
-
+        
         LOGGER.info("get taskList from QLLogic");
         List<Task> t = QLLogic.setup("save.json");
         assert t != null;
@@ -157,6 +177,8 @@ public class QLGUI extends JFrame implements Observer {
         int i = 1, taskIndex = 1;
         String curDate = "";
         String prevDate = "";
+        String display = "";
+        boolean isHover = false;
 
         for (Task task : tasks) {
             SpringLayout singleTaskLayout = new SpringLayout();
@@ -167,7 +189,9 @@ public class QLGUI extends JFrame implements Observer {
             JLabel index = new JLabel("#" + taskIndex);
             JLabel date = new JLabel(" ");
             JLabel priority = new JLabel();
-
+            //JPanel hoverPane = new JPanel(new BorderLayout());
+            
+            display = task.getName();
             singleTaskPane.setBorder(new LineBorder(Color.BLACK));
             if (task.getIsCompleted()) {
                 singleTaskPane.setBackground(Color.CYAN);
@@ -260,10 +284,21 @@ public class QLGUI extends JFrame implements Observer {
                 _taskList.add(dateLabel, con);
                 i++;
                 con.gridy = i - 1;
+                
             }
 
             _taskList.add(singleTaskPane, con);
-
+            singleTaskPane.setToolTipText(display);
+            if (!isHover) {
+                JPanel hoverPane = new JPanel(new BorderLayout());
+                hoverPane.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1,
+                        Color.BLACK));
+                hoverPane.setVisible(true);
+                hoverPane.add(new JLabel(display));
+                _overview.setVisible(false);
+                _overview.setText(display);
+            }
+            
             i++;
             taskIndex++;
             prevDate = curDate;
@@ -356,5 +391,35 @@ public class QLGUI extends JFrame implements Observer {
     public static void main(String[] args) {
         QLGUI g = new QLGUI();
 
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        // TODO Auto-generated method stub
+        
     }
 }
