@@ -34,7 +34,7 @@ import javax.swing.border.LineBorder;
 
 import java.util.logging.Logger;
 
-public class QLGUI extends JFrame implements Observer, MouseListener {
+public class QLGUI extends JFrame implements Observer {
     private static final String TITLE = "Quicklyst";
     private static final int WINDOW_WIDTH = 800;
     private static final int WINDOW_HEIGHT = 600;
@@ -49,7 +49,51 @@ public class QLGUI extends JFrame implements Observer, MouseListener {
     private JLabel _overview;
     private JTextArea _feedback;
     private JTextField _command;
+    
+    private String lastOverview;
 
+    public class TaskMouseListener implements MouseListener {
+        private Task task;
+        
+        public TaskMouseListener (Task task) {
+            this.task = task;
+        }
+        
+        public void mouseEntered(MouseEvent m) {
+           // _overview.setText("Title: " + task.getName());
+            _overview.setText(String.format("<html><u>View Task</u><br>"
+                    + "Title: %s<br>" + "Priority: %s<br>", task.getName(),
+                    task.getPriority()));
+            _overview.setBackground(Color.YELLOW);
+            _overview.setOpaque(true);
+        }
+        
+        @Override
+        public void mouseExited(MouseEvent arg0) {
+            _overview.setText(lastOverview);
+            _overview.setOpaque(false);
+        }
+
+        @Override
+        public void mouseClicked(MouseEvent arg0) {
+            // TODO Auto-generated method stub
+            
+        }
+
+
+        @Override
+        public void mousePressed(MouseEvent arg0) {
+            // TODO Auto-generated method stub
+            
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent arg0) {
+            // TODO Auto-generated method stub
+            
+        }
+        
+    }
     public QLGUI() {
         super(TITLE);
 
@@ -178,8 +222,7 @@ public class QLGUI extends JFrame implements Observer, MouseListener {
         String curDate = "";
         String prevDate = "";
         String display = "";
-        boolean isHover = false;
-
+        
         for (Task task : tasks) {
             SpringLayout singleTaskLayout = new SpringLayout();
             JPanel singleTaskPane = new JPanel(singleTaskLayout);
@@ -289,15 +332,7 @@ public class QLGUI extends JFrame implements Observer, MouseListener {
 
             _taskList.add(singleTaskPane, con);
             singleTaskPane.setToolTipText(display);
-            if (!isHover) {
-                JPanel hoverPane = new JPanel(new BorderLayout());
-                hoverPane.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1,
-                        Color.BLACK));
-                hoverPane.setVisible(true);
-                hoverPane.add(new JLabel(display));
-                _overview.setVisible(false);
-                _overview.setText(display);
-            }
+            singleTaskPane.addMouseListener(new TaskMouseListener(task));
             
             i++;
             taskIndex++;
@@ -339,6 +374,11 @@ public class QLGUI extends JFrame implements Observer, MouseListener {
                 overdue++;
             }
         }
+        
+        lastOverview = String.format("<html><u>Overview</u><br>"
+                + "%d due today<br>" + "%d due tomorrow<br>" + "%d overdue<br>"
+                + "%d completed</html>", dueToday, dueTomorrow, overdue,
+                completed);
 
         _overview.setText(String.format("<html><u>Overview</u><br>"
                 + "%d due today<br>" + "%d due tomorrow<br>" + "%d overdue<br>"
@@ -393,33 +433,4 @@ public class QLGUI extends JFrame implements Observer, MouseListener {
 
     }
 
-    @Override
-    public void mouseClicked(MouseEvent e) {
-        // TODO Auto-generated method stub
-        
-    }
-
-    @Override
-    public void mouseEntered(MouseEvent e) {
-        // TODO Auto-generated method stub
-        
-    }
-
-    @Override
-    public void mouseExited(MouseEvent e) {
-        // TODO Auto-generated method stub
-        
-    }
-
-    @Override
-    public void mousePressed(MouseEvent e) {
-        // TODO Auto-generated method stub
-        
-    }
-
-    @Override
-    public void mouseReleased(MouseEvent e) {
-        // TODO Auto-generated method stub
-        
-    }
 }
