@@ -132,9 +132,52 @@ public class QLGUI extends JFrame implements Observer {
         public void mouseReleased(MouseEvent arg0) {
             // TODO Auto-generated method stub
             
+        }  
+    }
+    
+    public class commandListener implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            // TODO Auto-generated method stub
+            LOGGER.info(String.format("user entered: %s",
+                    _command.getText()));
+            StringBuilder fb = new StringBuilder();
+            QLLogic.executeCommand(_command.getText(), fb);
+
+            if (!fb.toString().isEmpty()) {
+                _feedback.append(fb.toString() + "\r\n");
+            }
+            updateUI();
+            _command.setText("");
+        }
+    }
+    
+    public class hotKeysAction extends AbstractAction {
+        private String keyPressed;
+       
+        public hotKeysAction (String keyPressed) {
+            this.keyPressed = keyPressed;
+        }
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            // TODO Auto-generated method stub
+            LOGGER.info(keyPressed);
+            StringBuilder fb = new StringBuilder();
+            if (keyPressed.equalsIgnoreCase("undo")) {
+                QLLogic.executeCommand("undo", fb);
+            } else {
+                QLLogic.executeCommand("redo", fb);                
+            }
+
+            if (!fb.toString().isEmpty()) {
+                _feedback.append(fb.toString() + "\r\n");
+            }
+            updateUI();
         }
         
     }
+    
     public QLGUI() {
         super(TITLE);
 
@@ -176,23 +219,7 @@ public class QLGUI extends JFrame implements Observer {
         LOGGER.info("creating command text field");
         _command = new JTextField();
         LOGGER.info("adding actionListener to command text field");
-        _command.addActionListener(new ActionListener() {
-
-            public void actionPerformed(ActionEvent e) {
-                LOGGER.info(String.format("user entered: %s",
-                        _command.getText()));
-                StringBuilder fb = new StringBuilder();
-                QLLogic.executeCommand(_command.getText(), fb);
-                List<Task> tasks = QLLogic.getDisplayList();
-                assert tasks != null;
-
-                if (!fb.toString().isEmpty()) {
-                    _feedback.append(fb.toString() + "\r\n");
-                }
-                updateUIWithTaskList(tasks);
-                _command.setText("");
-            }
-        });
+        _command.addActionListener(new commandListener());
 
         LOGGER.info("adding components to main panel");
         add(_command);
@@ -208,35 +235,34 @@ public class QLGUI extends JFrame implements Observer {
         setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
         setVisible(true);
 
-        Action undoAction = new AbstractAction() {
+        /*Action undoAction = new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
                 LOGGER.info("Undo.");
                 StringBuilder fb = new StringBuilder();
                 QLLogic.executeCommand("undo", fb);
-                List<Task> tasks = QLLogic.getDisplayList();
-                assert tasks != null;
-                
+
                 if (!fb.toString().isEmpty()) {
                     _feedback.append(fb.toString() + "\r\n");
                 }
-                updateUIWithTaskList(tasks);
+                updateUI();
             }
-        };
+        };*/
+        Action undoAction = new hotKeysAction("Undo");
+        Action redoAction = new hotKeysAction("Redo");
         
-        Action redoAction = new AbstractAction() {
+        
+        /*Action redoAction = new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
             LOGGER.info("Redo.");
             StringBuilder fb = new StringBuilder();
             QLLogic.executeCommand("redo", fb);
-            List<Task> tasks = QLLogic.getDisplayList();
-            assert tasks != null;
 
             if (!fb.toString().isEmpty()) {
                 _feedback.append(fb.toString() + "\r\n");
             }
-            updateUIWithTaskList(tasks);
+            updateUI();
           }
-        };
+        };*/
 
         _command.getActionMap().put(UNDO, undoAction);
         _command.getActionMap().put(REDO, redoAction);
@@ -252,19 +278,18 @@ public class QLGUI extends JFrame implements Observer {
         
         LOGGER.info("get taskList from QLLogic");
         QLLogic.setup("save.json");
-        List<Task> t = QLLogic.getDisplayList();
-        assert t != null;
-        updateUIWithTaskList(t);
+        updateUI();
 
     }
 
-    private void updateUIWithTaskList(List<Task> tasks) {
+    private void updateUI() {
         _taskList.removeAll();
         int i = 1, taskIndex = 1;
         String curDate = "";
         String prevDate = "";
         String display = "";
-        
+
+        List<Task> tasks = QLLogic.getDisplayList();
         for (Task task : tasks) {
             SpringLayout singleTaskLayout = new SpringLayout();
             JPanel singleTaskPane = new JPanel(singleTaskLayout);
@@ -416,6 +441,7 @@ public class QLGUI extends JFrame implements Observer {
         tomorrow.add(Calendar.DAY_OF_MONTH, 1);
         Calendar twoDaysAfter = (Calendar) tomorrow.clone();
         twoDaysAfter.add(Calendar.DAY_OF_MONTH, 1);
+        
         List<Task> allTasks = QLLogic.getFullList();
         for (int j = 0; j < allTasks.size(); ++j) {
             if (allTasks.get(j).getIsCompleted()) {
