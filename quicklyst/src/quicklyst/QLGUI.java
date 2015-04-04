@@ -47,31 +47,72 @@ public class QLGUI extends JFrame implements Observer {
 
     private JPanel _taskList;
     private JLabel _overview;
+    private JPanel overviewPane;
     private JTextArea _feedback;
     private JTextField _command;
-    
-    private String lastOverview;
 
     public class TaskMouseListener implements MouseListener {
         private Task task;
+        private JLabel hover;
         
         public TaskMouseListener (Task task) {
             this.task = task;
         }
         
         public void mouseEntered(MouseEvent m) {
-           // _overview.setText("Title: " + task.getName());
-            _overview.setText(String.format("<html><u>View Task</u><br>"
-                    + "Title: %s<br>" + "Priority: %s<br>", task.getName(),
-                    task.getPriority()));
-            _overview.setBackground(Color.YELLOW);
-            _overview.setOpaque(true);
+            hover = new JLabel();
+            overviewPane.add(hover, BorderLayout.CENTER);
+            hover.setBorder(BorderFactory.createEmptyBorder(3, 3, 3, 3));
+            
+            String title = task.getName(), description, priority;
+            String start = "", due = "", displayTime = "";
+            SimpleDateFormat date = new SimpleDateFormat("dd/MM/yyyy");
+            SimpleDateFormat dateAndTime = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+            
+            if (task.getDescription() != null) {
+                description = task.getDescription();
+            } else {
+                description = "";
+            }
+            
+            if (task.getPriority() != null) {
+                priority = task.getPriority();
+            } else {
+                priority = "";
+            }
+            
+            if (task.getStartDate() != null && task.getHasStartTime()) {
+                start = dateAndTime.format(task.getStartDate().getTime());
+            } else if (task.getStartDate() != null) {
+                start = date.format(task.getStartDate().getTime());
+            }
+
+            if (task.getDueDate() != null && task.getHasDueTime()) {
+                due = dateAndTime.format(task.getDueDate().getTime());
+            } else if (task.getDueDate() != null) {
+                due = date.format(task.getDueDate().getTime());
+            }
+            
+            if (!start.isEmpty() && !due.isEmpty()) {
+                displayTime = (start + " - " + due);
+            } else if (!start.isEmpty()) {
+                displayTime = "starts " + start;
+            } else if (!due.isEmpty()) {
+                displayTime = "due " + due;                
+            } else {
+                displayTime = "";
+            }
+            
+            hover.setText(String.format("<html><u>Task Detail</u><br>"
+                    + "Title: %s<br>" + "Description: %s<br>"
+                    + "Priority: %s<br>" + "Time: %s<br>", 
+                    title, description, priority, displayTime));
+            hover.setOpaque(true);
         }
         
         @Override
         public void mouseExited(MouseEvent arg0) {
-            _overview.setText(lastOverview);
-            _overview.setOpaque(false);
+            hover.setVisible(false);
         }
 
         @Override
@@ -113,7 +154,7 @@ public class QLGUI extends JFrame implements Observer {
         JScrollPane taskListScroll = new JScrollPane(taskListBorderPane);
 
         LOGGER.info("creating overview panel");
-        JPanel overviewPane = new JPanel(new BorderLayout());
+        overviewPane = new JPanel(new BorderLayout());
         overviewPane.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1,
                 Color.BLACK));
 
@@ -141,8 +182,8 @@ public class QLGUI extends JFrame implements Observer {
                 LOGGER.info(String.format("user entered: %s",
                         _command.getText()));
                 StringBuilder fb = new StringBuilder();
-                List<Task> tasks = QLLogic.executeCommand(_command.getText(),
-                        fb);
+                QLLogic.executeCommand(_command.getText(), fb);
+                List<Task> tasks = QLLogic.getDisplayList();
                 assert tasks != null;
 
                 if (!fb.toString().isEmpty()) {
@@ -171,8 +212,8 @@ public class QLGUI extends JFrame implements Observer {
             public void actionPerformed(ActionEvent e) {
                 LOGGER.info("Undo.");
                 StringBuilder fb = new StringBuilder();
-                List<Task> tasks = QLLogic.executeCommand("undo",
-                        fb);
+                QLLogic.executeCommand("undo", fb);
+                List<Task> tasks = QLLogic.getDisplayList();
                 assert tasks != null;
                 
                 if (!fb.toString().isEmpty()) {
@@ -186,8 +227,8 @@ public class QLGUI extends JFrame implements Observer {
             public void actionPerformed(ActionEvent e) {
             LOGGER.info("Redo.");
             StringBuilder fb = new StringBuilder();
-            List<Task> tasks = QLLogic.executeCommand("redo",
-                    fb);
+            QLLogic.executeCommand("redo", fb);
+            List<Task> tasks = QLLogic.getDisplayList();
             assert tasks != null;
 
             if (!fb.toString().isEmpty()) {
@@ -210,7 +251,8 @@ public class QLGUI extends JFrame implements Observer {
         }
         
         LOGGER.info("get taskList from QLLogic");
-        List<Task> t = QLLogic.setup("save.json");
+        QLLogic.setup("save.json");
+        List<Task> t = QLLogic.getDisplayList();
         assert t != null;
         updateUIWithTaskList(t);
 
@@ -232,19 +274,39 @@ public class QLGUI extends JFrame implements Observer {
             JLabel index = new JLabel("#" + taskIndex);
             JLabel date = new JLabel(" ");
             JLabel priority = new JLabel();
-            //JPanel hoverPane = new JPanel(new BorderLayout());
+            
+            SimpleDateFormat dateOnly = new SimpleDateFormat("dd/MM/yyy"); 
+            SimpleDateFormat dateAndTime = new SimpleDateFormat("dd/MM/yyy HH:mm");            
             
             display = task.getName();
             singleTaskPane.setBorder(new LineBorder(Color.BLACK));
+            
             if (task.getIsCompleted()) {
                 singleTaskPane.setBackground(Color.CYAN);
             } else if (task.getIsOverdue()) {
                 singleTaskPane.setBackground(Color.PINK);
             }
-
-            if (task.getDueDate() != null) {
-                SimpleDateFormat sdf = new SimpleDateFormat("dd/M/yyyy");
-                date.setText("due " + sdf.format(task.getDueDate().getTime()));
+            
+            String start = "", due = "";
+            
+            if (task.getStartDate() != null && task.getHasStartTime()) {
+                start = dateAndTime.format(task.getStartDate().getTime());
+            } else if (task.getStartDate() != null) {
+                start = dateOnly.format(task.getStartDate().getTime());
+            }
+            
+            if (task.getDueDate() != null && task.getHasDueTime()) {
+                due = dateAndTime.format(task.getDueDate().getTime());
+            } else if (task.getDueDate() != null) {
+                due = dateOnly.format(task.getDueDate().getTime());
+            }
+            
+            if ((!start.isEmpty()) && (!due.isEmpty())) {
+                date.setText(start + " - " + due);
+            } else if (!start.isEmpty()) {
+                date.setText(start);
+            } else if (!due.isEmpty()) {
+                date.setText(due);
             }
 
             if (task.getPriority() != null) {
@@ -354,13 +416,13 @@ public class QLGUI extends JFrame implements Observer {
         tomorrow.add(Calendar.DAY_OF_MONTH, 1);
         Calendar twoDaysAfter = (Calendar) tomorrow.clone();
         twoDaysAfter.add(Calendar.DAY_OF_MONTH, 1);
-
-        for (int j = 0; j < tasks.size(); ++j) {
-            if (tasks.get(j).getIsCompleted()) {
+        List<Task> allTasks = QLLogic.getFullList();
+        for (int j = 0; j < allTasks.size(); ++j) {
+            if (allTasks.get(j).getIsCompleted()) {
                 completed++;
                 continue;
             }
-            Calendar due = tasks.get(j).getDueDate();
+            Calendar due = allTasks.get(j).getDueDate();
             if (due == null) {
                 continue;
             }
@@ -375,11 +437,6 @@ public class QLGUI extends JFrame implements Observer {
             }
         }
         
-        lastOverview = String.format("<html><u>Overview</u><br>"
-                + "%d due today<br>" + "%d due tomorrow<br>" + "%d overdue<br>"
-                + "%d completed</html>", dueToday, dueTomorrow, overdue,
-                completed);
-
         _overview.setText(String.format("<html><u>Overview</u><br>"
                 + "%d due today<br>" + "%d due tomorrow<br>" + "%d overdue<br>"
                 + "%d completed</html>", dueToday, dueTomorrow, overdue,
