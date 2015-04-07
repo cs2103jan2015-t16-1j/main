@@ -153,19 +153,20 @@ public class QLGoogleIntegration {
             return;
         }
         List<com.google.api.services.tasks.model.Task> tasks = googleTasks.getTasks(taskListId).getItems();
-        for (com.google.api.services.tasks.model.Task t : tasks) {
-            Task matchingTask = tasksTask.remove(PREFIX_GOOGLEID_TASKS + t.getId());
-            if (matchingTask == null) {
-                if (isMeaningfulTask(t)) {
-                    Task newTask = new Task("");
-                    updateTaskWithGoogleTask(newTask, t);
-                    taskList.add(newTask);
-                }
-            } else {
-                updateTaskWithGoogleTask(matchingTask, t);
-            }
+        if (tasks != null) {
+	        for (com.google.api.services.tasks.model.Task t : tasks) {
+	            Task matchingTask = tasksTask.remove(PREFIX_GOOGLEID_TASKS + t.getId());
+	            if (matchingTask == null) {
+	                if (isMeaningfulTask(t)) {
+	                    Task newTask = new Task("");
+	                    updateTaskWithGoogleTask(newTask, t);
+	                    taskList.add(newTask);
+	                }
+	            } else {
+	                updateTaskWithGoogleTask(matchingTask, t);
+	            }
+	        }
         }
-        
         for (Task t : tasksTask.values()) {
             taskList.remove(t);
         }
@@ -177,18 +178,20 @@ public class QLGoogleIntegration {
         if (calId.isEmpty())
             return;
         List<Event> events = googleCalendar.getEvents(calId).getItems();
-        for (Event e : events) {
-            Task matchingTask = calendarTask.remove(PREFIX_GOOGLEID_CALENDAR + e.getId());
-            if (e.getRecurrence() != null) {
-                continue;
-            }
-            if (matchingTask == null) {
-                Task newTask = new Task("");
-                updateTaskWithGoogleEvent(newTask, e);
-                taskList.add(newTask);
-            } else {
-                updateTaskWithGoogleEvent(matchingTask, e);
-            }
+        if (events != null) {
+	        for (Event e : events) {
+	            Task matchingTask = calendarTask.remove(PREFIX_GOOGLEID_CALENDAR + e.getId());
+	            if (e.getRecurrence() != null) {
+	                continue;
+	            }
+	            if (matchingTask == null) {
+	                Task newTask = new Task("");
+	                updateTaskWithGoogleEvent(newTask, e);
+	                taskList.add(newTask);
+	            } else {
+	                updateTaskWithGoogleEvent(matchingTask, e);
+	            }
+	        }
         }
         
         for (Task t : calendarTask.values()) {
