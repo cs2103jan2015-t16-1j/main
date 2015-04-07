@@ -49,7 +49,7 @@ public class EditAction extends Action {
 		} else {
 			this._feedback.append("Task # out of range. ");
 		}
-		
+
 		System.out.println(this._isSuccess);
 
 		if (this._isSuccess) {
@@ -149,17 +149,18 @@ public class EditAction extends Action {
 
 	private boolean calibrateDueDate(Field field, Calendar newDate) {
 		boolean hasDueTime;
-		if (!field.isDateParsed() && field.isTimeParsed()
+
+		if (field.isTimeParsed() && _task.getDueDate() != null) {
+
+			matchTaskDueDate(newDate);
+			hasDueTime = true;
+			
+		} else if (!field.isDateParsed() && field.isTimeParsed()
 				&& _task.getStartDate() != null) {
 
 			matchTaskStartDate(newDate);
 			hasDueTime = true;
 
-		} else if(field.isTimeParsed() && _task.getDueDate()!= null) {
-			
-			matchTaskDueDate(newDate);
-			hasDueTime = true;
-			
 		} else if (!field.isTimeParsed()) {
 
 			configureToMaxTime(newDate);
@@ -205,17 +206,18 @@ public class EditAction extends Action {
 
 	private boolean calibrateStartDate(Field field, Calendar newDate) {
 		boolean hasStartTime;
-		if (!field.isDateParsed() && field.isTimeParsed()
+		
+		if (field.isTimeParsed() && _task.getStartDate() != null) {
+
+			matchTaskStartDate(newDate);
+			hasStartTime = true;
+
+		} else if (!field.isDateParsed() && field.isTimeParsed()
 				&& _task.getDueDate() != null) {
 
 			matchTaskDueDate(newDate);
 			hasStartTime = true;
 
-		} else if(field.isTimeParsed() && _task.getStartDate()!= null) {
-			
-			matchTaskStartDate(newDate);
-			hasStartTime = true;
-			
 		} else if (!field.isTimeParsed()) {
 
 			configureToMinTime(newDate);
