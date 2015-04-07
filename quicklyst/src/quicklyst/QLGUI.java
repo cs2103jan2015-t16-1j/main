@@ -39,145 +39,18 @@ public class QLGUI extends JFrame implements Observer {
     private static final int WINDOW_WIDTH = 800;
     private static final int WINDOW_HEIGHT = 600;
     
-    private static final String UNDO = "Undo action key";
-    private static final String REDO = "Redo action key";
+    private static final String UNDO = "Undo";
+    private static final String REDO = "Redo";
 
-    private final static Logger LOGGER = Logger
+    private static final Logger LOGGER = Logger
             .getLogger(QLGUI.class.getName());
 
     private JPanel _taskList;
+    private JPanel _overviewPane;
     private JLabel _overview;
-    private JPanel overviewPane;
     private JTextArea _feedback;
     private JTextField _command;
-
-    public class TaskMouseListener implements MouseListener {
-        private Task task;
-        private JLabel hover;
-        
-        public TaskMouseListener (Task task) {
-            this.task = task;
-        }
-        
-        public void mouseEntered(MouseEvent m) {
-            hover = new JLabel();
-            overviewPane.add(hover, BorderLayout.CENTER);
-            hover.setBorder(BorderFactory.createEmptyBorder(3, 3, 3, 3));
-            
-            String title = task.getName(), description, priority;
-            String start = "", due = "", displayTime = "";
-            SimpleDateFormat date = new SimpleDateFormat("dd/MM/yyyy");
-            SimpleDateFormat dateAndTime = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-            
-            if (task.getDescription() != null) {
-                description = task.getDescription();
-            } else {
-                description = "";
-            }
-            
-            if (task.getPriority() != null) {
-                priority = task.getPriority();
-            } else {
-                priority = "";
-            }
-            
-            if (task.getStartDate() != null && task.getHasStartTime()) {
-                start = dateAndTime.format(task.getStartDate().getTime());
-            } else if (task.getStartDate() != null) {
-                start = date.format(task.getStartDate().getTime());
-            }
-
-            if (task.getDueDate() != null && task.getHasDueTime()) {
-                due = dateAndTime.format(task.getDueDate().getTime());
-            } else if (task.getDueDate() != null) {
-                due = date.format(task.getDueDate().getTime());
-            }
-            
-            if (!start.isEmpty() && !due.isEmpty()) {
-                displayTime = (start + " - " + due);
-            } else if (!start.isEmpty()) {
-                displayTime = "starts " + start;
-            } else if (!due.isEmpty()) {
-                displayTime = "due " + due;                
-            } else {
-                displayTime = "";
-            }
-            
-            hover.setText(String.format("<html><u>Task Detail</u><br>"
-                    + "Title: %s<br>" + "Description: %s<br>"
-                    + "Priority: %s<br>" + "Time: %s<br>", 
-                    title, description, priority, displayTime));
-            hover.setOpaque(true);
-        }
-        
-        @Override
-        public void mouseExited(MouseEvent arg0) {
-            hover.setVisible(false);
-        }
-
-        @Override
-        public void mouseClicked(MouseEvent arg0) {
-            // TODO Auto-generated method stub
-            
-        }
-
-
-        @Override
-        public void mousePressed(MouseEvent arg0) {
-            // TODO Auto-generated method stub
-            
-        }
-
-        @Override
-        public void mouseReleased(MouseEvent arg0) {
-            // TODO Auto-generated method stub
-            
-        }  
-    }
-    
-    public class commandListener implements ActionListener {
-
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            // TODO Auto-generated method stub
-            LOGGER.info(String.format("user entered: %s",
-                    _command.getText()));
-            StringBuilder fb = new StringBuilder();
-            QLLogic.executeCommand(_command.getText(), fb);
-
-            if (!fb.toString().isEmpty()) {
-                _feedback.append(fb.toString() + "\r\n");
-            }
-            updateUI();
-            _command.setText("");
-        }
-    }
-    
-    public class hotKeysAction extends AbstractAction {
-        private String keyPressed;
-       
-        public hotKeysAction (String keyPressed) {
-            this.keyPressed = keyPressed;
-        }
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            // TODO Auto-generated method stub
-            LOGGER.info(keyPressed);
-            StringBuilder fb = new StringBuilder();
-            if (keyPressed.equalsIgnoreCase("undo")) {
-                QLLogic.executeCommand("undo", fb);
-            } else {
-                QLLogic.executeCommand("redo", fb);                
-            }
-
-            if (!fb.toString().isEmpty()) {
-                _feedback.append(fb.toString() + "\r\n");
-            }
-            updateUI();
-        }
-        
-    }
-    
+      
     public QLGUI() {
         super(TITLE);
 
@@ -197,14 +70,13 @@ public class QLGUI extends JFrame implements Observer {
         JScrollPane taskListScroll = new JScrollPane(taskListBorderPane);
 
         LOGGER.info("creating overview panel");
-        overviewPane = new JPanel(new BorderLayout());
-        overviewPane.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1,
+        _overviewPane = new JPanel(new BorderLayout());
+        _overviewPane.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1,
                 Color.BLACK));
-
 
         _overview = new JLabel();
         _overview.setBorder(BorderFactory.createEmptyBorder(3, 3, 3, 3));
-        overviewPane.add(_overview, BorderLayout.NORTH);
+        _overviewPane.add(_overview, BorderLayout.NORTH);
 
         LOGGER.info("creating feedback");
         _feedback = new JTextArea();
@@ -219,50 +91,24 @@ public class QLGUI extends JFrame implements Observer {
         LOGGER.info("creating command text field");
         _command = new JTextField();
         LOGGER.info("adding actionListener to command text field");
-        _command.addActionListener(new commandListener());
+        _command.addActionListener(new CommandListener(_command, this));
 
         LOGGER.info("adding components to main panel");
         add(_command);
         add(taskListScroll);
         add(feedbackScroll);
-        add(overviewPane);
+        add(_overviewPane);
 
         LOGGER.info("set constraints for components");
         setConstraintsForMainFrame(layout, contentPane, taskListScroll,
-                overviewPane, feedbackScroll, _command);
+                _overviewPane, feedbackScroll, _command);
 
         LOGGER.info("finalizing GUI");
         setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
         setVisible(true);
 
-        /*Action undoAction = new AbstractAction() {
-            public void actionPerformed(ActionEvent e) {
-                LOGGER.info("Undo.");
-                StringBuilder fb = new StringBuilder();
-                QLLogic.executeCommand("undo", fb);
-
-                if (!fb.toString().isEmpty()) {
-                    _feedback.append(fb.toString() + "\r\n");
-                }
-                updateUI();
-            }
-        };*/
-        Action undoAction = new hotKeysAction("Undo");
-        Action redoAction = new hotKeysAction("Redo");
-        
-        
-        /*Action redoAction = new AbstractAction() {
-            public void actionPerformed(ActionEvent e) {
-            LOGGER.info("Redo.");
-            StringBuilder fb = new StringBuilder();
-            QLLogic.executeCommand("redo", fb);
-
-            if (!fb.toString().isEmpty()) {
-                _feedback.append(fb.toString() + "\r\n");
-            }
-            updateUI();
-          }
-        };*/
+        Action undoAction = new HotkeysAction("Undo", this);
+        Action redoAction = new HotkeysAction("Redo", this);
 
         _command.getActionMap().put(UNDO, undoAction);
         _command.getActionMap().put(REDO, redoAction);
@@ -287,112 +133,12 @@ public class QLGUI extends JFrame implements Observer {
         int i = 1, taskIndex = 1;
         String curDate = "";
         String prevDate = "";
-        String display = "";
 
         List<Task> tasks = QLLogic.getDisplayList();
         for (Task task : tasks) {
-            SpringLayout singleTaskLayout = new SpringLayout();
-            JPanel singleTaskPane = new JPanel(singleTaskLayout);
-
-            JPanel priorityColorPane = new JPanel();
-            JLabel name = new JLabel(task.getName());
-            JLabel index = new JLabel("#" + taskIndex);
-            JLabel date = new JLabel(" ");
-            JLabel priority = new JLabel();
             
-            SimpleDateFormat dateOnly = new SimpleDateFormat("dd/MM/yyy"); 
-            SimpleDateFormat dateAndTime = new SimpleDateFormat("dd/MM/yyy HH:mm");            
+            TaskPanel singleTaskPane = new TaskPanel(task, taskIndex);
             
-            display = task.getName();
-            singleTaskPane.setBorder(new LineBorder(Color.BLACK));
-            
-            if (task.getIsCompleted()) {
-                singleTaskPane.setBackground(Color.CYAN);
-            } else if (task.getIsOverdue()) {
-                singleTaskPane.setBackground(Color.PINK);
-            }
-            
-            String start = "", due = "";
-            
-            if (task.getStartDate() != null && task.getHasStartTime()) {
-                start = dateAndTime.format(task.getStartDate().getTime());
-            } else if (task.getStartDate() != null) {
-                start = dateOnly.format(task.getStartDate().getTime());
-            }
-            
-            if (task.getDueDate() != null && task.getHasDueTime()) {
-                due = dateAndTime.format(task.getDueDate().getTime());
-            } else if (task.getDueDate() != null) {
-                due = dateOnly.format(task.getDueDate().getTime());
-            }
-            
-            if ((!start.isEmpty()) && (!due.isEmpty())) {
-                date.setText(start + " - " + due);
-            } else if (!start.isEmpty()) {
-                date.setText(start);
-            } else if (!due.isEmpty()) {
-                date.setText(due);
-            }
-
-            if (task.getPriority() != null) {
-
-                priority.setText(task.getPriority());
-
-                switch (task.getPriority()) {
-                case "H":
-                    priorityColorPane.setBackground(Color.RED);
-                    break;
-                case "M":
-                    priorityColorPane.setBackground(Color.ORANGE);
-                    break;
-                case "L":
-                    priorityColorPane.setBackground(Color.YELLOW);
-                    break;
-                default:
-                    break;
-                }
-            }
-
-            singleTaskPane.add(priorityColorPane);
-            singleTaskPane.add(name);
-            singleTaskPane.add(index);
-            singleTaskPane.add(date);
-            singleTaskPane.add(priority);
-
-            singleTaskLayout.putConstraint(SpringLayout.SOUTH, singleTaskPane,
-                    5, SpringLayout.SOUTH, date);
-
-            singleTaskLayout.putConstraint(SpringLayout.WEST,
-                    priorityColorPane, 5, SpringLayout.WEST, singleTaskPane);
-            singleTaskLayout.putConstraint(SpringLayout.NORTH,
-                    priorityColorPane, 5, SpringLayout.NORTH, singleTaskPane);
-            singleTaskLayout.putConstraint(SpringLayout.SOUTH,
-                    priorityColorPane, -5, SpringLayout.SOUTH, singleTaskPane);
-
-            singleTaskLayout.putConstraint(SpringLayout.WEST, name, 10,
-                    SpringLayout.EAST, priorityColorPane);
-            singleTaskLayout.putConstraint(SpringLayout.NORTH, name, 5,
-                    SpringLayout.NORTH, singleTaskPane);
-            singleTaskLayout.putConstraint(SpringLayout.EAST, name, -5,
-                    SpringLayout.WEST, index);
-
-            singleTaskLayout.putConstraint(SpringLayout.EAST, index, -10,
-                    SpringLayout.EAST, singleTaskPane);
-            singleTaskLayout.putConstraint(SpringLayout.NORTH, index, 5,
-                    SpringLayout.NORTH, singleTaskPane);
-
-            singleTaskLayout.putConstraint(SpringLayout.WEST, date, 10,
-                    SpringLayout.EAST, priorityColorPane);
-            singleTaskLayout.putConstraint(SpringLayout.NORTH, date, 5,
-                    SpringLayout.SOUTH, name);
-            singleTaskLayout.putConstraint(SpringLayout.EAST, date, -5,
-                    SpringLayout.WEST, priority);
-
-            singleTaskLayout.putConstraint(SpringLayout.SOUTH, priority, -5,
-                    SpringLayout.SOUTH, singleTaskPane);
-            singleTaskLayout.putConstraint(SpringLayout.EAST, priority, -10,
-                    SpringLayout.EAST, singleTaskPane);
-
             GridBagConstraints con = new GridBagConstraints();
             con.insets = new Insets(5, 5, 5, 5);
             con.weightx = 1;
@@ -418,8 +164,7 @@ public class QLGUI extends JFrame implements Observer {
             }
 
             _taskList.add(singleTaskPane, con);
-            singleTaskPane.setToolTipText(display);
-            singleTaskPane.addMouseListener(new TaskMouseListener(task));
+            singleTaskPane.addMouseListener(new TaskMouseListener(task, _overviewPane));
             
             i++;
             taskIndex++;
@@ -430,6 +175,10 @@ public class QLGUI extends JFrame implements Observer {
         _taskList.repaint();
 
         // update the overview based on dates
+        updateOverview();
+    }
+
+    private void updateOverview() {
         int dueToday = 0, dueTomorrow = 0, overdue = 0, completed = 0;
         Calendar now = Calendar.getInstance();
         Calendar today = (Calendar) now.clone();
@@ -470,17 +219,32 @@ public class QLGUI extends JFrame implements Observer {
     }
 
     private void setConstraintsForMainFrame(SpringLayout layout,
-            Container contentPane, JComponent taskListScroll,
-            JComponent overviewPane, JComponent feedbackScroll,
-            JComponent commandTextField) {
+                Container contentPane, JComponent taskListScroll,
+                JComponent overviewPane, JComponent feedbackScroll,
+                JComponent commandTextField) {
 
+        setConstraintsForCommandTextField(layout, contentPane, commandTextField);
+        setConstraintsForTaskListScroll(layout, contentPane, taskListScroll,
+                commandTextField);
+        setConstraintsForOverviewPane(layout, contentPane, taskListScroll,
+                overviewPane);
+        setConstraintsForFeedbackScroll(layout, contentPane, taskListScroll,
+                overviewPane, feedbackScroll);
+    }
+
+    private void setConstraintsForCommandTextField(SpringLayout layout,
+                 Container contentPane, JComponent commandTextField) {
         layout.putConstraint(SpringLayout.WEST, commandTextField, 10,
                 SpringLayout.WEST, contentPane);
         layout.putConstraint(SpringLayout.EAST, commandTextField, -10,
                 SpringLayout.EAST, contentPane);
         layout.putConstraint(SpringLayout.SOUTH, commandTextField, -10,
                 SpringLayout.SOUTH, contentPane);
-
+    }
+    
+    private void setConstraintsForTaskListScroll(SpringLayout layout,
+                 Container contentPane, JComponent taskListScroll,
+                 JComponent commandTextField) {
         layout.putConstraint(SpringLayout.WEST, taskListScroll, 10,
                 SpringLayout.WEST, contentPane);
         layout.putConstraint(SpringLayout.NORTH, taskListScroll, 10,
@@ -488,7 +252,11 @@ public class QLGUI extends JFrame implements Observer {
         layout.putConstraint(SpringLayout.SOUTH, taskListScroll, -10,
                 SpringLayout.NORTH, commandTextField);
         layout.getConstraints(taskListScroll).setWidth(Spring.constant(385));
-
+    }
+    
+    private void setConstraintsForOverviewPane(SpringLayout layout,
+                 Container contentPane, JComponent taskListScroll,
+                 JComponent overviewPane) {
         layout.putConstraint(SpringLayout.WEST, overviewPane, 10,
                 SpringLayout.EAST, taskListScroll);
         layout.putConstraint(SpringLayout.NORTH, overviewPane, 10,
@@ -496,7 +264,11 @@ public class QLGUI extends JFrame implements Observer {
         layout.putConstraint(SpringLayout.EAST, overviewPane, -10,
                 SpringLayout.EAST, contentPane);
         layout.getConstraints(overviewPane).setHeight(Spring.constant(220));
-
+    }
+    
+    private void setConstraintsForFeedbackScroll(SpringLayout layout,
+                 Container contentPane, JComponent taskListScroll,
+                 JComponent overviewPane, JComponent feedbackScroll) {
         layout.putConstraint(SpringLayout.WEST, feedbackScroll, 10,
                 SpringLayout.EAST, taskListScroll);
         layout.putConstraint(SpringLayout.NORTH, feedbackScroll, 10,
@@ -507,13 +279,22 @@ public class QLGUI extends JFrame implements Observer {
                 SpringLayout.EAST, contentPane);
     }
     
+    public void executeCommand(String command) {
+        StringBuilder fb = new StringBuilder();
+        QLLogic.executeCommand(command, fb);
+    
+        if (!fb.toString().isEmpty()) {
+            _feedback.append(fb.toString() + "\r\n");
+        }
+        updateUI();
+    }
+    
     public void update (Observable o, Object arg) {
         
     }
 
     public static void main(String[] args) {
         QLGUI g = new QLGUI();
-
     }
 
 }
