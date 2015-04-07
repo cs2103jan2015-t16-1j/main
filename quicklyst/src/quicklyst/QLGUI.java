@@ -35,6 +35,8 @@ import javax.swing.border.LineBorder;
 import java.util.logging.Logger;
 
 public class QLGUI extends JFrame implements Observer {
+    private static final String HOTKEY_REDO = "control Y";
+    private static final String HOTKEY_UNDO = "control Z";
     private static final String TITLE = "Quicklyst";
     private static final int WINDOW_WIDTH = 800;
     private static final int WINDOW_HEIGHT = 600;
@@ -56,7 +58,6 @@ public class QLGUI extends JFrame implements Observer {
 
         LOGGER.info("creating GUI");
 
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         Container contentPane = this.getContentPane();
         SpringLayout layout = new SpringLayout();
@@ -64,21 +65,76 @@ public class QLGUI extends JFrame implements Observer {
         contentPane.setLayout(layout);
 
         LOGGER.info("creating tasklist");
-        _taskList = new JPanel(new GridBagLayout());
-        JPanel taskListBorderPane = new JPanel(new BorderLayout());
-        taskListBorderPane.add(_taskList, BorderLayout.NORTH);
-        JScrollPane taskListScroll = new JScrollPane(taskListBorderPane);
+        JScrollPane taskListScroll = setupTaskListPanel();
 
         LOGGER.info("creating overview panel");
-        _overviewPane = new JPanel(new BorderLayout());
-        _overviewPane.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1,
-                Color.BLACK));
-
-        _overview = new JLabel();
-        _overview.setBorder(BorderFactory.createEmptyBorder(3, 3, 3, 3));
-        _overviewPane.add(_overview, BorderLayout.NORTH);
+        setupOverviewPanel();
 
         LOGGER.info("creating feedback");
+        JScrollPane feedbackScroll = setupFeedback();
+
+        LOGGER.info("creating command text field");
+        setupCommand();
+
+        setupHotkeys();
+        
+        LOGGER.info("adding components to main panel");
+        addComponents(taskListScroll, feedbackScroll,
+                      _command, _overviewPane);
+
+        LOGGER.info("set constraints for components");
+        setConstraintsForMainFrame(layout, contentPane, taskListScroll,
+                                   _overviewPane, feedbackScroll, _command);
+
+        LOGGER.info("finalizing GUI");
+        setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setVisible(true);
+
+        LOGGER.info("get taskList from QLLogic");
+        QLLogic.setup(new StringBuilder());
+        updateUI();
+
+    }
+
+    private void setupHotkeys() {
+        setupActionMap();
+        setupInputMap();
+    }
+
+    private void setupInputMap() {
+        _command.getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke(HOTKEY_UNDO), UNDO);
+        _command.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(HOTKEY_UNDO), UNDO);
+        _command.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(HOTKEY_UNDO), UNDO);
+        
+        _command.getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke(HOTKEY_REDO), REDO);
+        _command.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(HOTKEY_REDO), REDO);
+        _command.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(HOTKEY_REDO), REDO);
+    }
+
+    private void setupActionMap() {
+        Action undoAction = new HotkeysAction("Undo", this);
+        Action redoAction = new HotkeysAction("Redo", this);
+
+        _command.getActionMap().put(UNDO, undoAction);
+        _command.getActionMap().put(REDO, redoAction);
+    }
+
+    private void addComponents(JScrollPane taskListScroll, JScrollPane feedbackScroll,
+                               JTextField command, JPanel overview) {
+        add(_command);
+        add(taskListScroll);
+        add(feedbackScroll);
+        add(_overviewPane);
+    }
+
+    private void setupCommand() {
+        _command = new JTextField();
+        LOGGER.info("adding actionListener to command text field");
+        _command.addActionListener(new CommandListener(_command, this));
+    }
+
+    private JScrollPane setupFeedback() {
         _feedback = new JTextArea();
         _feedback.setEditable(false);
         _feedback.setLineWrap(true);
@@ -87,45 +143,25 @@ public class QLGUI extends JFrame implements Observer {
         feedbackBorderPane.setBackground(_feedback.getBackground());
         feedbackBorderPane.add(_feedback, BorderLayout.SOUTH);
         JScrollPane feedbackScroll = new JScrollPane(feedbackBorderPane);
+        return feedbackScroll;
+    }
 
-        LOGGER.info("creating command text field");
-        _command = new JTextField();
-        LOGGER.info("adding actionListener to command text field");
-        _command.addActionListener(new CommandListener(_command, this));
+    private void setupOverviewPanel() {
+        _overviewPane = new JPanel(new BorderLayout());
+        _overviewPane.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1,
+                Color.BLACK));
 
-        LOGGER.info("adding components to main panel");
-        add(_command);
-        add(taskListScroll);
-        add(feedbackScroll);
-        add(_overviewPane);
+        _overview = new JLabel();
+        _overview.setBorder(BorderFactory.createEmptyBorder(3, 3, 3, 3));
+        _overviewPane.add(_overview, BorderLayout.NORTH);
+    }
 
-        LOGGER.info("set constraints for components");
-        setConstraintsForMainFrame(layout, contentPane, taskListScroll,
-                _overviewPane, feedbackScroll, _command);
-
-        LOGGER.info("finalizing GUI");
-        setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
-        setVisible(true);
-
-        Action undoAction = new HotkeysAction("Undo", this);
-        Action redoAction = new HotkeysAction("Redo", this);
-
-        _command.getActionMap().put(UNDO, undoAction);
-        _command.getActionMap().put(REDO, redoAction);
-
-        InputMap[] inputMaps = new InputMap[] {
-                _command.getInputMap(JComponent.WHEN_FOCUSED),
-                _command.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT),
-                _command.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW), };
-        for (InputMap i : inputMaps) {
-            i.put(KeyStroke.getKeyStroke("control Z"), UNDO);
-            i.put(KeyStroke.getKeyStroke("control Y"), REDO);
-        }
-        
-        LOGGER.info("get taskList from QLLogic");
-        QLLogic.setup(new StringBuilder());
-        updateUI();
-
+    private JScrollPane setupTaskListPanel() {
+        _taskList = new JPanel(new GridBagLayout());
+        JPanel taskListBorderPane = new JPanel(new BorderLayout());
+        taskListBorderPane.add(_taskList, BorderLayout.NORTH);
+        JScrollPane taskListScroll = new JScrollPane(taskListBorderPane);
+        return taskListScroll;
     }
 
     private void updateUI() {
