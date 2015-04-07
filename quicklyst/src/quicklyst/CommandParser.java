@@ -16,7 +16,7 @@ public class CommandParser {
 	private LinkedList<Field> _fields;
 
 	private Boolean _completeYesNo;
-	private boolean _findAll;
+	private boolean _all;
 
 	private static final String[][] CONVERSION_TABLE = { { "name", "-n" },
 			{ "from", "-s" }, { "start", "-s" }, { "to", "-d" },
@@ -54,7 +54,7 @@ public class CommandParser {
 		case SORT:
 			return new SortAction(_fields);
 		case FIND:
-			return new FindAction(_fields, _findAll);
+			return new FindAction(_fields, _all);
 		case COMPLETE:
 			return new CompleteAction(_taskNumber, _completeYesNo);
 		case PUSH:
@@ -220,12 +220,17 @@ public class CommandParser {
 
 			_actionType = ActionType.FIND;
 
-		} else if (actionString.equalsIgnoreCase("SORT")
+		} 
+		
+		/* sort function removed */
+		/* else if (actionString.equalsIgnoreCase("SORT")
 				|| actionString.equalsIgnoreCase("S")) {
 
 			_actionType = ActionType.SORT;
 
-		} else if (actionString.equalsIgnoreCase("COMPLETE")
+		} */
+		
+		else if (actionString.equalsIgnoreCase("COMPLETE")
 				|| actionString.equalsIgnoreCase("C")) {
 
 			_actionType = ActionType.COMPLETE;
@@ -281,10 +286,11 @@ public class CommandParser {
 	private void determineNonFieldInputs(String fieldsString) {
 		switch (_actionType) {
 		case FIND:
+		case DELETE:
 			if (fieldsString.trim().equalsIgnoreCase("all")) {
-				_findAll = true;
+				_all = true;
 			} else {
-				_findAll = false;
+				_all = false;
 			}
 			break;
 
