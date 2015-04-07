@@ -5,10 +5,12 @@ import java.util.LinkedList;
 public class DeleteAction extends Action {
 
 	private int _taskIndex;
+	//private SortAction _defaultSort;
 
 	public DeleteAction(int taskNumber) {
 		this._feedback = new StringBuilder();
 		this._type = ActionType.DELETE;
+		//_defaultSort = new SortAction();
 
 		if (taskNumber != 0) {
 			_taskIndex = taskNumber - 1;
@@ -28,6 +30,7 @@ public class DeleteAction extends Action {
 			this._feedback.append("Task #" + 
 					(_taskIndex + 1) +
 					" deleted. ");
+			//_defaultSort.execute(workingList, workingListMaster);
 		} else {
 			this._isSuccess = false;
 			this._feedback.append("Task # out of range. ");

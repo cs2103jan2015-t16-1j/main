@@ -54,9 +54,6 @@ public class Field {
 				_dateRange = (Calendar[]) content;
 			}
 			break;
-		case DATE_RANGE:
-			_dateRange = (Calendar[]) content;
-			break;
 		case PRIORITY:
 			_priority = (String) content;
 			break;
@@ -71,11 +68,11 @@ public class Field {
 	private void updateFieldCriteria(FieldCriteria fieldCriteria) {
 		_fieldCriteria = fieldCriteria;
 	}
-	
+
 	public void setDateParsed(boolean yesNo) {
 		_dateParsed = yesNo;
 	}
-	
+
 	public void setTimeParsed(boolean yesNo) {
 		_timeParsed = yesNo;
 	}
@@ -103,11 +100,11 @@ public class Field {
 	public FieldCriteria getCriteria() {
 		return _fieldCriteria;
 	}
-	
+
 	public boolean isDateParsed() {
 		return _dateParsed;
 	}
-	
+
 	public boolean isTimeParsed() {
 		return _timeParsed;
 	}
@@ -118,5 +115,57 @@ public class Field {
 		} else {
 			return false;
 		}
+	}
+
+	public boolean shouldClearPriority() {
+		if (_fieldCriteria == FieldCriteria.CLEAR_PRIORITY) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	/* For debugging purposes */
+	public String toString() {
+		String output = _fieldType.toString() + " ";
+		switch (_fieldType) {
+		case TASK_NAME:
+			output += getTaskName();
+			break;
+		case START_DATE:
+		case DUE_DATE:
+		case REMINDER:
+			if (_fieldCriteria == FieldCriteria.BETWEEN) {
+				output += _fieldCriteria.toString() + " "
+						+ getDateRange()[0].getTime().toString() + " "
+						+ getDateRange()[1].getTime().toString();
+			} else if (_fieldCriteria == null && getDate() != null) {
+				output += getDate().getTime().toString() + _dateParsed
+						+ _timeParsed;
+			} else if (_fieldCriteria != null && getDate() == null) {
+				output += _fieldCriteria.toString() + " " + _dateParsed
+						+ _timeParsed;
+			} else if (_fieldCriteria != null && getDate() != null) {
+				output += _fieldCriteria.toString() + " "
+						+ getDate().getTime().toString() + _dateParsed
+						+ _timeParsed;
+			}
+			break;
+		case PRIORITY:
+			if (_fieldCriteria == null) {
+				output += getPriority();
+			} else {
+				output += _fieldCriteria.toString() + " " + getPriority();
+			}
+			break;
+		case DURATION:
+		case COMPLETED:
+		case OVERDUE:
+			output += _fieldCriteria.toString();
+			break;
+		default:
+			break;
+		}
+		return output;
 	}
 }

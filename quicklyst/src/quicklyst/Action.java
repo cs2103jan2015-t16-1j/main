@@ -8,8 +8,8 @@ public abstract class Action {
 	protected StringBuilder _feedback;
 	protected boolean _isSuccess;
 	
-	public abstract void execute(LinkedList<Task> workingList,
-			LinkedList<Task> workingListMaster);
+	public abstract void execute(LinkedList<Task> displayList,
+			LinkedList<Task> masterList);
 	
 	public void attachFeedback(StringBuilder feedback) {
 		_feedback = feedback;
@@ -21,5 +21,17 @@ public abstract class Action {
 	
 	public boolean isSuccess() {
 		return _isSuccess;
+	}
+	
+	public void setSuccess(boolean isSuccess) {
+		_isSuccess = isSuccess;
+	}
+	
+	public ActionType getType() {
+		return _type;
+	}
+	
+	public void setType(ActionType type) {
+		_type = type;
 	}
 }

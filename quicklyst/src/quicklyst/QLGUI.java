@@ -277,7 +277,7 @@ public class QLGUI extends JFrame implements Observer {
         }
         
         LOGGER.info("get taskList from QLLogic");
-        QLLogic.setup("save.json");
+        QLLogic.setup(new StringBuilder());
         updateUI();
 
     }

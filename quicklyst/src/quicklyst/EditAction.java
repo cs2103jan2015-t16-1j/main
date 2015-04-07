@@ -9,12 +9,14 @@ public class EditAction extends Action {
 	private int _taskIndex;
 	private LinkedList<Field> _fields;
 	private Task _task;
+	private SortAction _defaultSort;
 
 	public EditAction(int taskNumber, LinkedList<Field> fields) {
 		
 		this._isSuccess = false;
 		this._feedback = new StringBuilder();
 		this._type = ActionType.EDIT;
+		_defaultSort = new SortAction();
 
 		if (taskNumber != 0) {
 			_taskIndex = taskNumber - 1;
@@ -26,26 +28,34 @@ public class EditAction extends Action {
 	}
 
 	public EditAction(Task task, LinkedList<Field> fields) {
-
+		
+		this._isSuccess = false;
 		this._feedback = new StringBuilder();
 		this._type = ActionType.EDIT;
 		_task = task;
 		_fields = fields;
+		_defaultSort = new SortAction();
 	}
 
 	@Override
-	public void execute(LinkedList<Task> workingList,
-			LinkedList<Task> workingListMaster) {
-
-		if (isTaskIndexInRange(workingList)) {
-			_task = workingList.get(_taskIndex);
+	public void execute(LinkedList<Task> displayList,
+			LinkedList<Task> masterList) {
+		
+		if(_task != null) {
+			execute();
+		} else if (isTaskIndexInRange(displayList)) {
+			_task = displayList.get(_taskIndex);
 			execute();
 		} else {
 			this._feedback.append("Task # out of range. ");
 		}
+		
+		if(this._isSuccess) {
+			_defaultSort.execute(displayList, masterList);
+		}
 	}
 
-	public void execute() {
+	private void execute() {
 		for (Field field : _fields) {
 			FieldType fieldType = field.getFieldType();
 			switch (fieldType) {
@@ -53,11 +63,14 @@ public class EditAction extends Action {
 				_task.setName(field.getTaskName());
 				this._feedback.append("Task name set to \""
 						+ field.getTaskName() + "\". ");
+				this._isSuccess = true;
 				break;
 			case START_DATE:
 
 				if (field.shouldClearDate()) {
 					_task.setStartDate((Calendar) null);
+					_task.setHasStartTime(false);
+					this._isSuccess = true;
 					this._feedback.append("Start date cleared. ");
 					break;
 				}
@@ -77,6 +90,8 @@ public class EditAction extends Action {
 
 				if (field.shouldClearDate()) {
 					_task.setDueDate((Calendar) null);
+					_task.setHasDueTime(false);
+					this._isSuccess = true;
 					this._feedback.append("Due date cleared. ");
 					break;
 				}
@@ -100,14 +115,14 @@ public class EditAction extends Action {
 				 */
 				break;
 			case PRIORITY:
-				if (field.getPriority() == null) {
-					break;
-				} else if (field.getPriority().equalsIgnoreCase("clr")) {
+				if (field.shouldClearPriority()) {
 					_task.setPriority((String) null);
+					this._isSuccess = true;
 					this._feedback.append("Priority cleared. ");
 					break;
 				} else {
 					_task.setPriority(field.getPriority());
+					this._isSuccess = true;
 					this._feedback.append("Priority set to \""
 							+ field.getPriority() + "\". ");
 					break;
@@ -122,7 +137,7 @@ public class EditAction extends Action {
 		if (_task.getStartDate() != null
 				&& field.getDate().compareTo(_task.getStartDate()) < 0) {
 			this._feedback
-					.append("Due date/time entered is bigger than start date/time of task. ");
+					.append("Due date/time entered is smaller than start date/time of task. ");
 			return;
 		}
 
@@ -137,7 +152,7 @@ public class EditAction extends Action {
 		}
 		
 		this._isSuccess = true;
-		this._feedback.append("Due date set to " + _task.getDueDateTimeString()
+		this._feedback.append("Due date set to " + _task.getDueDateString()
 				+ ". ");
 	}
 
@@ -175,15 +190,15 @@ public class EditAction extends Action {
 		if (_task.getStartDate() != null
 				&& newDate.compareTo(_task.getStartDate()) < 0) {
 			this._feedback
-					.append("Due date/time entered is bigger than start date/time of task. ");
+					.append("Due date/time entered is smaller than start date/time of task. ");
 		} else {
 			_task.setDueDate(newDate);
-			if(field.isDateParsed()) {
+			if(field.isTimeParsed()) {
 				_task.setHasDueTime(true);
 			}
 			this._isSuccess = true;
 			this._feedback.append("Due date set to "
-					+ _task.getDueDateTimeString() + ". ");
+					+ _task.getDueDateString() + ". ");
 
 		}
 
@@ -208,7 +223,7 @@ public class EditAction extends Action {
 		}
 		
 		this._isSuccess = true;
-		this._feedback.append("Start date set to " + _task.getStartDateTimeString()
+		this._feedback.append("Start date set to " + _task.getStartDateString()
 				+ ". ");
 	}
 
@@ -252,16 +267,16 @@ public class EditAction extends Action {
 		} else {
 			_task.setStartDate(newDate);
 			if(field.isTimeParsed()) {
-				_task.setHasDueTime(true);
+				_task.setHasStartTime(true);
 			}
 			this._isSuccess = true;
 			this._feedback.append("Start date set to "
-					+ _task.getStartDateTimeString() + ". ");
+					+ _task.getStartDateString() + ". ");
 		}
 	}
 
-	private boolean isTaskIndexInRange(LinkedList<Task> workingList) {
-		if (_taskIndex < 0 || _taskIndex >= workingList.size()) {
+	private boolean isTaskIndexInRange(LinkedList<Task> displayList) {
+		if (_taskIndex < 0 || _taskIndex >= displayList.size()) {
 			return false;
 		} else {
 			return true;

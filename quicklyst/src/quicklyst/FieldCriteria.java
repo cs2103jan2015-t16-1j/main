@@ -1,19 +1,31 @@
 package quicklyst;
 
 public enum FieldCriteria {
+	
+	//start date, due date
+	//duration
+	//priority
 	ASCEND,
 	DESCEND,
 	
+	//start date, due date
 	BEFORE,
 	ON,
 	AFTER,
 	BETWEEN,
-	ALL,
 	
-	// complete 
-	// overdue
+	//completed
+	//overdue
 	YES,
 	NO,
 	
-	CLEAR_DATE;
+	//start date, due date
+	CLEAR_DATE,
+	
+	//priority
+	CLEAR_PRIORITY,
+	
+	//sync
+	TO,
+	FROM;
 }

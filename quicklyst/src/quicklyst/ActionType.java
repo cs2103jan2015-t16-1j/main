@@ -6,5 +6,7 @@ public enum ActionType {
 	EDIT, 
 	SORT,
 	FIND,
-	COMPLETE;
+	COMPLETE,
+	PUSH,
+	PULL;
 }

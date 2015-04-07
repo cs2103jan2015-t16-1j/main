@@ -35,6 +35,10 @@ public class QLStorage {
         }
     }
     
+    public static boolean isValidFile(String filePath) {
+        return true;
+    }
+    
     private static boolean checkFile(String filePath) {
         File file = null;
         file = new File(filePath);
@@ -69,10 +73,8 @@ public class QLStorage {
         {
             LOGGER.info(String.format("Decoding %s", filePath));
             Gson gson = new GsonBuilder()
-                            .registerTypeAdapter(Calendar.class, new CalendarDeserializer())
+                            .registerTypeAdapter(Task.class, new TaskDeserializer())
                             .create();
-            
-            assert gson != null;
             
             TasksWrapper wrapper = gson.fromJson(f, TasksWrapper.class);
             
@@ -104,8 +106,6 @@ public class QLStorage {
                             .setPrettyPrinting()
                             .create();
             
-            assert gson != null;
-            
             LOGGER.info("Encoding taskList");
             gson.toJson(wrapper, f);
         } catch (IOException e) {
@@ -114,21 +114,17 @@ public class QLStorage {
         } 
     }
     
-    private static class CalendarDeserializer implements JsonDeserializer<Calendar>
+    private static class TaskDeserializer implements JsonDeserializer<Task>
     {
-        public Calendar deserialize(JsonElement json, java.lang.reflect.Type typeOfT,
+        public Task deserialize(JsonElement json, java.lang.reflect.Type typeOfT,
                 JsonDeserializationContext context) throws JsonParseException {
-            JsonObject jobject = json.getAsJsonObject(); 
-            Calendar c = Calendar.getInstance();
-            c.setTimeInMillis(0);
-            c.set(jobject.get("year").getAsInt(), 
-                  jobject.get("month").getAsInt(), 
-                  jobject.get("dayOfMonth").getAsInt(), 
-                  jobject.get("hourOfDay").getAsInt(),
-                  jobject.get("minute").getAsInt(), 
-                  jobject.get("second").getAsInt());
-            c.get(Calendar.YEAR);
-            return c;
+            Gson g = new Gson();
+            Task t = g.fromJson(json, Task.class);
+            JsonObject taskObj = json.getAsJsonObject();
+            if (taskObj.get("_name").isJsonNull()) {
+                t.setName("(No Title)");
+            }
+            return t;
         }
     }
 }

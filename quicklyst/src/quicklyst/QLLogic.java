@@ -2,82 +2,56 @@ package quicklyst;
 
 import java.util.LinkedList;
 import java.util.Scanner;
-import java.util.Stack;
 
 public class QLLogic {
 
-	private static final String MESSAGE_NOTHING_TO_REDO = "Nothing to redo. ";
-	private static final String MESSAGE_NOTHING_TO_UNDO = "Nothing to undo. ";
+	public static LinkedList<Task> _displayList; // TODO change back to private
+	private static LinkedList<Task> _masterList;
+	private static String _filePath;
 
-	public static LinkedList<Task> _workingList; // TODO change back to private
-	private static LinkedList<Task> _workingListMaster;
-	private static Stack<LinkedList<Task>> _undoStack;
-	private static Stack<LinkedList<Task>> _redoStack;
-	private static String _filepath;
+	private static HistoryManager _historyMgnr;
 
 	/** General methods **/
-	public static LinkedList<Task> setup(String fileName) {
-		_filepath = fileName;
-		_undoStack = new Stack<LinkedList<Task>>();
-		_redoStack = new Stack<LinkedList<Task>>();
-		_workingList = QLStorage.loadFile(new LinkedList<Task>(), fileName);
-		_workingListMaster = new LinkedList<Task>();
-		copyList(_workingList, _workingListMaster);
-		_undoStack.push(_workingListMaster);
-		_undoStack.push(_workingList);
-		return _workingList;
+	public static void setup(StringBuilder feedback) {
+		try {
+			_filePath = QLSettings.getInstance().getPrefFilePath();
+			_masterList = QLStorage.loadFile(new LinkedList<Task>(), _filePath);
+		} catch (Error e) {
+			feedback.append("Preferred task file does not exist. " + "Default task file is used. ");
+			_filePath = QLSettings.getInstance().getDefaultFilePath();
+			_masterList = QLStorage.loadFile(new LinkedList<Task>(), _filePath);
+		}
+		_displayList = new LinkedList<Task>();
+		copyList(_masterList, _displayList);
+		_historyMgnr = new HistoryManager(_displayList, _masterList);
 	}
 
 	// Stub
 	public static void setupStub() {
-		_undoStack = new Stack<LinkedList<Task>>();
-		_redoStack = new Stack<LinkedList<Task>>();
-		_workingList = new LinkedList<Task>();
-		_workingListMaster = new LinkedList<Task>();
-		_undoStack.push(new LinkedList<Task>());
-		_undoStack.push(new LinkedList<Task>());
-	}
-
-	// stub
-	private static void printStack(Stack<LinkedList<Task>> stack) {
-		Stack<LinkedList<Task>> buffer = new Stack<LinkedList<Task>>();
-		int stackCount = 0;
-		while (!stack.isEmpty()) {
-			stackCount++;
-			buffer.push(stack.pop());
-			LinkedList<Task> list = buffer.peek();
-			if (stackCount % 2 != 0) {
-				System.out.println("Stack " + stackCount);
-				for (Task task : list) {
-					System.out.println(task.getName());
-				}
-			}
-		}
-
-		while (!buffer.isEmpty()) {
-			stack.push(buffer.pop());
-		}
+		_displayList = new LinkedList<Task>();
+		_masterList = new LinkedList<Task>();
+		_historyMgnr = new HistoryManager(_displayList, _masterList);
 	}
 
 	// Stub
 	public static void displayStub(StringBuilder feedback) {
 		System.out.println("Feedback: " + feedback.toString());
 		System.out.println("Name: start date: due date:");
-		for (int i = 0; i < _workingList.size(); i++) {
-			System.out.print(_workingList.get(i).getName() + " ");
+		for (int i = 0; i < _displayList.size(); i++) {
+			System.out.print(_displayList.get(i).getName() + " ");
 			try {
 				System.out
-						.print(_workingList.get(i).getStartDateTimeString() + " ");
+						.print(_displayList.get(i).getStartDateString() + " ");
 			} catch (NullPointerException e) {
 				System.out.print("        ");
 			}
 			try {
-				System.out.print(_workingList.get(i).getDueDateTimeString() + " ");
+				System.out.print(_displayList.get(i).getDueDateString() + " ");
 			} catch (NullPointerException e) {
 				System.out.print("        ");
 			}
-			if (_workingList.get(i).getPriority() != null) {
-				System.out.print(_workingList.get(i).getPriority() + " ");
+			if (_displayList.get(i).getPriority() != null) {
+				System.out.print(_displayList.get(i).getPriority() + " ");
 			}
 			System.out.println();
 		}
@@ -99,44 +73,139 @@ public class QLLogic {
 		feedback.setLength(0);
 	}
 
-	public static LinkedList<Task> executeCommand(String command,
-			StringBuilder feedback) {
+	public static LinkedList<Task> getDisplayList() {
+		return _displayList;
+	}
+
+	public static LinkedList<Task> getFullList() {
+		return _masterList;
+	}
+
+	public static void executeUndo(StringBuilder feedback) {
+		_historyMgnr.undo(feedback);
+		_displayList = _historyMgnr.getDisplayList();
+		_masterList = _historyMgnr.getMasterList();
+		QLStorage.saveFile(_masterList, _filePath);
+	}
+
+	public static void executeRedo(StringBuilder feedback) {
+		_historyMgnr.redo(feedback);
+		_displayList = _historyMgnr.getDisplayList();
+		_masterList = _historyMgnr.getMasterList();
+		QLStorage.saveFile(_masterList, _filePath);
+	}
+
+	public static void executeCommand(String command, StringBuilder feedback) {
 
 		if (command.trim().equalsIgnoreCase("undo")
 				|| command.trim().equalsIgnoreCase("u")) {
-			undo(feedback);
-			printStack(_undoStack);
-			return _workingList;
+			executeUndo(feedback);
+			return;
 		}
 
 		if (command.trim().equalsIgnoreCase("redo")
 				|| command.trim().equalsIgnoreCase("r")) {
-			redo(feedback);
-			printStack(_undoStack);
-			return _workingList;
+			executeRedo(feedback);
+			return;
 		}
+
+		if (command.split(" ", 2)[0].equalsIgnoreCase("save")
+				|| command.split(" ", 2)[0].equalsIgnoreCase("s")) {
+			executeSave(command, feedback);
+			return;
+		}
+
+		if (command.split(" ", 2)[0].equalsIgnoreCase("load")
+				|| command.split(" ", 2)[0].equalsIgnoreCase("l")) {
+			executeLoad(command, feedback);
+			return;
+		}
+
+		if (command.split(" ", 2)[0].equalsIgnoreCase("cd")
+				|| command.split(" ", 2)[0].equalsIgnoreCase("s")) {
+			executeChangeDir(command, feedback);
+			return;
+		}
+
+		executeAction(command, feedback);
+
+	}
+
+	private static void executeChangeDir(String command, StringBuilder feedback) {
+		String commandAndPath[] = command.split(" ", 2);
+		if (commandAndPath.length == 1 || commandAndPath[1].trim().isEmpty()) {
+			feedback.append("No file path entered. ");
+		} else {
+			String filepath = commandAndPath[1].trim();
+			if (QLStorage.isValidFile(filepath)) {
+				QLSettings.getInstance().updatePrefFilePath(filepath);
+				_filePath = filepath;
+				_masterList = QLStorage.loadFile(new LinkedList<Task>(),
+						filepath);
+				_displayList = new LinkedList<Task>();
+				copyList(_masterList, _displayList);
+				_historyMgnr = new HistoryManager(_displayList, _masterList);
+				feedback.append("Directory changed. You are editing tasks in file: \"" + filepath + "\".");
+			} else {
+				feedback.append("Preferred task file does not exist. "  + "Directory is not changed. ");
+			}
+		}
+	}
+
+	private static void executeAction(String command, StringBuilder feedback) {
 
 		CommandParser cp = new CommandParser(command);
-		
 		feedback.append(cp.getFeedback().toString());
-
 		Action action = cp.getAction();
+
 		if (action == null) {
-			return _workingList;
+			return;
 		}
 
-		action.execute(_workingList, _workingListMaster);
-		
+		action.execute(_displayList, _masterList);
 		feedback.append(action.getFeedback().toString());
-		
-		if(action.isSuccess()) {
-			QLStorage.saveFile(_workingListMaster, _filepath);
-			updateUndoStack();
-		}
-		
-		//printStack(_undoStack);
 
-		return _workingList;
+		if (action.isSuccess()) {
+			QLStorage.saveFile(_masterList, _filePath);
+			if (action.getType() != ActionType.PUSH) {
+				_historyMgnr.updateUndoStack(_displayList, _masterList);
+			}
+		}
+	}
+
+	private static void executeLoad(String command, StringBuilder feedback) {
+		String commandAndPath[] = command.split(" ", 2);
+		if (commandAndPath.length == 1 || commandAndPath[1].trim().isEmpty()) {
+			feedback.append("No file path entered. ");
+		} else {
+			String filepath = commandAndPath[1].trim();
+			try {
+				_displayList = QLStorage.loadFile(new LinkedList<Task>(),
+						filepath);
+				_masterList = new LinkedList<Task>();
+				copyList(_displayList, _masterList);
+				QLStorage.saveFile(_masterList, _filePath);
+				_historyMgnr.updateUndoStack(_displayList, _masterList);
+				feedback.append("Loaded from: \"" + filepath + "\". ");
+			} catch (Error e) {
+				feedback.append(e.getMessage());
+			}
+		}
+	}
+
+	private static void executeSave(String command, StringBuilder feedback) {
+		String commandAndPath[] = command.split(" ", 2);
+		if (commandAndPath.length == 1 || commandAndPath[1].trim().isEmpty()) {
+			feedback.append("No file path entered. ");
+		} else {
+			String filepath = commandAndPath[1].trim();
+			try {
+				QLStorage.saveFile(_masterList, filepath);
+				feedback.append("Saved to: \"" + filepath + "\". ");
+			} catch (Error e) {
+				feedback.append(e.getMessage());
+			}
+		}
 	}
 
 	/** Multi-command methods **/
@@ -146,83 +215,6 @@ public class QLLogic {
 		toList.clear();
 		for (int i = 0; i < fromList.size(); i++)
 			toList.add(fromList.get(i));
-	}
-
-	private static void copyListsForUndoStack(LinkedList<Task> list,
-			LinkedList<Task> listMaster, LinkedList<Task> listNew,
-			LinkedList<Task> listMasterNew) {
-		LinkedList<Integer> indexesInListMasterForRepeatTask = new LinkedList<Integer>();
-		for (int i = 0; i < list.size(); i++) {
-			indexesInListMasterForRepeatTask
-					.add(listMaster.indexOf(list.get(i)));
-		}
-		for (int i = 0; i < listMaster.size(); i++) {
-			listMasterNew.add(listMaster.get(i).clone());
-		}
-		for (int i = 0; i < indexesInListMasterForRepeatTask.size(); i++) {
-			listNew.add(listMasterNew.get(indexesInListMasterForRepeatTask
-					.get(i)));
-		}
-	}
-
-	private static void updateUndoStack() {
-		LinkedList<Task> workingListMaster = new LinkedList<Task>();
-		LinkedList<Task> workingList = new LinkedList<Task>();
-		copyListsForUndoStack(_workingList, _workingListMaster, workingList,
-				workingListMaster);
-
-		_undoStack.push(workingListMaster);
-		_undoStack.push(workingList);
-		_redoStack.clear();
-	}
-
-	private static void undo(StringBuilder feedback) {
-		if (_undoStack.size() == 2) {
-			feedback.append(MESSAGE_NOTHING_TO_UNDO);
-			return;
-		}
-		_redoStack.push(_undoStack.pop());
-		_redoStack.push(_undoStack.pop());
-
-		_workingList = _undoStack.pop();
-		_workingListMaster = _undoStack.pop();
-		LinkedList<Task> updatedWL = new LinkedList<Task>();
-		LinkedList<Task> updatedWLM = new LinkedList<Task>();
-
-		copyListsForUndoStack(_workingList, _workingListMaster, updatedWL,
-				updatedWLM);
-
-		_undoStack.push(_workingListMaster);
-		_undoStack.push(_workingList);
-
-		_workingList = updatedWL;
-		_workingListMaster = updatedWLM;
-
-		QLStorage.saveFile(_workingListMaster, _filepath);
-	}
-
-	private static void redo(StringBuilder feedback) {
-		if (_redoStack.isEmpty()) {
-			feedback.append(MESSAGE_NOTHING_TO_REDO);
-			return;
-		}
-		
-		_workingList = _redoStack.pop();
-		_workingListMaster = _redoStack.pop();
-		
-		LinkedList<Task> updatedWL = new LinkedList<Task>();
-		LinkedList<Task> updatedWLM = new LinkedList<Task>();
-
-		copyListsForUndoStack(_workingList, _workingListMaster, updatedWL,
-				updatedWLM);
-
-		_undoStack.push(_workingListMaster);
-		_undoStack.push(_workingList);
-		
-		_workingList = updatedWL;
-		_workingListMaster = updatedWLM;
-
-		QLStorage.saveFile(_workingListMaster, _filepath);
 	}
 
 	/** Main method **/
