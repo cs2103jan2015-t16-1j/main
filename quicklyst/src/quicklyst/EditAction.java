@@ -150,11 +150,12 @@ public class EditAction extends Action {
 	private boolean calibrateDueDate(Field field, Calendar newDate) {
 		boolean hasDueTime;
 
-		if (field.isTimeParsed() && _task.getDueDate() != null) {
+		if (!field.isDateParsed() && field.isTimeParsed()
+				&& _task.getDueDate() != null) {
 
 			matchTaskDueDate(newDate);
 			hasDueTime = true;
-			
+
 		} else if (!field.isDateParsed() && field.isTimeParsed()
 				&& _task.getStartDate() != null) {
 
@@ -206,8 +207,9 @@ public class EditAction extends Action {
 
 	private boolean calibrateStartDate(Field field, Calendar newDate) {
 		boolean hasStartTime;
-		
-		if (field.isTimeParsed() && _task.getStartDate() != null) {
+
+		if (!field.isDateParsed() && field.isTimeParsed()
+				&& _task.getStartDate() != null) {
 
 			matchTaskStartDate(newDate);
 			hasStartTime = true;

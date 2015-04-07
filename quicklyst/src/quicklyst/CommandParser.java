@@ -331,7 +331,7 @@ public class CommandParser {
 			}
 			_feedback.append("Invalid field format in \"" + wrongFields
 					+ "\". ");
-			fieldsString = fieldsString.replaceFirst(wrongFields, "");
+			fieldsString = fieldsString.replaceFirst(Pattern.quote(wrongFields), "");
 		}
 		return fieldsString;
 	}
