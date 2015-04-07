@@ -13,9 +13,9 @@ public class SortAction extends Action {
 		_fields = new LinkedList<Field>();
 		_fields.add(new Field(FieldType.DUE_DATE, FieldCriteria.ASCEND));
 	}
-	
+
 	public SortAction(LinkedList<Field> fields) {
-		
+
 		this._isSuccess = true;
 		this._feedback = new StringBuilder();
 		this._type = ActionType.SORT;
@@ -26,10 +26,13 @@ public class SortAction extends Action {
 	public void execute(LinkedList<Task> displayList,
 			LinkedList<Task> masterList) {
 		execute(displayList);
+		if (this._isSuccess) {
+			execute(masterList);
+		}
 	}
 
 	private void execute(LinkedList<Task> displayList) {
-		
+
 		if (_fields == null || _fields.isEmpty()) {
 			System.out.println("No field entered. ");
 			this._isSuccess = false;
@@ -120,7 +123,7 @@ public class SortAction extends Action {
 
 	private void sortByPriority(FieldCriteria order,
 			LinkedList<Task> displayList) {
-		
+
 		LinkedList<Task> tasksWithNoPriority = new LinkedList<Task>();
 		for (int i = 0; i < displayList.size(); i++) {
 			if (displayList.get(i).getPriorityInt() == 0) {

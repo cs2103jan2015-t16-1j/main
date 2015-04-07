@@ -6,6 +6,8 @@ import java.util.GregorianCalendar;
 
 public class Task {
 
+	private static final String FORMAT_DATE_NO_TIME = "dd/MM/yyyy";
+	private static final String FORMAT_DATE_WITH_TIME = "dd/MM/yyyy HHmm'H'";
 	private static final String STRING_PRIORITY_HIGH = "H";
 	private static final String STRING_PRIORITY_MEDIUM = "M";
 	private static final String STRING_PRIORITY_LOW = "L";
@@ -171,10 +173,10 @@ public class Task {
 		}
 		
 		if(_hasStartTime) {
-			sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+			sdf = new SimpleDateFormat(FORMAT_DATE_WITH_TIME);
 			return sdf.format(_startDate.getTime());
 		} else {
-			sdf = new SimpleDateFormat("dd/MM/yyyy");
+			sdf = new SimpleDateFormat(FORMAT_DATE_NO_TIME);
 			return sdf.format(_startDate.getTime());
 		}
 	}
@@ -186,10 +188,10 @@ public class Task {
 		}
 		
 		if(_hasDueTime) {
-			sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+			sdf = new SimpleDateFormat(FORMAT_DATE_WITH_TIME);
 			return sdf.format(_dueDate.getTime());
 		} else {
-			sdf = new SimpleDateFormat("dd/MM/yyyy");
+			sdf = new SimpleDateFormat(FORMAT_DATE_NO_TIME);
 			return sdf.format(_dueDate.getTime());
 		}
 	}

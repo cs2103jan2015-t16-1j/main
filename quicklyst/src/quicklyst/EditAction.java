@@ -155,6 +155,11 @@ public class EditAction extends Action {
 			matchTaskStartDate(newDate);
 			hasDueTime = true;
 
+		} else if(field.isTimeParsed() && _task.getDueDate()!= null) {
+			
+			matchTaskDueDate(newDate);
+			hasDueTime = true;
+			
 		} else if (!field.isTimeParsed()) {
 
 			configureToMaxTime(newDate);
@@ -206,6 +211,11 @@ public class EditAction extends Action {
 			matchTaskDueDate(newDate);
 			hasStartTime = true;
 
+		} else if(field.isTimeParsed() && _task.getStartDate()!= null) {
+			
+			matchTaskStartDate(newDate);
+			hasStartTime = true;
+			
 		} else if (!field.isTimeParsed()) {
 
 			configureToMinTime(newDate);
