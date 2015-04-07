@@ -62,7 +62,6 @@ public class HistoryManager {
 		_undoStack.push(workingListMaster);
 		_undoStack.push(workingList);
 		_redoStack.clear();
-		printStack(_undoStack);
 	}
 
 	public void undo(StringBuilder feedback) {
@@ -86,8 +85,7 @@ public class HistoryManager {
 
 		_displayList = updatedWL;
 		_masterList = updatedWLM;
-
-		printStack(_undoStack);
+		
 	}
 
 	public void redo(StringBuilder feedback) {
@@ -110,7 +108,6 @@ public class HistoryManager {
 		_displayList = updatedWL;
 		_masterList = updatedWLM;
 
-		printStack(_redoStack);
 	}
 
 	private void copyListWithClone(LinkedList<Task> subList,
