@@ -3,6 +3,8 @@ package quicklyst;
 import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -381,24 +383,21 @@ public class QLGoogleIntegration {
         t.setDescription(e.getDescription());
         t.setGoogleID(PREFIX_GOOGLEID_CALENDAR + e.getId());
         if (e.getStart().getDateTime() != null) {
-            java.util.Calendar cal = java.util.Calendar.getInstance();
-            cal.setTimeInMillis(e.getStart().getDateTime().getValue());
+            java.util.Calendar cal = dateTimeToCalendar(e.getStart().getDateTime());
             t.setStartDate(cal);
             t.setHasStartTime(true);
         } else if (e.getStart().getDate() != null) {
-            java.util.Calendar cal = java.util.Calendar.getInstance();
-            cal.setTimeInMillis(e.getStart().getDate().getValue());
+            java.util.Calendar cal = dateToCalendar(e.getStart().getDate());
             t.setStartDate(cal);
             t.setHasStartTime(false);
         }
         if (e.getEnd().getDateTime() != null) {
-            java.util.Calendar cal = java.util.Calendar.getInstance();
-            cal.setTimeInMillis(e.getEnd().getDateTime().getValue());
+            java.util.Calendar cal = dateTimeToCalendar(e.getEnd().getDateTime());
             t.setDueDate(cal);
             t.setHasDueTime(true);
         } else if (e.getEnd().getDate() != null) {
-            java.util.Calendar cal = java.util.Calendar.getInstance();
-            cal.setTimeInMillis(e.getEnd().getDate().getValue()-(24*3600000));
+            java.util.Calendar cal = dateToCalendar(e.getEnd().getDate());
+            cal.add(java.util.Calendar.SECOND, -1);
             t.setDueDate(cal);
             t.setHasDueTime(false);
         }
@@ -412,14 +411,20 @@ public class QLGoogleIntegration {
         t.setDescription(gt.getNotes());
         t.setGoogleID(PREFIX_GOOGLEID_TASKS + gt.getId());
         if (gt.getDue() != null) {
-            java.util.Calendar cal = java.util.Calendar.getInstance();
-            cal.setTimeInMillis(gt.getDue().getValue());
+            java.util.Calendar cal = dateToCalendar(gt.getDue());
+            cal.add(java.util.Calendar.DATE, 1);
+            cal.add(java.util.Calendar.SECOND, -1);
             t.setDueDate(cal);
-            if (gt.getDue().isDateOnly()) {
+            t.setHasDueTime(false);
+            /*if (gt.getDue().isDateOnly()) {
+                java.util.Calendar cal = dateToCalendar(gt.getDue());
+                t.setDueDate(cal);
                 t.setHasDueTime(false);
             } else {
+                java.util.Calendar cal = dateTimeToCalendar(gt.getDue());
+                t.setDueDate(cal);
                 t.setHasDueTime(true);
-            }
+            }*/
         }
         if (gt.getCompleted() == null) {
             t.setIsCompleted(false);
@@ -432,39 +437,32 @@ public class QLGoogleIntegration {
     private Event updateGoogleEventWithTask(Event e, Task t) {
         e.setSummary(t.getName());
         e.setDescription(t.getDescription());
-        /*if (t.getHasStartTime()) {
-            DateTime dt = new DateTime(false, t.getStartDate().getTimeInMillis(),  0);
-            e.setStart(new EventDateTime().setDateTime(dt));
-        } else {
-            DateTime dt = new DateTime(true, t.getStartDate().getTimeInMillis(),  0);
-            e.setStart(new EventDateTime().setDate(dt));
-        }
-        if (t.getHasDueTime()) {
-            DateTime dt = new DateTime(false, t.getDueDate().getTimeInMillis(),  0);
-            e.setEnd(new EventDateTime().setDateTime(dt));
-        } else {
-            DateTime dt = new DateTime(true, t.getDueDate().getTimeInMillis(),  0);
-            e.setEnd(new EventDateTime().setDate(dt));
-        }*/
+
         if ((e.getStart() != null) && (e.getStart().getDateTime() != null)) {
-        	DateTime startDT = new DateTime(false, t.getStartDate().getTimeInMillis(), null);
+            DateTime startDT = calendarToDateTime(t.getStartDate());
             e.setStart(new EventDateTime().setDateTime(startDT));
-        	DateTime endDT = new DateTime(false, t.getDueDate().getTimeInMillis(), null);
+            
+            DateTime endDT = calendarToDateTime(t.getDueDate());
             e.setEnd(new EventDateTime().setDateTime(endDT));
         } else if (t.getHasDueTime() != t.getHasStartTime()) {
-        	DateTime startDT = new DateTime(false, t.getStartDate().getTimeInMillis(), null);
+            DateTime startDT = calendarToDateTime(t.getStartDate());
             e.setStart(new EventDateTime().setDateTime(startDT));
-        	DateTime endDT = new DateTime(false, t.getDueDate().getTimeInMillis(), null);
+            
+            DateTime endDT = calendarToDateTime(t.getDueDate());
             e.setEnd(new EventDateTime().setDateTime(endDT));
         } else if (t.getHasStartTime()) {
-        	DateTime startDT = new DateTime(false, t.getStartDate().getTimeInMillis(), null);
+        	DateTime startDT = calendarToDateTime(t.getStartDate());
             e.setStart(new EventDateTime().setDateTime(startDT));
-        	DateTime endDT = new DateTime(false, t.getDueDate().getTimeInMillis(), null);
+            
+        	DateTime endDT = calendarToDateTime(t.getDueDate());
             e.setEnd(new EventDateTime().setDateTime(endDT));
         } else {
-        	DateTime startDT = new DateTime(true, t.getStartDate().getTimeInMillis(), null);
+        	DateTime startDT = calendarToDate(t.getStartDate());
             e.setStart(new EventDateTime().setDate(startDT));
-        	DateTime endDT = new DateTime(true, t.getDueDate().getTimeInMillis()+(24*3600000), null);
+            
+            java.util.Calendar dueCal = (java.util.Calendar)t.getDueDate().clone();
+            dueCal.add(java.util.Calendar.DATE, 1);
+        	DateTime endDT = calendarToDate(dueCal);
             e.setEnd(new EventDateTime().setDate(endDT));
         }
         
@@ -476,7 +474,8 @@ public class QLGoogleIntegration {
         gt.setTitle(t.getName());
         gt.setNotes(t.getDescription());
         if (t.getDueDate() != null) {
-            DateTime dt = new DateTime(false, t.getDueDate().getTimeInMillis(), null);
+            
+            DateTime dt = calendarToDateTime(t.getDueDate());
             gt.setDue(dt);
         }
         if ((t.getIsCompleted()) && (gt.getCompleted() == null)) {
@@ -493,8 +492,9 @@ public class QLGoogleIntegration {
     }
     
     private boolean isEmptyTask(com.google.api.services.tasks.model.Task t) {
-        if ((t.getTitle().isEmpty()) && (t.getDue() == null) && (t.getNotes() == null))
+        if ((t.getTitle().isEmpty()) && (t.getDue() == null) && (t.getNotes() == null)) {
             return true;
+        }
         return false;
     }
     
@@ -505,4 +505,24 @@ public class QLGoogleIntegration {
         return "(No Title)";
     }
     
+    private DateTime calendarToDateTime(java.util.Calendar c) {
+        return new DateTime(false, c.getTimeInMillis(), null);
+    }
+    
+    private DateTime calendarToDate(java.util.Calendar c) {
+        SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd");
+        return DateTime.parseRfc3339(sdf.format(c.getTime()));
+    }
+    
+    private java.util.Calendar dateTimeToCalendar(DateTime dt) {
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.setTimeInMillis(dt.getValue());
+        return cal;
+    }
+    
+    private java.util.Calendar dateToCalendar(DateTime dt) {
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.setTimeInMillis(dt.getValue()-cal.getTimeZone().getRawOffset());
+        return cal;
+    }
 }
