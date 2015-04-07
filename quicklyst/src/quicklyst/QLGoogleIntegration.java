@@ -157,7 +157,7 @@ public class QLGoogleIntegration {
 	        for (com.google.api.services.tasks.model.Task t : tasks) {
 	            Task matchingTask = tasksTask.remove(PREFIX_GOOGLEID_TASKS + t.getId());
 	            if (matchingTask == null) {
-	                if (isMeaningfulTask(t)) {
+	                if (!isEmptyTask(t)) {
 	                    Task newTask = new Task("");
 	                    updateTaskWithGoogleTask(newTask, t);
 	                    taskList.add(newTask);
@@ -239,16 +239,21 @@ public class QLGoogleIntegration {
         Set<String> existingIds = new HashSet<String>();
         Set<String> currentEvents = new HashSet<String>();
         Set<String> currentTasks = new HashSet<String>();
-        for (Event e : events.getItems()) {
-            currentEvents.add(e.getId());
+        if ((events != null) && (events.getItems() != null)) {
+	        for (Event e : events.getItems()) {
+	            currentEvents.add(e.getId());
+	        }
         }
-        
-        for (com.google.api.services.tasks.model.Task t : tasks.getItems()) {
-            currentTasks.add(t.getId());
+        if ((tasks != null) && (tasks.getItems() != null)) {
+        	for (com.google.api.services.tasks.model.Task t : tasks.getItems()) {
+        		currentTasks.add(t.getId());
+        	}
         }
         
         for (Task t : taskList) {
-            existingIds.add(t.getGoogleID().substring(OFFSET_GOOGLEID_PREFIX));
+        	if ((t.getGoogleID() != null) && (!t.getGoogleID().isEmpty())) {
+        		existingIds.add(t.getGoogleID().substring(OFFSET_GOOGLEID_PREFIX));
+        	}
             if (isCalendarEvent(t)) {
                 syncTaskToGoogleCalendar(googleCalendar, googleTasks, calId,
                         taskListId, t, currentEvents);
@@ -265,7 +270,7 @@ public class QLGoogleIntegration {
             googleCalendar.deleteEvent(calId, id);
         }
         for (String id : currentTasks) {
-            googleTasks.deleteTask(calId, id);
+            googleTasks.deleteTask(taskListId, id);
         }
     }
 
@@ -393,7 +398,7 @@ public class QLGoogleIntegration {
             t.setHasDueTime(true);
         } else if (e.getEnd().getDate() != null) {
             java.util.Calendar cal = java.util.Calendar.getInstance();
-            cal.setTimeInMillis(e.getEnd().getDate().getValue());
+            cal.setTimeInMillis(e.getEnd().getDate().getValue()-(24*3600000));
             t.setDueDate(cal);
             t.setHasDueTime(false);
         }
@@ -427,7 +432,7 @@ public class QLGoogleIntegration {
     private Event updateGoogleEventWithTask(Event e, Task t) {
         e.setSummary(t.getName());
         e.setDescription(t.getDescription());
-        if (t.getHasStartTime()) {
+        /*if (t.getHasStartTime()) {
             DateTime dt = new DateTime(false, t.getStartDate().getTimeInMillis(),  0);
             e.setStart(new EventDateTime().setDateTime(dt));
         } else {
@@ -440,7 +445,29 @@ public class QLGoogleIntegration {
         } else {
             DateTime dt = new DateTime(true, t.getDueDate().getTimeInMillis(),  0);
             e.setEnd(new EventDateTime().setDate(dt));
+        }*/
+        if ((e.getStart() != null) && (e.getStart().getDateTime() != null)) {
+        	DateTime startDT = new DateTime(false, t.getStartDate().getTimeInMillis(), null);
+            e.setStart(new EventDateTime().setDateTime(startDT));
+        	DateTime endDT = new DateTime(false, t.getDueDate().getTimeInMillis(), null);
+            e.setEnd(new EventDateTime().setDateTime(endDT));
+        } else if (t.getHasDueTime() != t.getHasStartTime()) {
+        	DateTime startDT = new DateTime(false, t.getStartDate().getTimeInMillis(), null);
+            e.setStart(new EventDateTime().setDateTime(startDT));
+        	DateTime endDT = new DateTime(false, t.getDueDate().getTimeInMillis(), null);
+            e.setEnd(new EventDateTime().setDateTime(endDT));
+        } else if (t.getHasStartTime()) {
+        	DateTime startDT = new DateTime(false, t.getStartDate().getTimeInMillis(), null);
+            e.setStart(new EventDateTime().setDateTime(startDT));
+        	DateTime endDT = new DateTime(false, t.getDueDate().getTimeInMillis(), null);
+            e.setEnd(new EventDateTime().setDateTime(endDT));
+        } else {
+        	DateTime startDT = new DateTime(true, t.getStartDate().getTimeInMillis(), null);
+            e.setStart(new EventDateTime().setDate(startDT));
+        	DateTime endDT = new DateTime(true, t.getDueDate().getTimeInMillis()+(24*3600000), null);
+            e.setEnd(new EventDateTime().setDate(endDT));
         }
+        
         return e;
     }
     
@@ -449,7 +476,7 @@ public class QLGoogleIntegration {
         gt.setTitle(t.getName());
         gt.setNotes(t.getDescription());
         if (t.getDueDate() != null) {
-            DateTime dt = new DateTime(false, t.getDueDate().getTimeInMillis(),  0);
+            DateTime dt = new DateTime(false, t.getDueDate().getTimeInMillis(), null);
             gt.setDue(dt);
         }
         if ((t.getIsCompleted()) && (gt.getCompleted() == null)) {
@@ -465,8 +492,8 @@ public class QLGoogleIntegration {
         return ((t.getStartDate() != null) && (t.getDueDate() != null));
     }
     
-    private boolean isMeaningfulTask(com.google.api.services.tasks.model.Task t) {
-        if ((!t.getTitle().isEmpty()) || (t.getDue() != null) || (t.getNotes() != null))
+    private boolean isEmptyTask(com.google.api.services.tasks.model.Task t) {
+        if ((t.getTitle().isEmpty()) && (t.getDue() == null) && (t.getNotes() == null))
             return true;
         return false;
     }
