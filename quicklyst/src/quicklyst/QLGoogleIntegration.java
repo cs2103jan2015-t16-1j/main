@@ -36,6 +36,9 @@ public class QLGoogleIntegration {
     private static final String PREFIX_GOOGLEID_CALENDAR = "c";
     private static final String USER_ID = "u";
     
+    private static final String STATUS_TASKS_NEEDSACTION = "needsAction";
+    private static final String STATUS_TASKS_COMPLETED = "completed";
+    
     private static final int OFFSET_GOOGLEID_PREFIX = 1;
     
     private static QLGoogleIntegration instance;
@@ -321,7 +324,11 @@ public class QLGoogleIntegration {
             GoogleTaskConn googleTasks, String calId, String taskListId, Task t, Set<String> currentTasks) throws IOException {
         if ((t.getGoogleID() != null) && (!t.getGoogleID().isEmpty())) {
             if (t.getGoogleID().startsWith(PREFIX_GOOGLEID_TASKS)) {
-                updateTaskToGoogleTasks(t, googleTasks, taskListId);
+                if (currentTasks.contains(t.getGoogleID().substring(OFFSET_GOOGLEID_PREFIX))) {
+                    updateTaskToGoogleTasks(t, googleTasks, taskListId);
+                } else {
+                    createNewTaskToGoogleTasks(t, googleTasks, taskListId);
+                }
             } else {
                 changeGoogleCalendarToGoogleTasks(t, googleCalendar, googleTasks, 
                                                  calId, taskListId);
@@ -426,11 +433,10 @@ public class QLGoogleIntegration {
                 t.setHasDueTime(true);
             }*/
         }
-        if (gt.getCompleted() == null) {
-            t.setIsCompleted(false);
-        }
-        else {
+        if (gt.getStatus().equals(STATUS_TASKS_COMPLETED)) {
             t.setIsCompleted(true);
+        } else {
+            t.setIsCompleted(false);
         }
     }
     
@@ -474,15 +480,16 @@ public class QLGoogleIntegration {
         gt.setTitle(t.getName());
         gt.setNotes(t.getDescription());
         if (t.getDueDate() != null) {
-            
             DateTime dt = calendarToDateTime(t.getDueDate());
             gt.setDue(dt);
         }
         if ((t.getIsCompleted()) && (gt.getCompleted() == null)) {
             DateTime dt = new DateTime(new Date());
             gt.setCompleted(dt);
+            gt.setStatus(STATUS_TASKS_COMPLETED);
         } else if (!t.getIsCompleted()) {
             gt.setCompleted(null);
+            gt.setStatus(STATUS_TASKS_NEEDSACTION);
         }
         return gt;
     }
