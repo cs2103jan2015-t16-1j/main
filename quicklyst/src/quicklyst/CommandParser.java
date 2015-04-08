@@ -218,7 +218,7 @@ public class CommandParser {
 
 		if (quoteStart != -1 && quoteEnd == -1) {
 			_feedback
-					.append("Please denote end of task name with the \"\\\" character. ");
+					.append("Please denote end of task name with the \"\\\" character. Unexpected error may occur. ");
 			return null;
 		} else if (quoteStart != -1 && quoteEnd != -1) {
 			_taskName = fieldsString.substring(quoteStart + 1, quoteEnd).trim();
