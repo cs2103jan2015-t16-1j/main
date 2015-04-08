@@ -47,9 +47,6 @@ public class FieldParser {
 			case 's':
 				_fieldType = FieldType.START_DATE;
 				break;
-			case 'r':
-				_fieldType = FieldType.REMINDER;
-				break;
 			case 'l':
 				_fieldType = FieldType.DURATION;
 				break;
@@ -72,8 +69,7 @@ public class FieldParser {
 		if (content.isEmpty()) {
 			return;
 		} else if (_fieldType == FieldType.DUE_DATE
-				|| _fieldType == FieldType.START_DATE
-				|| _fieldType == FieldType.REMINDER) {
+				|| _fieldType == FieldType.START_DATE) {
 
 			switch (_actionType) {
 			case ADD:

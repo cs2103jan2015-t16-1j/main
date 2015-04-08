@@ -18,8 +18,7 @@ public class CommandParser {
 
 	private static final String[][] CONVERSION_TABLE = { { "from", "-s" },
 			{ "start", "-s" }, { "to", "-d" }, { "due", "-d" }, { "by", "-d" },
-			{ "end", "-d" }, { "priority", "-p" }, { "prio", "-p" },
-			{ "remind", "-r" }, { "overdue", "-o" }, { "completed", "-c" },
+			{ "end", "-d" }, { "priority", "-p" }, { "prio", "-p" }, { "overdue", "-o" }, { "completed", "-c" },
 			{ "duration", "-l" }, { "ascend", "a" }, { "descend", "d" },
 			{ "high", "h" }, { "medium", "m" }, { "low", "l" }, { "yes", "y" },
 			{ "no", "n" }, { "before", "bf" }, { "after", "af" },
