@@ -15,6 +15,7 @@ import java.awt.event.KeyListener;
 //import java.awt.event.MouseEvent;
 //import java.awt.event.MouseListener;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
@@ -39,6 +40,8 @@ import javax.swing.Spring;
 import javax.swing.SpringLayout;
 
 //import com.sun.glass.events.KeyEvent;
+
+
 
 
 
@@ -111,59 +114,7 @@ public class QLGUI extends JFrame implements Observer {
     private JLabel _overview;
     private JTextArea _feedback;
     private JTextField _command;
-       
-    class KeyPressed implements KeyListener {
-    
-        Stack<String> _commands;
-        Stack<String> _prevCmd;
-        Stack<String> _nextCmd;
-        
-        public KeyPressed(Stack<String> commands) {
-            this._commands = commands;
-            _nextCmd = new Stack<String>();
-        }
-
-        @Override
-        public void keyTyped(KeyEvent e) {
-            // TODO Auto-generated method stub
-            
-        }
-        @Override
-        public void keyPressed(KeyEvent e) {
-            // TODO Auto-generated method stub
-            int keyCode = e.getKeyCode();
-            switch (keyCode) {
-            case 38:
-                _feedback.append("Up button" + "\r\n");
-                _prevCmd = _commands;
-                if (_prevCmd.size() > 0) {
-                    _feedback.append(_prevCmd.peek());
-                    _command.setText(_prevCmd.peek());
-                    _feedback.append("here" + "\r\n");
-                    _nextCmd.add(_prevCmd.remove(_prevCmd.size()-1));
-                    _feedback.append("there" + "\r\n");
-                }
-                break;
-            case 40:
-                _feedback.append("Down button" + "\r\n");
-                if (_nextCmd.size() > 0) {
-                    _feedback.append(_nextCmd.peek());
-                    _command.setText(_nextCmd.peek());
-                    _nextCmd.remove(_nextCmd.size()-1);
-                }
-                break;
-            default:
-                break;
-            }
-        }
-        @Override
-        public void keyReleased(KeyEvent e) {
-            // TODO Auto-generated method stub
-
-        }
-        
-
-    }
+    private CommandHistory _commandHistory;
     
     public QLGUI() {
         super(MESSAGE_TITLE);
@@ -186,11 +137,12 @@ public class QLGUI extends JFrame implements Observer {
 
         LOGGER.info(MESSAGE_CREATING_COMMAND_TEXT_FIELD);
         //setupCommand();
-        Stack<String> commandlist = setupCommand();
+        setupCommand();
 
         setupHotkeys();
         
-        _command.addKeyListener(new KeyPressed(commandlist));
+        _commandHistory = new CommandHistory();
+        _command.addKeyListener(new CommandKeyListener(_commandHistory, _command));
         
         LOGGER.info(MESSAGE_ADDING_COMPONENTS);
         addComponents(taskListScroll, feedbackScroll, _command, _overviewPane);
@@ -207,7 +159,7 @@ public class QLGUI extends JFrame implements Observer {
         LOGGER.info(MESSAGE_GET_TASK_LIST_FROM_QL_LOGIC);
         QLLogic.setup(new StringBuilder());
         updateUI();
-
+        
     }
 
     private JScrollPane setupTaskListPanel() {
@@ -248,13 +200,11 @@ public class QLGUI extends JFrame implements Observer {
         _command.addActionListener(new CommandListener(_command, this));
     }*/
     
-    private Stack<String> setupCommand() {
+    private void setupCommand() {
         _command = new JTextField();
         LOGGER.info("adding actionListener to command text field");
-        CommandListener c = new CommandListener(_command, this);
+        CommandActionListener c = new CommandActionListener(_command, this);
         _command.addActionListener(c);
-        
-        return c.getCommandList();
     }
     
     private void setupHotkeys() {
@@ -473,6 +423,11 @@ public class QLGUI extends JFrame implements Observer {
 
     public static void main(String[] args) {
         QLGUI g = new QLGUI();
+    }
+
+    public void addCommandToCommandHistory(String command) {
+        // TODO Auto-generated method stub
+        _commandHistory.addCommand(command);
     }
 
 
