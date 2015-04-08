@@ -44,6 +44,8 @@ public class AddAction extends Action {
 				if (!_editAction.isSuccess()) {
 					_defaultSort.execute(displayList, masterList);
 				}
+			} else {
+				_defaultSort.execute(displayList, masterList);
 			}
 		}
 	}

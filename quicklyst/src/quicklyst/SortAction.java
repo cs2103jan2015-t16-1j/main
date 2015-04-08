@@ -12,6 +12,7 @@ public class SortAction extends Action {
 		this._type = ActionType.SORT;
 		_fields = new LinkedList<Field>();
 		_fields.add(new Field(FieldType.DUE_DATE, FieldCriteria.ASCEND));
+		_fields.add(new Field(FieldType.PRIORITY, FieldCriteria.DESCEND));
 	}
 
 	public SortAction(LinkedList<Field> fields) {
@@ -117,8 +118,7 @@ public class SortAction extends Action {
 				break;
 			}
 		}
-		tasksWithNoDuration.addAll(displayList);
-		copyList(tasksWithNoDuration, displayList);
+		displayList.addAll(tasksWithNoDuration);
 	}
 
 	private void sortByPriority(FieldCriteria order,
@@ -164,8 +164,7 @@ public class SortAction extends Action {
 				break;
 			}
 		}
-		tasksWithNoPriority.addAll(displayList);
-		copyList(tasksWithNoPriority, displayList);
+		displayList.addAll(tasksWithNoPriority);
 	}
 
 	private void sortByDueDate(FieldCriteria order, LinkedList<Task> displayList) {
@@ -208,14 +207,6 @@ public class SortAction extends Action {
 				break;
 			}
 		}
-		tasksWithNoDueDate.addAll(displayList);
-		copyList(tasksWithNoDueDate, displayList);
-	}
-
-	private static <E> void copyList(LinkedList<E> fromList,
-			LinkedList<E> toList) {
-		toList.clear();
-		for (int i = 0; i < fromList.size(); i++)
-			toList.add(fromList.get(i));
+		displayList.addAll(tasksWithNoDueDate);
 	}
 }
