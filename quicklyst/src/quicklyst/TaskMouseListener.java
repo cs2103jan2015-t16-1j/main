@@ -11,22 +11,19 @@ import javax.swing.JPanel;
 
 public class TaskMouseListener implements MouseListener {
     private Task _task;
-    private JPanel _panel;
-    private JLabel hover;
+    private JLabel _taskDetailsLabel;
+    private JPanel _overviewPanel;
     
-    public TaskMouseListener (Task task, JPanel panel ) {
-        this._task = task;
-        this._panel = panel; 
+    public TaskMouseListener (Task task, JLabel taskDetailsLabel, JPanel overviewPanel) {
+        _task = task;
+        _taskDetailsLabel = taskDetailsLabel;
+        _overviewPanel = overviewPanel;
     }
     
     public void mouseEntered(MouseEvent m) {
-        hover = new JLabel();
-        _panel.add(hover, BorderLayout.CENTER);
-        hover.setBorder(BorderFactory.createEmptyBorder(3, 3, 3, 3));
-        
         String title = _task.getName(), description, priority;
-        
-        description = getDescription();
+            
+        String displayTime = getTimeString();
         
         if (_task.getPriority() != null) {
             priority = _task.getPriority();
@@ -34,13 +31,16 @@ public class TaskMouseListener implements MouseListener {
             priority = "";
         }
         
-        String displayTime = getTimeString();
+        description = getDescription();
         
-        hover.setText(String.format("<html><u>Task Detail</u><br>"
-                + "Title: %s<br>" + "Description: %s<br>"
-                + "Priority: %s<br>" + "Time: %s<br>", 
-                title, description, priority, displayTime));
-        hover.setOpaque(true);
+        _taskDetailsLabel.setText(String.format("<html><u>Task Detail</u><br>"
+                + "Title: %s<br>" + "Time: %s<br>"
+                + "Priority: %s<br>" + "Description: %s<br>", 
+                title, displayTime, priority, description));
+        
+        _overviewPanel.setLayout(null);
+        _overviewPanel.add(_taskDetailsLabel);
+        _taskDetailsLabel.setLocation(0, -20);
     }
 
     private String getTimeString() {
@@ -100,12 +100,7 @@ public class TaskMouseListener implements MouseListener {
     
     @Override
     public void mouseExited(MouseEvent arg0) {
-        BorderLayout layout = (BorderLayout) _panel.getLayout();
-        while (layout.getLayoutComponent(BorderLayout.CENTER) != null) {
-            _panel.remove(layout.getLayoutComponent(BorderLayout.CENTER));
-        }
-        _panel.revalidate();
-        _panel.repaint();
+        _taskDetailsLabel.setText("");
     }
 
     @Override
