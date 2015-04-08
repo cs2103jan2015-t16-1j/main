@@ -4,6 +4,7 @@ package quicklyst;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -40,6 +41,7 @@ import javax.swing.Spring;
 import javax.swing.SpringLayout;
 
 //import com.sun.glass.events.KeyEvent;
+
 
 
 
@@ -112,6 +114,7 @@ public class QLGUI extends JFrame implements Observer {
     private JPanel _taskList;
     private JPanel _overviewPane;
     private JLabel _overview;
+    private JLabel _taskDetails;
     private JTextArea _feedback;
     private JTextField _command;
     private CommandHistory _commandHistory;
@@ -154,6 +157,7 @@ public class QLGUI extends JFrame implements Observer {
         LOGGER.info(MESSAGE_FINALIZING_GUI);
         setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.setMinimumSize(new Dimension(600, 450));
         setVisible(true);
 
         LOGGER.info(MESSAGE_GET_TASK_LIST_FROM_QL_LOGIC);
@@ -180,6 +184,11 @@ public class QLGUI extends JFrame implements Observer {
         _overview.setBorder(BorderFactory.createEmptyBorder(PADDING_OVERVIEW,
                 PADDING_OVERVIEW, PADDING_OVERVIEW, PADDING_OVERVIEW));
         _overviewPane.add(_overview, BorderLayout.NORTH);
+        
+        _taskDetails = new JLabel();
+        _taskDetails.setBorder(BorderFactory.createEmptyBorder(PADDING_OVERVIEW,
+                PADDING_OVERVIEW, PADDING_OVERVIEW, PADDING_OVERVIEW));
+        _overviewPane.add(_taskDetails, BorderLayout.CENTER);
     }
 
     private JScrollPane setupFeedback() {
@@ -194,12 +203,6 @@ public class QLGUI extends JFrame implements Observer {
         return feedbackScroll;
     }
 
-    /*private void setupCommand() {
-        _command = new JTextField();
-        LOGGER.info("adding actionListener to command text field");
-        _command.addActionListener(new CommandListener(_command, this));
-    }*/
-    
     private void setupCommand() {
         _command = new JTextField();
         LOGGER.info("adding actionListener to command text field");
@@ -250,9 +253,9 @@ public class QLGUI extends JFrame implements Observer {
 
         setConstraintsForCommandTextField(layout, contentPane, commandTextField);
         setConstraintsForTaskListScroll(layout, contentPane, taskListScroll,
-                commandTextField);
+                commandTextField, overviewPane);
         setConstraintsForOverviewPane(layout, contentPane, taskListScroll,
-                overviewPane);
+                overviewPane, feedbackScroll);
         setConstraintsForFeedbackScroll(layout, contentPane, taskListScroll,
                 overviewPane, feedbackScroll);
     }
@@ -269,7 +272,7 @@ public class QLGUI extends JFrame implements Observer {
 
     private void setConstraintsForTaskListScroll(SpringLayout layout,
             Container contentPane, JComponent taskListScroll,
-            JComponent commandTextField) {
+            JComponent commandTextField, JComponent overviewPane) {
         layout.putConstraint(SpringLayout.WEST, taskListScroll,
                 OFFSET_TASKLISTSCROLL_WEST, SpringLayout.WEST, contentPane);
         layout.putConstraint(SpringLayout.NORTH, taskListScroll,
@@ -277,19 +280,21 @@ public class QLGUI extends JFrame implements Observer {
         layout.putConstraint(SpringLayout.SOUTH, taskListScroll,
                 OFFSET_TASKLISTSCROLL_SOUTH, SpringLayout.NORTH,
                 commandTextField);
-        layout.getConstraints(taskListScroll).setWidth(Spring.constant(385));
+        layout.putConstraint(SpringLayout.EAST, taskListScroll,
+                -10, SpringLayout.WEST, overviewPane);
+        layout.getConstraints(taskListScroll).setWidth(Spring.max(Spring.constant(220), layout.getConstraints(taskListScroll).getWidth()));
     }
 
     private void setConstraintsForOverviewPane(SpringLayout layout,
             Container contentPane, JComponent taskListScroll,
-            JComponent overviewPane) {
-        layout.putConstraint(SpringLayout.WEST, overviewPane,
-                OFFSET_OVERVIEWPANE_WEST, SpringLayout.EAST, taskListScroll);
+            JComponent overviewPane, JComponent feedbackScroll) {
         layout.putConstraint(SpringLayout.NORTH, overviewPane,
                 OFFSET_OVERVIEWPANE_NORTH, SpringLayout.NORTH, contentPane);
         layout.putConstraint(SpringLayout.EAST, overviewPane,
                 OFFSET_OVERVIEWPANE_EAST, SpringLayout.EAST, contentPane);
-        layout.getConstraints(overviewPane).setHeight(Spring.constant(220));
+        layout.putConstraint(SpringLayout.SOUTH, overviewPane, -10,
+                SpringLayout.NORTH, feedbackScroll);
+        layout.getConstraints(overviewPane).setWidth(Spring.constant(220));
     }
 
     private void setConstraintsForFeedbackScroll(SpringLayout layout,
@@ -297,15 +302,26 @@ public class QLGUI extends JFrame implements Observer {
             JComponent overviewPane, JComponent feedbackScroll) {
         layout.putConstraint(SpringLayout.WEST, feedbackScroll, OFFSET_FEEDBACKSCROLL_WEST,
                 SpringLayout.EAST, taskListScroll);
-        layout.putConstraint(SpringLayout.NORTH, feedbackScroll, OFFSET_FEEDBACKSCROLL_NORTH,
-                SpringLayout.SOUTH, overviewPane);
         layout.putConstraint(SpringLayout.SOUTH, feedbackScroll, OFFSET_FEEDBACKSCROLL_SOUTH,
                 SpringLayout.SOUTH, taskListScroll);
         layout.putConstraint(SpringLayout.EAST, feedbackScroll, OFFSET_FEEDBACKSCROLL_EAST,
                 SpringLayout.EAST, contentPane);
+        layout.getConstraints(feedbackScroll).setHeight(Spring.constant(100));
     }
     
     private void updateUI() {
+        updateTaskList();
+        
+        // update the overview based on dates
+        updateOverview();
+        clearTaskDetails();
+    }
+
+    private void clearTaskDetails() {
+        _taskDetails.setText("");
+    }
+
+    private void updateTaskList() {
         _taskList.removeAll();
         int taskPosition = STARTING_TASK_POSITION, taskIndex = STARTING_TASK_INDEX;
         String curDate = EMPTY_STRING;
@@ -342,7 +358,7 @@ public class QLGUI extends JFrame implements Observer {
 
             _taskList.add(singleTaskPane, con);
             singleTaskPane.addMouseListener(new TaskMouseListener(task,
-                    _overviewPane));
+                    _taskDetails, _overviewPane));
 
             taskPosition++;
             taskIndex++;
@@ -351,9 +367,6 @@ public class QLGUI extends JFrame implements Observer {
 
         _taskList.revalidate();
         _taskList.repaint();
-
-        // update the overview based on dates
-        updateOverview();
     }
 
     private void updateOverview() {

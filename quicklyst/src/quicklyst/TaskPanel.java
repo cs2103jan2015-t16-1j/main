@@ -154,9 +154,9 @@ public class TaskPanel extends JPanel {
         if ((!start.isEmpty()) && (!due.isEmpty())) {
             date.setText(start + TO + due);
         } else if (!start.isEmpty()) {
-            date.setText(start);
+            date.setText("starts " + start);
         } else if (!due.isEmpty()) {
-            date.setText(due);
+            date.setText("due " + due);
         }
     }
 }
