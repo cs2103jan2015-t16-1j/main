@@ -10,7 +10,6 @@ public class CommandParser {
 
 	private String _taskName;
 	private String _userName;
-	private String _filePath;
 	private int _taskNumber;
 	private ActionType _actionType;
 	private LinkedList<Field> _fields;
@@ -58,9 +57,9 @@ public class CommandParser {
 		case COMPLETE:
 			return new CompleteAction(_taskNumber, _completeYesNo);
 		case PUSH:
-			return new PushAction(_userName);
+			return new PushAction();
 		case PULL:
-			return new PullAction(_userName);
+			return new PullAction();
 		default:
 			return null;
 		}
@@ -109,8 +108,10 @@ public class CommandParser {
 				return;
 			}
 			extractTaskNumber(actionAndContents[1].trim());
+
 			actionAndContents[1] = actionAndContents[1].trim()
 					.replaceFirst(String.valueOf(_taskNumber), "").trim();
+			
 			break;
 		default:
 			break;
@@ -124,6 +125,40 @@ public class CommandParser {
 		String fieldsString = convertToPrim(actionAndContents[1]).trim();
 		System.out.println(fieldsString);
 		determineActionDetails(fieldsString);
+	}
+
+	private String extractFindEditName(String content) {
+		content = content.replaceFirst(
+				"\\b(?i)name\\b", "-n");
+		content = content.replaceFirst(
+				"-n ", "\\\\ ");
+		int start = -1;
+		int end = -1;
+		for(int i = 0; i < content.length(); i++) {
+			if(content.charAt(i) == 92 && start == -1) {
+				start = i;
+			} else if(content.charAt(i) == 92 && start != -1) {
+				end = i;
+				break;
+			}
+		}
+		if(start != -1 && end == -1) {
+			_feedback.append("Please denote end of task name with the \"\\\" character. ");
+			return content.trim();
+		} else if (start != -1 && end != -1) {
+			_taskName = content.substring(start + 1, end).trim();
+			content = content.replaceAll("\\\\", "");
+			/*
+			String front = content.substring(0, start);
+			String back = content.substring(end);
+			content = front + " " + back;
+			*/
+			content = content.replaceFirst(Pattern.quote(_taskName), "");
+			return content.trim();
+		} else {
+			System.out.println("nothing");
+			return content.trim();
+		}
 	}
 
 	private String convertToPrim(String cmdString) {
@@ -220,16 +255,18 @@ public class CommandParser {
 
 			_actionType = ActionType.FIND;
 
-		} 
-		
+		}
+
 		/* sort function removed */
-		/* else if (actionString.equalsIgnoreCase("SORT")
-				|| actionString.equalsIgnoreCase("S")) {
+		/*
+		 * else if (actionString.equalsIgnoreCase("SORT") ||
+		 * actionString.equalsIgnoreCase("S")) {
+		 * 
+		 * _actionType = ActionType.SORT;
+		 * 
+		 * }
+		 */
 
-			_actionType = ActionType.SORT;
-
-		} */
-		
 		else if (actionString.equalsIgnoreCase("COMPLETE")
 				|| actionString.equalsIgnoreCase("C")) {
 
@@ -304,11 +341,6 @@ public class CommandParser {
 			}
 			break;
 
-		case PUSH:
-		case PULL:
-			_userName = fieldsString;
-			break;
-
 		default:
 			break;
 		}
@@ -331,7 +363,8 @@ public class CommandParser {
 			}
 			_feedback.append("Invalid field format in \"" + wrongFields
 					+ "\". ");
-			fieldsString = fieldsString.replaceFirst(Pattern.quote(wrongFields), "");
+			fieldsString = fieldsString.replaceFirst(
+					Pattern.quote(wrongFields), "");
 		}
 		return fieldsString;
 	}
