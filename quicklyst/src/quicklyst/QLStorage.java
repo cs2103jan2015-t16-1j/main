@@ -20,51 +20,54 @@ import com.google.gson.JsonParseException;
 
 public class QLStorage {
     
-    private static final String ERROR_WRITE_FILE = "Error writing file %s";
+	private static final String ERROR_WRITE_FILE = "Error writing file %s";
     private static final String ERROR_READ_FILE = "Error reading file %s";
-    private static final String ERROR_CHECK_FILE = "Error checking file %s";
     private static final String ERROR_UNABLE_READ_FILE = "Unable to read file %s";
+    private static final String ERROR_UNABLE_WRITE_FILE = "Unable to write file %s";
     private static final String ERROR_DIRECTORY = "%s is a directory";
+    private static final String ERROR_UNABLE_MAKE_DIRECTORY = "unable to make directory %s";
+	private static final String ERROR_DIRECTORY_FILE = "%s is a file";
     
-    private final static Logger LOGGER = Logger.getLogger(QLStorage.class.getName()); 
+    private final static Logger LOGGER = Logger.getLogger(QLStorage.class.getName());
     
-    private static class TasksWrapper {
+    private static QLStorage instance;
+    
+    private QLStorage() {
+    }
+    
+    public static QLStorage getInstance() {
+    	if (instance == null) {
+    		instance = new QLStorage(); 
+    	}
+    	return instance;
+    }
+    
+    
+    private class TasksWrapper {
         private ArrayList<Task> tasks;
         public TasksWrapper(List<Task> t) {
             tasks = new ArrayList<Task>(t);
         }
     }
     
-    public static boolean isValidFile(String filePath) {
-        return true;
-    }
-    
-    private static boolean checkFile(String filePath) {
-        File file = null;
-        file = new File(filePath);
-        if (!file.exists()) {
-            LOGGER.info(String.format("%s does not exist", filePath));
-            return false;
-        }
-        if (file.isDirectory()) {
-            LOGGER.warning(String.format("%s points to a directory", filePath));
-            throw new Error(String.format(ERROR_DIRECTORY, filePath));
-        } else if (!file.canRead()) {
-            LOGGER.warning(String.format("%s cannot be read", filePath));
-            throw new Error(String.format(ERROR_UNABLE_READ_FILE, filePath));
-        }
-        return true;
-    }
-    
-    public static <T extends List<Task>> T loadFile(T taskList, String filePath) {
+    public <T extends List<Task>> T loadFile(T taskList, String filePath) {
         assert taskList != null;
         assert taskList.isEmpty();
         assert filePath != null;
         
-        boolean doesFileExist = checkFile(filePath);
-        
-        if (!doesFileExist) {
+        if (!hasFile(filePath)) {
+            LOGGER.info(String.format("%s does not exist", filePath));
             return taskList;
+        }
+        
+        if (isDirectory(filePath)) {
+        	LOGGER.warning(String.format("%s points to a directory", filePath));
+        	throw new Error(ERROR_DIRECTORY);
+        }
+        
+        if (!isReadable(filePath)) {
+        	LOGGER.warning(String.format("%s cannot be read", filePath));
+        	throw new Error(ERROR_UNABLE_READ_FILE);
         }
         
         LOGGER.info(String.format("Reading %s", filePath));
@@ -91,9 +94,16 @@ public class QLStorage {
         }
     }
     
-    public static void saveFile(List<Task> taskList, String filePath) {
+    public void saveFile(List<Task> taskList, String filePath) {
         assert taskList != null;
         assert filePath != null;
+        
+        if (isWritable(filePath)) {
+        	LOGGER.warning(String.format("%s cannot be writen", filePath));
+        	throw new Error(ERROR_UNABLE_WRITE_FILE); 
+        }
+        
+        createDirectories(filePath);
         
         LOGGER.info(String.format("Writing %s", filePath));
         
@@ -114,7 +124,57 @@ public class QLStorage {
         } 
     }
     
-    private static class TaskDeserializer implements JsonDeserializer<Task>
+    public void createDirectories(String filePath) {
+    	int pathSeperatorIndex = 0;
+    	while (filePath.indexOf(File.separator, pathSeperatorIndex) != -1) {
+    		pathSeperatorIndex = filePath.indexOf(File.separator, pathSeperatorIndex) +1;
+    		File directory = new File(filePath.substring(0, pathSeperatorIndex));
+    		
+    		if (directory.exists()) {
+				if (!directory.isDirectory()) {
+					throw new Error(String.format(ERROR_DIRECTORY_FILE, directory.getPath()));
+				}
+    		} else {
+    			LOGGER.info(String.format("creating %s", directory.getPath()));
+    			if (!directory.mkdir()) {
+    				throw new Error(String.format(ERROR_UNABLE_MAKE_DIRECTORY, directory.getPath()));
+    			}
+    			LOGGER.info(String.format("directory %s created", directory.getPath()));
+    		}
+    	}
+    }
+    
+    public boolean isValidFile(String filePath) {
+    	if (!hasFile(filePath)) {
+    		return true;
+    	}
+    	if ((hasFile(filePath)) && (!isDirectory(filePath)) && (isReadable(filePath)) && (isWritable(filePath))) {
+    		return true;
+    	}
+        return false;
+    }
+    
+    private boolean hasFile(String filePath) {
+        File file = new File(filePath);
+        return file.exists();
+    }
+    
+    private boolean isDirectory(String filePath) {
+    	File file = new File(filePath);
+    	return file.isDirectory();
+    }
+    
+    private boolean isReadable(String filePath) {
+    	File file = new File(filePath);
+    	return file.canRead();
+    }
+    
+    private boolean isWritable(String filePath) {
+    	File file = new File(filePath);
+    	return file.canWrite();
+    }
+    
+    private class TaskDeserializer implements JsonDeserializer<Task>
     {
         public Task deserialize(JsonElement json, java.lang.reflect.Type typeOfT,
                 JsonDeserializationContext context) throws JsonParseException {

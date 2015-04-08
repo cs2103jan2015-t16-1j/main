@@ -15,11 +15,11 @@ public class QLLogic {
 	public static void setup(StringBuilder feedback) {
 		try {
 			_filePath = QLSettings.getInstance().getPrefFilePath();
-			_masterList = QLStorage.loadFile(new LinkedList<Task>(), _filePath);
+			_masterList = QLStorage.getInstance().loadFile(new LinkedList<Task>(), _filePath);
 		} catch (Error e) {
 			feedback.append("Preferred task file does not exist. " + "Default task file is used. ");
 			_filePath = QLSettings.getInstance().getDefaultFilePath();
-			_masterList = QLStorage.loadFile(new LinkedList<Task>(), _filePath);
+			_masterList = QLStorage.getInstance().loadFile(new LinkedList<Task>(), _filePath);
 		}
 		_displayList = new LinkedList<Task>();
 		copyList(_masterList, _displayList);
@@ -85,14 +85,14 @@ public class QLLogic {
 		_historyMgnr.undo(feedback);
 		_displayList = _historyMgnr.getDisplayList();
 		_masterList = _historyMgnr.getMasterList();
-		QLStorage.saveFile(_masterList, _filePath);
+		QLStorage.getInstance().saveFile(_masterList, _filePath);
 	}
 
 	public static void executeRedo(StringBuilder feedback) {
 		_historyMgnr.redo(feedback);
 		_displayList = _historyMgnr.getDisplayList();
 		_masterList = _historyMgnr.getMasterList();
-		QLStorage.saveFile(_masterList, _filePath);
+		QLStorage.getInstance().saveFile(_masterList, _filePath);
 	}
 
 	public static void executeCommand(String command, StringBuilder feedback) {
@@ -137,10 +137,10 @@ public class QLLogic {
 			feedback.append("No file path entered. ");
 		} else {
 			String filepath = commandAndPath[1].trim();
-			if (QLStorage.isValidFile(filepath)) {
+			if (QLStorage.getInstance().isValidFile(filepath)) {
 				QLSettings.getInstance().updatePrefFilePath(filepath);
 				_filePath = filepath;
-				_masterList = QLStorage.loadFile(new LinkedList<Task>(),
+				_masterList = QLStorage.getInstance().loadFile(new LinkedList<Task>(),
 						filepath);
 				_displayList = new LinkedList<Task>();
 				copyList(_masterList, _displayList);
@@ -166,7 +166,7 @@ public class QLLogic {
 		feedback.append(action.getFeedback().toString());
 
 		if (action.isSuccess()) {
-			QLStorage.saveFile(_masterList, _filePath);
+			QLStorage.getInstance().saveFile(_masterList, _filePath);
 			if (action.getType() != ActionType.PUSH) {
 				_historyMgnr.updateUndoStack(_displayList, _masterList);
 			}
@@ -180,11 +180,11 @@ public class QLLogic {
 		} else {
 			String filepath = commandAndPath[1].trim();
 			try {
-				_displayList = QLStorage.loadFile(new LinkedList<Task>(),
+				_displayList = QLStorage.getInstance().loadFile(new LinkedList<Task>(),
 						filepath);
 				_masterList = new LinkedList<Task>();
 				copyList(_displayList, _masterList);
-				QLStorage.saveFile(_masterList, _filePath);
+				QLStorage.getInstance().saveFile(_masterList, _filePath);
 				_historyMgnr.updateUndoStack(_displayList, _masterList);
 				feedback.append("Loaded from: \"" + filepath + "\". ");
 			} catch (Error e) {
@@ -200,7 +200,7 @@ public class QLLogic {
 		} else {
 			String filepath = commandAndPath[1].trim();
 			try {
-				QLStorage.saveFile(_masterList, filepath);
+				QLStorage.getInstance().saveFile(_masterList, filepath);
 				feedback.append("Saved to: \"" + filepath + "\". ");
 			} catch (Error e) {
 				feedback.append(e.getMessage());
