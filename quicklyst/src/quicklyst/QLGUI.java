@@ -1,6 +1,7 @@
 package quicklyst;
 
-//import java.awt.AWTKeyStroke;
+import java.text.SimpleDateFormat;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
@@ -8,27 +9,15 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
-//import java.awt.event.ActionListener;
-//import java.awt.event.ActionEvent;
-import java.awt.event.KeyListener;
-//import java.awt.event.MouseEvent;
-//import java.awt.event.MouseListener;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+
 import java.util.Calendar;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.Stack;
+import java.util.logging.Logger;
 
-import javax.swing.AbstractAction;
 import javax.swing.Action;
-//import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
-//import javax.swing.InputMap;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -39,21 +28,6 @@ import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.Spring;
 import javax.swing.SpringLayout;
-
-//import com.sun.glass.events.KeyEvent;
-
-
-
-
-
-
-
-
-
-
-import java.util.logging.Logger;
-
-
 
 public class QLGUI extends JFrame implements Observer { 
     private static final String MESSAGE_TITLE = "Quicklyst";
@@ -96,13 +70,13 @@ public class QLGUI extends JFrame implements Observer {
     private static final int OFFSET_TASKLISTSCROLL_WEST = 10;
     private static final int OFFSET_TASKLISTSCROLL_NORTH = 10;
     private static final int OFFSET_TASKLISTSCROLL_SOUTH = -10;
+    private static final int OFFSET_TASKLISTSCROLL_EAST = -10;
     
-    private static final int OFFSET_OVERVIEWPANE_WEST = 10;
     private static final int OFFSET_OVERVIEWPANE_NORTH = 10;
     private static final int OFFSET_OVERVIEWPANE_EAST = -10;
+    private static final int OFFSET_OVERVIEWPANE_SOUTH = -10;
 
     private static final int OFFSET_FEEDBACKSCROLL_WEST = 10;
-    private static final int OFFSET_FEEDBACKSCROLL_NORTH = 10;
     private static final int OFFSET_FEEDBACKSCROLL_SOUTH = 0;
     private static final int OFFSET_FEEDBACKSCROLL_EAST = -10;
     
@@ -281,7 +255,7 @@ public class QLGUI extends JFrame implements Observer {
                 OFFSET_TASKLISTSCROLL_SOUTH, SpringLayout.NORTH,
                 commandTextField);
         layout.putConstraint(SpringLayout.EAST, taskListScroll,
-                -10, SpringLayout.WEST, overviewPane);
+                OFFSET_TASKLISTSCROLL_EAST, SpringLayout.WEST, overviewPane);
         layout.getConstraints(taskListScroll).setWidth(Spring.max(Spring.constant(220), layout.getConstraints(taskListScroll).getWidth()));
     }
 
@@ -292,7 +266,7 @@ public class QLGUI extends JFrame implements Observer {
                 OFFSET_OVERVIEWPANE_NORTH, SpringLayout.NORTH, contentPane);
         layout.putConstraint(SpringLayout.EAST, overviewPane,
                 OFFSET_OVERVIEWPANE_EAST, SpringLayout.EAST, contentPane);
-        layout.putConstraint(SpringLayout.SOUTH, overviewPane, -10,
+        layout.putConstraint(SpringLayout.SOUTH, overviewPane, OFFSET_OVERVIEWPANE_SOUTH,
                 SpringLayout.NORTH, feedbackScroll);
         layout.getConstraints(overviewPane).setWidth(Spring.constant(220));
     }
@@ -311,8 +285,6 @@ public class QLGUI extends JFrame implements Observer {
     
     private void updateUI() {
         updateTaskList();
-        
-        // update the overview based on dates
         updateOverview();
         clearTaskDetails();
     }
@@ -324,12 +296,15 @@ public class QLGUI extends JFrame implements Observer {
     private void updateTaskList() {
         _taskList.removeAll();
         int taskPosition = STARTING_TASK_POSITION, taskIndex = STARTING_TASK_INDEX;
-        String curDate = EMPTY_STRING;
-        String prevDate = EMPTY_STRING;
+        String currentHeader = EMPTY_STRING;
+        String previousHeader = EMPTY_STRING;
+        Calendar now = Calendar.getInstance();
+        Calendar today = getCalendarToday();
+        Calendar tomorrow = getCalendarOneDayAfter(today); 
+        Calendar twoDaysAfter = getCalendarOneDayAfter(tomorrow);
 
         List<Task> tasks = QLLogic.getDisplayList();
         for (Task task : tasks) {
-
             TaskPanel singleTaskPane = new TaskPanel(task, taskIndex);
 
             GridBagConstraints con = new GridBagConstraints();
@@ -343,14 +318,23 @@ public class QLGUI extends JFrame implements Observer {
 
             SimpleDateFormat sdf = new SimpleDateFormat("dd/M/yyyy");
             if (task.getDueDate() != null) {
-                curDate = sdf.format(task.getDueDate().getTime());
+                //curDate = sdf.format(task.getDueDate().getTime());
+                if (task.getDueDate().compareTo(now) < 0) {
+                    currentHeader = "Overdue";
+                } else if (task.getDueDate().compareTo(tomorrow) < 0) {
+                    currentHeader = "Today";
+                } else if (task.getDueDate().compareTo(twoDaysAfter) < 0) {
+                    currentHeader = "Tomorrow";
+                } else {
+                    currentHeader = "Others";
+                }
             } else {
-                curDate = MESSAGE_NO_DUE_DATE;
+                currentHeader = MESSAGE_NO_DUE_DATE;
             }
 
-            if (!curDate.equals(prevDate)) {
+            if (!currentHeader.equals(previousHeader)) {
 
-                JLabel dateLabel = new JLabel(curDate);
+                JLabel dateLabel = new JLabel(currentHeader);
                 _taskList.add(dateLabel, con);
                 taskPosition++;
                 con.gridy = taskPosition - 1;
@@ -362,7 +346,7 @@ public class QLGUI extends JFrame implements Observer {
 
             taskPosition++;
             taskIndex++;
-            prevDate = curDate;
+            previousHeader = currentHeader;
         }
 
         _taskList.revalidate();
@@ -371,9 +355,9 @@ public class QLGUI extends JFrame implements Observer {
 
     private void updateOverview() {
         Calendar now = Calendar.getInstance();
-        Calendar today = setCalendarToday(now);
-        Calendar tomorrow = setCalendarTomorrow(today); 
-        Calendar twoDaysAfter = setCalendarTomorrow(tomorrow);
+        Calendar today = getCalendarToday();
+        Calendar tomorrow = getCalendarOneDayAfter(today); 
+        Calendar twoDaysAfter = getCalendarOneDayAfter(tomorrow);
 
         int dueToday = 0, dueTomorrow = 0, overdue = 0, completed = 0;
         List<Task> allTasks = QLLogic.getFullList();
@@ -404,8 +388,8 @@ public class QLGUI extends JFrame implements Observer {
                                         dueTomorrow, overdue, completed));
     }
 
-    private Calendar setCalendarToday(Calendar now) {
-        Calendar today = (Calendar) now.clone();
+    private Calendar getCalendarToday() {
+        Calendar today = Calendar.getInstance();
         today.set(Calendar.HOUR_OF_DAY, 0);
         today.set(Calendar.MINUTE, 0);
         today.set(Calendar.SECOND, 0);
@@ -413,9 +397,9 @@ public class QLGUI extends JFrame implements Observer {
         return today;
     }
     
-    private Calendar setCalendarTomorrow(Calendar today) {
-        Calendar tomorrow = (Calendar) today.clone();
-        tomorrow.add(Calendar.DAY_OF_MONTH, 1);
+    private Calendar getCalendarOneDayAfter(Calendar day) {
+        Calendar tomorrow = (Calendar) day.clone();
+        tomorrow.add(Calendar.DATE, 1);
         return tomorrow;
     }
 
