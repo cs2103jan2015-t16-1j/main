@@ -11,11 +11,13 @@ public class FindAction extends Action {
 	private LinkedList<Field> _fields;
 	private boolean _findAll;
 	private int _failCount;
+	private String _taskName; 
 
-	public FindAction(LinkedList<Field> fields, boolean findAll) {
+	public FindAction(LinkedList<Field> fields, boolean findAll, String taskName) {
 		this._isSuccess = false;
 		this._feedback = new StringBuilder();
 		this._type = ActionType.FIND;
+		_taskName = taskName;
 		_findAll = findAll;
 		_fields = fields;
 		_failCount = 0;
@@ -31,13 +33,21 @@ public class FindAction extends Action {
 			return;
 		}
 
-		if (_fields == null || _fields.isEmpty()) {
+		if (_taskName == null && (_fields == null || _fields.isEmpty())) {
 			System.out.println("No field entered. ");
 			return;
 		}
 
 		LinkedList<Task> bufferList = new LinkedList<Task>();
 		copyList(masterList, bufferList);
+		
+		if(_taskName != null) {
+			filterByName(_taskName, bufferList);
+			if (bufferList.isEmpty()) {
+				this._feedback.append("No matches found. ");
+				return;
+			}
+		}
 
 		for (Field field : _fields) {
 			filterdisplayList(field, bufferList);
@@ -46,8 +56,10 @@ public class FindAction extends Action {
 				return;
 			}
 		}
+		
+		int totalUpdateSize = (_taskName == null) ? _fields.size() : _fields.size() + 1;
 
-		if (_failCount == _fields.size()) {
+		if (_failCount == totalUpdateSize) {
 			this._feedback.append("No matches found. ");
 			return;
 		} else {
@@ -83,10 +95,6 @@ public class FindAction extends Action {
 		case OVERDUE:
 			FieldCriteria yesNoO = field.getCriteria();
 			filterByOverdueStatus(yesNoO, displayList);
-			break;
-		case TASK_NAME:
-			String taskName = field.getTaskName();
-			filterByName(taskName, displayList);
 			break;
 		default:
 			_feedback.append("Invalid field. ");

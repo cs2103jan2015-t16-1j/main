@@ -10,12 +10,14 @@ public class EditAction extends Action {
 	private LinkedList<Field> _fields;
 	private Task _task;
 	private SortAction _defaultSort;
+	private String _taskName;
 
-	public EditAction(int taskNumber, LinkedList<Field> fields) {
+	public EditAction(int taskNumber, LinkedList<Field> fields, String taskName) {
 
 		this._isSuccess = false;
 		this._feedback = new StringBuilder();
 		this._type = ActionType.EDIT;
+		_taskName = taskName;
 		_defaultSort = new SortAction();
 
 		if (taskNumber != 0) {
@@ -27,6 +29,7 @@ public class EditAction extends Action {
 		_fields = fields;
 	}
 
+	/* For add action */
 	public EditAction(Task task, LinkedList<Field> fields) {
 
 		this._isSuccess = false;
@@ -59,12 +62,13 @@ public class EditAction extends Action {
 	}
 
 	private void execute() {
+		if (_taskName != null) {
+			updateTaskName();
+		}
+
 		for (Field field : _fields) {
 			FieldType fieldType = field.getFieldType();
 			switch (fieldType) {
-			case TASK_NAME:
-				updateTaskName(field);
-				break;
 			case START_DATE:
 				updateStartDate(field);
 				/*
@@ -81,13 +85,6 @@ public class EditAction extends Action {
 				 */
 				break;
 
-			case REMINDER:
-				/*
-				 * not implemented yet _task.setReminder(field.getDate());
-				 * this._feedback.append("Reminder set to " +
-				 * _task.getReminderDateString() + ". ");
-				 */
-				break;
 			case PRIORITY:
 				updatePriority(field);
 				break;
@@ -110,10 +107,9 @@ public class EditAction extends Action {
 		}
 	}
 
-	private void updateTaskName(Field field) {
-		_task.setName(field.getTaskName());
-		this._feedback.append("Task name set to \"" + field.getTaskName()
-				+ "\". ");
+	private void updateTaskName() {
+		_task.setName(_taskName);
+		this._feedback.append("Task name set to \"" + _taskName + "\". ");
 		this._isSuccess = true;
 	}
 

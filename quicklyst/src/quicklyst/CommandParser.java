@@ -9,7 +9,6 @@ public class CommandParser {
 	private StringBuilder _feedback;
 
 	private String _taskName;
-	private String _userName;
 	private int _taskNumber;
 	private ActionType _actionType;
 	private LinkedList<Field> _fields;
@@ -17,20 +16,20 @@ public class CommandParser {
 	private Boolean _completeYesNo;
 	private boolean _all;
 
-	private static final String[][] CONVERSION_TABLE = { { "name", "-n" },
-			{ "from", "-s" }, { "start", "-s" }, { "to", "-d" },
-			{ "due", "-d" }, { "by", "-d" }, { "end", "-d" },
-			{ "priority", "-p" }, { "prio", "-p" }, { "remind", "-r" },
-			{ "overdue", "-o" }, { "completed", "-c" }, { "duration", "-l" },
-			{ "ascend", "a" }, { "descend", "d" }, { "high", "h" },
-			{ "medium", "m" }, { "low", "l" }, { "yes", "y" }, { "no", "n" },
-			{ "before", "bf" }, { "after", "af" }, { "on", "on" },
-			{ "between", "btw" }, { "and", "&" }, { "today", "tdy" },
-			{ "tomorrow", "tmr" } };
+	private static final String[][] CONVERSION_TABLE = { { "from", "-s" },
+			{ "start", "-s" }, { "to", "-d" }, { "due", "-d" }, { "by", "-d" },
+			{ "end", "-d" }, { "priority", "-p" }, { "prio", "-p" },
+			{ "remind", "-r" }, { "overdue", "-o" }, { "completed", "-c" },
+			{ "duration", "-l" }, { "ascend", "a" }, { "descend", "d" },
+			{ "high", "h" }, { "medium", "m" }, { "low", "l" }, { "yes", "y" },
+			{ "no", "n" }, { "before", "bf" }, { "after", "af" },
+			{ "on", "on" }, { "between", "btw" }, { "and", "&" },
+			{ "today", "tdy" }, { "tomorrow", "tmr" } };
 
 	public CommandParser(String command) {
 		_feedback = new StringBuilder();
 		_fields = new LinkedList<Field>();
+		command = command.trim();
 		processCmdString(command);
 	}
 
@@ -49,11 +48,11 @@ public class CommandParser {
 		case DELETE:
 			return new DeleteAction(_taskNumber);
 		case EDIT:
-			return new EditAction(_taskNumber, _fields);
+			return new EditAction(_taskNumber, _fields, _taskName);
 		case SORT:
 			return new SortAction(_fields);
 		case FIND:
-			return new FindAction(_fields, _all);
+			return new FindAction(_fields, _all, _taskName);
 		case COMPLETE:
 			return new CompleteAction(_taskNumber, _completeYesNo);
 		case PUSH:
@@ -112,6 +111,22 @@ public class CommandParser {
 			actionAndContents[1] = actionAndContents[1].trim()
 					.replaceFirst(String.valueOf(_taskNumber), "").trim();
 			
+			if(_actionType == ActionType.EDIT) {
+				String commandWithNoName = extractFindEditName(actionAndContents[1]);
+				if (commandWithNoName != null) {
+					actionAndContents[1] = commandWithNoName;
+				}
+			}
+
+			break;
+		case FIND:
+			if (actionAndContents.length == 1) {
+				return;
+			}
+			String commandWithNoName = extractFindEditName(actionAndContents[1]);
+			if (commandWithNoName != null) {
+				actionAndContents[1] = commandWithNoName;
+			}
 			break;
 		default:
 			break;
@@ -125,40 +140,6 @@ public class CommandParser {
 		String fieldsString = convertToPrim(actionAndContents[1]).trim();
 		System.out.println(fieldsString);
 		determineActionDetails(fieldsString);
-	}
-
-	private String extractFindEditName(String content) {
-		content = content.replaceFirst(
-				"\\b(?i)name\\b", "-n");
-		content = content.replaceFirst(
-				"-n ", "\\\\ ");
-		int start = -1;
-		int end = -1;
-		for(int i = 0; i < content.length(); i++) {
-			if(content.charAt(i) == 92 && start == -1) {
-				start = i;
-			} else if(content.charAt(i) == 92 && start != -1) {
-				end = i;
-				break;
-			}
-		}
-		if(start != -1 && end == -1) {
-			_feedback.append("Please denote end of task name with the \"\\\" character. ");
-			return content.trim();
-		} else if (start != -1 && end != -1) {
-			_taskName = content.substring(start + 1, end).trim();
-			content = content.replaceAll("\\\\", "");
-			/*
-			String front = content.substring(0, start);
-			String back = content.substring(end);
-			content = front + " " + back;
-			*/
-			content = content.replaceFirst(Pattern.quote(_taskName), "");
-			return content.trim();
-		} else {
-			System.out.println("nothing");
-			return content.trim();
-		}
 	}
 
 	private String convertToPrim(String cmdString) {
@@ -206,30 +187,52 @@ public class CommandParser {
 		}
 	}
 
-	private void extractTaskNameWithQuotes(String fieldsString) {
+	private String extractFindEditName(String content) {
+		content = content.replaceFirst("\\b(?i)name\\b", "-n");
+		int initLength = content.length();
+		content = content.replaceFirst("-n", "\\\\");
+		int endLength = content.length();
+		if (initLength == endLength) {
+			return null;
+		}
+
+		return extractTaskNameWithBackSlash(content);
+	}
+
+	private String extractTaskNameWithBackSlash(String fieldsString) {
 		int quoteStart = -1, quoteEnd = -1;
 		int i, j;
 		for (i = 0; i < fieldsString.length(); i++) {
-			if (fieldsString.charAt(i) == 34) {
+			if (fieldsString.charAt(i) == 92) {
 				quoteStart = i;
 				break;
 			}
 		}
 
 		for (j = fieldsString.length() - 1; j >= 0 && j > i; j--) {
-			if (fieldsString.charAt(j) == 34) {
+			if (fieldsString.charAt(j) == 92) {
 				quoteEnd = j;
 				break;
 			}
 		}
 
-		System.out.println(quoteStart + " " + quoteEnd);
-
-		if (quoteStart == -1 || quoteEnd == -1) {
-			_feedback.append("Please enclose task name with \" \". ");
-			return;
+		if (quoteStart != -1 && quoteEnd == -1) {
+			_feedback
+					.append("Please denote end of task name with the \"\\\" character. ");
+			return null;
+		} else if (quoteStart != -1 && quoteEnd != -1) {
+			_taskName = fieldsString.substring(quoteStart + 1, quoteEnd).trim();
+			String front = fieldsString.substring(0, quoteStart).trim();
+			String back;
+			if (quoteEnd == fieldsString.length() - 1) {
+				back = "";
+			} else {
+				back = fieldsString.substring(quoteEnd + 1).trim();
+			}
+			String contentWithoutName = front + " " + back;
+			return contentWithoutName;
 		} else {
-			_taskName = fieldsString.substring(quoteStart + 1, quoteEnd);
+			return null;
 		}
 	}
 

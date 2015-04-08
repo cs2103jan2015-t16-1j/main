@@ -56,9 +56,6 @@ public class FieldParser {
 			case 'p':
 				_fieldType = FieldType.PRIORITY;
 				break;
-			case 'n':
-				_fieldType = FieldType.TASK_NAME;
-				break;
 			case 'c':
 				_fieldType = FieldType.COMPLETED;
 				break;
@@ -74,10 +71,6 @@ public class FieldParser {
 	private void determineContent(String content) {
 		if (content.isEmpty()) {
 			return;
-		} else if (_fieldType == FieldType.TASK_NAME) {
-
-			_fieldContent = content.replaceAll(Pattern.quote("\\"), "");
-
 		} else if (_fieldType == FieldType.DUE_DATE
 				|| _fieldType == FieldType.START_DATE
 				|| _fieldType == FieldType.REMINDER) {
