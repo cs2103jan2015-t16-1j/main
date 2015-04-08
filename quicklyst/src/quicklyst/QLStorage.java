@@ -6,7 +6,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -53,16 +52,16 @@ public class QLStorage {
 	private final static Logger LOGGER = Logger.getLogger(QLStorage.class
 			.getName());
 
-	private static QLStorage instance;
+	private static QLStorage _instance;
 
 	private QLStorage() {
 	}
 
 	public static QLStorage getInstance() {
-		if (instance == null) {
-			instance = new QLStorage();
+		if (_instance == null) {
+			_instance = new QLStorage();
 		}
-		return instance;
+		return _instance;
 	}
 
 	public boolean isValidFile(String filePath) {
