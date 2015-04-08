@@ -98,12 +98,12 @@ public class QLStorage {
         assert taskList != null;
         assert filePath != null;
         
-        if (isWritable(filePath)) {
+        if ((hasFile(filePath)) && (!isWritable(filePath))) {
         	LOGGER.warning(String.format("%s cannot be writen", filePath));
         	throw new Error(ERROR_UNABLE_WRITE_FILE); 
         }
         
-        createDirectories(filePath);
+        createNecessaryDirectories(filePath);
         
         LOGGER.info(String.format("Writing %s", filePath));
         
@@ -121,10 +121,10 @@ public class QLStorage {
         } catch (IOException e) {
             LOGGER.severe("IOException was thrown");
             throw new Error(String.format(ERROR_WRITE_FILE, filePath));
-        } 
+        }
     }
     
-    public void createDirectories(String filePath) {
+    public void createNecessaryDirectories(String filePath) {
     	int pathSeperatorIndex = 0;
     	while (filePath.indexOf(File.separator, pathSeperatorIndex) != -1) {
     		pathSeperatorIndex = filePath.indexOf(File.separator, pathSeperatorIndex) +1;
@@ -132,6 +132,7 @@ public class QLStorage {
     		
     		if (directory.exists()) {
 				if (!directory.isDirectory()) {
+					LOGGER.warning(String.format("%s is a file", directory.getPath()));
 					throw new Error(String.format(ERROR_DIRECTORY_FILE, directory.getPath()));
 				}
     		} else {
