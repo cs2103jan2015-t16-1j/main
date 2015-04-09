@@ -1,0 +1,40 @@
+ADD:
+name + \
+start/from + date/time
+to/due/end + date/time
+priority + low/medium/high
+
+EDIT:
+item # +
+name + new name + \
+start/from + new date/time 
+to/due/end + new date/time
+priority + low/medium/high
+
+FIND:
+name + name + \
+start/from + on/after/before/between + date/time 
+to/due/end + on/after/before/between + date/time
+priority + low/medium/high
+overdue + yes/no
+completed + yes/no
+
+COMPLETE:
+item # + 
+yes/no
+
+DELETE:
+item #
+
+LOAD:
+file name
+
+SAVE:
+file name
+
+CD:
+file name
+
+PUSH:
+
+PULL:
