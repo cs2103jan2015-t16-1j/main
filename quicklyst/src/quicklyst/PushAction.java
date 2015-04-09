@@ -2,7 +2,7 @@ package quicklyst;
 
 import java.util.LinkedList;
 
-public class PushAction extends SyncAction {
+public class PushAction extends Action {
 
 	public PushAction() {
 		setSuccess(false);
