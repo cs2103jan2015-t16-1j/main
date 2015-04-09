@@ -27,7 +27,7 @@ public class CommandParser {
 			{ "between", "btw" }, { "and", "&" }, { "today", "tdy" },
 			{ "tomorrow", "tmr" }, { "monday", "mon" }, { "tuesday", "tue" },
 			{ "wednesday", "wed" }, { "thursday", "thu" }, { "friday", "fri" },
-			{ "saturday", "sat" }, { "sunday", "sun" } };
+			{ "saturday", "sat" }, { "sunday", "sun" }};
 
 	public CommandParser(String command) {
 		_feedback = new StringBuilder();
@@ -149,7 +149,7 @@ public class CommandParser {
 		for (String[] conversion : CONVERSION_TABLE) {
 			String natForm = conversion[0];
 			String primForm = conversion[1];
-			cmdString = cmdString.replaceFirst(
+			cmdString = cmdString.replaceAll(
 					"\\b" + "(?i)" + natForm + "\\b", primForm);
 		}
 		return cmdString;

@@ -72,6 +72,7 @@ public class DateParser {
 					parseDay(day, true);
 					parseTime(time);
 				} else {
+					_dateTime = null;
 					_feedback.append("Invalid day criteria \""
 							+ dayAndTime[0].trim() + "\". ");
 				}
@@ -80,7 +81,7 @@ public class DateParser {
 				time = dayAndTime[1];
 				parseDay(day, false);
 				parseTime(time);
-			} 
+			}
 
 		} else if (dateTimeStr.contains(":")) {
 
@@ -100,6 +101,7 @@ public class DateParser {
 					day = nextAndDay[1];
 					parseDay(day, true);
 				} else {
+					_dateTime = null;
 					_feedback.append("Invalid day criteria \""
 							+ nextAndDay[0].trim() + "\". ");
 				}
@@ -152,14 +154,16 @@ public class DateParser {
 			return;
 		}
 
-		_dateTime
-				.set(Calendar.HOUR_OF_DAY, timeOfDay.get(Calendar.HOUR_OF_DAY));
-		_dateTime.set(Calendar.MINUTE, timeOfDay.get(Calendar.MINUTE));
+		if (_dateTime != null) {
+			_dateTime.set(Calendar.HOUR_OF_DAY,
+					timeOfDay.get(Calendar.HOUR_OF_DAY));
+			_dateTime.set(Calendar.MINUTE, timeOfDay.get(Calendar.MINUTE));
 
-		if (!_dateParsed) {
-			Calendar now = new GregorianCalendar();
-			if (_dateTime.getTimeInMillis() < now.getTimeInMillis()) {
-				_dateTime.add(Calendar.DAY_OF_MONTH, 1);
+			if (!_dateParsed) {
+				Calendar now = new GregorianCalendar();
+				if (_dateTime.getTimeInMillis() < now.getTimeInMillis()) {
+					_dateTime.add(Calendar.DAY_OF_MONTH, 1);
+				}
 			}
 		}
 	}
@@ -192,10 +196,12 @@ public class DateParser {
 
 			if (isNextWeek) {
 				boolean weekCrossed = false;
+				int prevDay = _dateTime.get(Calendar.DAY_OF_WEEK);
 				while (dayOfWeekInt != _dateTime.get(Calendar.DAY_OF_WEEK)
-						&& !weekCrossed) {
+						|| !weekCrossed) {
 					_dateTime.add(Calendar.DAY_OF_MONTH, 1);
-					if (_dateTime.get(Calendar.DAY_OF_WEEK) < dayOfWeekInt) {
+					if (!weekCrossed
+							&& _dateTime.get(Calendar.DAY_OF_WEEK) <= prevDay) {
 						weekCrossed = true;
 					}
 				}
