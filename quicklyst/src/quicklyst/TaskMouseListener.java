@@ -6,39 +6,65 @@ import java.text.SimpleDateFormat;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextArea;
 
 public class TaskMouseListener implements MouseListener {
     private Task _task;
-    private JLabel _taskDetailsLabel;
-    private JPanel _overviewPanel;
+    private JTextArea _taskDetails;
     
-    public TaskMouseListener (Task task, JLabel taskDetailsLabel, JPanel overviewPanel) {
+    public TaskMouseListener (Task task, JTextArea taskDetails) {
         _task = task;
-        _taskDetailsLabel = taskDetailsLabel;
-        _overviewPanel = overviewPanel;
+        _taskDetails = taskDetails;
     }
     
     public void mouseEntered(MouseEvent m) {
-        String title = _task.getName(), description, priority;
+        String title = _task.getName();
             
         String displayTime = getTimeString();
         
+        String priority = getPriority();
+        
+        String description = getDescription();
+        
+        StringBuilder details = new StringBuilder();
+        details.append(String.format("Title:\r\n%s\r\n", title));
+        
+        if (!displayTime.isEmpty()) {
+            details.append(String.format("Time:\r\n%s\r\n", displayTime));
+        }
+        
+        if (!priority.isEmpty()) {
+            details.append(String.format("Priority:\r\n%s\r\n", priority));
+        }
+        
+        if (!description.isEmpty()) {
+            details.append(String.format("Description:\r\n%s\r\n", description));
+        }
+        
+        _taskDetails.setText(details.toString());
+    }
+
+    private String getPriority() {
+        String priority;
         if (_task.getPriority() != null) {
-            priority = _task.getPriority();
+            switch (_task.getPriority()) {
+            case "H":
+                priority = "HIGH";
+                break;
+            case "M":
+                priority = "MEDIUM";
+                break;
+            case "L":
+                priority = "LOW";
+                break;
+            default:
+                priority = "";
+            }
+             
         } else {
             priority = "";
         }
-        
-        description = getDescription();
-        
-        _taskDetailsLabel.setText(String.format("<html><u>Task Detail</u><br>"
-                + "Title: %s<br>" + "Time: %s<br>"
-                + "Priority: %s<br>" + "Description: %s<br>", 
-                title, displayTime, priority, description));
-        
-        _overviewPanel.setLayout(null);
-        _overviewPanel.add(_taskDetailsLabel);
-        _taskDetailsLabel.setLocation(0, -20);
+        return priority;
     }
 
     private String getTimeString() {
@@ -98,7 +124,7 @@ public class TaskMouseListener implements MouseListener {
     
     @Override
     public void mouseExited(MouseEvent arg0) {
-        _taskDetailsLabel.setText("");
+        //_taskDetails.setText("");
     }
 
     @Override

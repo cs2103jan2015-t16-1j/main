@@ -4,12 +4,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CommandHistory {
+    private static CommandHistory _instance;
+    
     private List<String> _commands;
     private int _currentIndex;
     
-    public CommandHistory() {
+    private CommandHistory() {
         _commands = new ArrayList<String>();
         _currentIndex = 0;
+    }
+    
+    public static CommandHistory getInstance() {
+        if (_instance == null) {
+            _instance = new CommandHistory();
+        }
+        return _instance;
     }
     
     public String getPreviousCommand() {
