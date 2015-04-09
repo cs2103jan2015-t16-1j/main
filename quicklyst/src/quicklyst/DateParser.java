@@ -30,7 +30,7 @@ public class DateParser {
 	}
 
 	private void parseDateTime(String dateTimeStr) {
-		
+
 		if (dateTimeStr.contains(":") && dateTimeStr.contains("/")) {
 
 			try {
@@ -61,11 +61,26 @@ public class DateParser {
 
 		} else if (dateTimeStr.contains(":") && dateTimeStr.contains(" ")) {
 
-			String[] dayAndTime = dateTimeStr.split(" ", 2);
-			String day = dayAndTime[0];
-			String time = dayAndTime[1];
-			parseDay(day);
-			parseTime(time);
+			String[] dayAndTime = dateTimeStr.split(" ", 3);
+			String day;
+			String time;
+
+			if (dayAndTime.length == 3) {
+				if (dayAndTime[0].trim().equalsIgnoreCase("next")) {
+					day = dayAndTime[1];
+					time = dayAndTime[2];
+					parseDay(day, true);
+					parseTime(time);
+				} else {
+					_feedback.append("Invalid day criteria \""
+							+ dayAndTime[0].trim() + "\". ");
+				}
+			} else if (dayAndTime.length == 2) {
+				day = dayAndTime[0];
+				time = dayAndTime[1];
+				parseDay(day, false);
+				parseTime(time);
+			} 
 
 		} else if (dateTimeStr.contains(":")) {
 
@@ -77,7 +92,21 @@ public class DateParser {
 
 		} else {
 
-			parseDay(dateTimeStr);
+			String nextAndDay[] = dateTimeStr.split(" ", 2);
+			String day;
+
+			if (nextAndDay.length == 2) {
+				if (nextAndDay[0].trim().equalsIgnoreCase("next")) {
+					day = nextAndDay[1];
+					parseDay(day, true);
+				} else {
+					_feedback.append("Invalid day criteria \""
+							+ nextAndDay[0].trim() + "\". ");
+				}
+			} else if (nextAndDay.length == 1) {
+				day = nextAndDay[0];
+				parseDay(day, false);
+			}
 		}
 	}
 
@@ -135,7 +164,7 @@ public class DateParser {
 		}
 	}
 
-	private void parseDay(String dayStr) {
+	private void parseDay(String dayStr, boolean isNextWeek) {
 
 		if (dayStr.equalsIgnoreCase("tmr") || dayStr.equalsIgnoreCase("tdy")) {
 			if (dayStr.equalsIgnoreCase("tmr")) {
@@ -158,12 +187,23 @@ public class DateParser {
 				_feedback.append("Invalid day \"" + dayStr + "\" entered. ");
 				return;
 			}
-			;
 
 			int dayOfWeekInt = dayOfWeek.get(Calendar.DAY_OF_WEEK);
 
-			while (dayOfWeekInt != _dateTime.get(Calendar.DAY_OF_WEEK)) {
-				_dateTime.add(Calendar.DAY_OF_MONTH, 1);
+			if (isNextWeek) {
+				boolean weekCrossed = false;
+				while (dayOfWeekInt != _dateTime.get(Calendar.DAY_OF_WEEK)
+						&& !weekCrossed) {
+					_dateTime.add(Calendar.DAY_OF_MONTH, 1);
+					if (_dateTime.get(Calendar.DAY_OF_WEEK) < dayOfWeekInt) {
+						weekCrossed = true;
+					}
+				}
+			} else {
+				while (dayOfWeekInt != _dateTime.get(Calendar.DAY_OF_WEEK)) {
+
+					_dateTime.add(Calendar.DAY_OF_MONTH, 1);
+				}
 			}
 		}
 	}

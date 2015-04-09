@@ -19,12 +19,15 @@ public class CommandParser {
 
 	private static final String[][] CONVERSION_TABLE = { { "from", "-s" },
 			{ "start", "-s" }, { "to", "-d" }, { "due", "-d" }, { "by", "-d" },
-			{ "end", "-d" }, { "priority", "-p" }, { "prio", "-p" }, { "overdue", "-o" }, { "completed", "-c" },
-			{ "duration", "-l" }, { "ascend", "a" }, { "descend", "d" },
-			{ "high", "h" }, { "medium", "m" }, { "low", "l" }, { "yes", "y" },
-			{ "no", "n" }, { "before", "bf" }, { "after", "af" },
-			{ "on", "on" }, { "between", "btw" }, { "and", "&" },
-			{ "today", "tdy" }, { "tomorrow", "tmr" } };
+			{ "end", "-d" }, { "priority", "-p" }, { "prio", "-p" },
+			{ "overdue", "-o" }, { "completed", "-c" }, { "duration", "-l" },
+			{ "ascend", "a" }, { "descend", "d" }, { "high", "h" },
+			{ "medium", "m" }, { "low", "l" }, { "yes", "y" }, { "no", "n" },
+			{ "before", "bf" }, { "after", "af" }, { "on", "on" },
+			{ "between", "btw" }, { "and", "&" }, { "today", "tdy" },
+			{ "tomorrow", "tmr" }, { "monday", "mon" }, { "tuesday", "tue" },
+			{ "wednesday", "wed" }, { "thursday", "thu" }, { "friday", "fri" },
+			{ "saturday", "sat" }, { "sunday", "sun" } };
 
 	public CommandParser(String command) {
 		_feedback = new StringBuilder();
@@ -110,8 +113,8 @@ public class CommandParser {
 
 			actionAndContents[1] = actionAndContents[1].trim()
 					.replaceFirst(String.valueOf(_taskNumber), "").trim();
-			
-			if(_actionType == ActionType.EDIT) {
+
+			if (_actionType == ActionType.EDIT) {
 				String commandWithNoName = extractFindEditName(actionAndContents[1]);
 				if (commandWithNoName != null) {
 					actionAndContents[1] = commandWithNoName;
