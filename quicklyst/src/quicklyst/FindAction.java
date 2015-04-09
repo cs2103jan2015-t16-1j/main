@@ -117,7 +117,7 @@ public class FindAction extends Action {
 			int matchScore = 0;
 			for (String keyword : keywords) {
 				keyword = keyword.trim();
-				matchScore = matchKeywordScore(currTask, keyword);
+				matchScore += matchKeywordScore(currTask, keyword);
 				System.out.println(currTask.getName() + " " + keyword + " "
 						+ matchScore);
 			}
