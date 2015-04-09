@@ -125,11 +125,12 @@ public class EditAction extends Action {
 		} else {
 			Calendar newDate = (Calendar) field.getDate().clone();
 			boolean hasDueTime = calibrateDueDate(field, newDate);
-			setDueDate(newDate, hasDueTime);
+			setDueDate(newDate, hasDueTime, field.isTimeParsed());
 		}
 	}
 
-	private void setDueDate(Calendar newDate, boolean hasDueTime) {
+	private void setDueDate(Calendar newDate, boolean hasDueTime,
+			boolean isTimeParsed) {
 		if (_task.getStartDate() != null
 				&& newDate.compareTo(_task.getStartDate()) < 0) {
 			this._feedback
@@ -158,6 +159,11 @@ public class EditAction extends Action {
 
 			matchTaskStartDate(newDate);
 			hasDueTime = true;
+			
+			if (!field.isDateParsed() && _task.getStartDate() != null
+					&& newDate.compareTo(_task.getStartDate()) < 0) {
+				newDate.add(Calendar.DAY_OF_MONTH, 1);
+			}
 
 		} else if (!field.isTimeParsed()) {
 
@@ -216,6 +222,11 @@ public class EditAction extends Action {
 
 			matchTaskDueDate(newDate);
 			hasStartTime = true;
+
+			if (!field.isDateParsed() && _task.getDueDate() != null
+					&& newDate.compareTo(_task.getDueDate()) > 0) {
+				newDate.add(Calendar.DAY_OF_MONTH, -1);
+			}
 
 		} else if (!field.isTimeParsed()) {
 
