@@ -160,10 +160,11 @@ public class FindAction extends Action {
 	}
 
 	private int matchKeywordScore(Task currTask, String keyword) {
+		keyword = keyword.toLowerCase();
 		String[] taskNameWords = currTask.getName().split(" ");
 		int totalScore = 0;
 		for (String currWord : taskNameWords) {
-			currWord = currWord.trim();
+			currWord = currWord.trim().toLowerCase();
 			if (currWord.contains(keyword)) {
 				totalScore++;
 			}
