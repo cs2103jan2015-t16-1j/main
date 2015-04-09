@@ -2,6 +2,7 @@ package quicklyst;
 
 import java.util.LinkedList;
 
+//@author A0102015H
 public abstract class Action {
 	
 	protected ActionType _type;

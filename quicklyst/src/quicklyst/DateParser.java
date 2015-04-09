@@ -6,6 +6,7 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Scanner;
 
+//@author A0102015H
 public class DateParser {
 
 	private static final String DATE_TIME_FORMAT_1 = "dd/MM/yy HH:mm";

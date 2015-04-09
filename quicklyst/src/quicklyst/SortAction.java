@@ -2,6 +2,7 @@ package quicklyst;
 
 import java.util.LinkedList;
 
+//@author A0102015H
 public class SortAction extends Action {
 
 	private LinkedList<Field> _fields;

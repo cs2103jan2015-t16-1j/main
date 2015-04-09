@@ -1,5 +1,6 @@
 package quicklyst;
 
+//@author A0102015H
 public enum FieldCriteria {
 	
 	//start date, due date

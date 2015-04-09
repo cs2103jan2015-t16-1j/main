@@ -3,6 +3,7 @@ package quicklyst;
 import java.util.Calendar;
 import java.util.regex.Pattern;
 
+//@author A0102015H
 public class FieldParser {
 
 	private StringBuilder _feedback;

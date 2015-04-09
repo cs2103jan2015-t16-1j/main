@@ -2,6 +2,7 @@ package quicklyst;
 
 import java.util.Calendar;
 
+//@author A0102015H
 public class Field {
 
 	private FieldType _fieldType;
@@ -47,7 +48,6 @@ public class Field {
 			break;
 		case START_DATE:
 		case DUE_DATE:
-		case REMINDER:
 			try {
 				_date = (Calendar) content;
 			} catch (ClassCastException e) {
@@ -134,7 +134,6 @@ public class Field {
 			break;
 		case START_DATE:
 		case DUE_DATE:
-		case REMINDER:
 			if (_fieldCriteria == FieldCriteria.BETWEEN) {
 				output += _fieldCriteria.toString() + " "
 						+ getDateRange()[0].getTime().toString() + " "

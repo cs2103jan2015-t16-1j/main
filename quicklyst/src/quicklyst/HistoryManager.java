@@ -3,6 +3,7 @@ package quicklyst;
 import java.util.LinkedList;
 import java.util.Stack;
 
+//@author A0102015H
 public class HistoryManager {
 
 	private Stack<LinkedList<Task>> _undoStack;

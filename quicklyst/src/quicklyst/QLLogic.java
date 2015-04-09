@@ -3,6 +3,7 @@ package quicklyst;
 import java.util.LinkedList;
 import java.util.Scanner;
 
+//@author A0102015H
 public class QLLogic {
 
 	public static LinkedList<Task> _displayList; // TODO change back to private

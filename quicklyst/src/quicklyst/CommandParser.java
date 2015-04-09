@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
+//@author A0102015H
 public class CommandParser {
 
 	private StringBuilder _feedback;
