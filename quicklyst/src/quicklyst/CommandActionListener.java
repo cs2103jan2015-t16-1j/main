@@ -30,7 +30,8 @@ public class CommandActionListener implements ActionListener {
         LOGGER.info(String.format("user entered: %s",
                 _command.getText()));
         _guiInstance.addCommandToCommandHistory(_command.getText());
-        _guiInstance.executeCommand(_command.getText());
-        _command.setText(STRING_EMPTY);
+        if (_guiInstance.executeCommand(_command.getText())) {
+            _command.setText(STRING_EMPTY);
+        }
     }
 }

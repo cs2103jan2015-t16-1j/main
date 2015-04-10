@@ -13,6 +13,8 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.Logger;
 
 import javax.swing.Action;
@@ -94,6 +96,31 @@ public class QLGUI extends JFrame {
 
 	private static final Logger LOGGER = Logger
 			.getLogger(QLGUI.class.getName());
+	
+    private class UpdateUITask extends TimerTask {
+
+        @Override
+        public void run() {
+            updateUI();
+        }
+        
+    }
+    
+    private class CommandExecution implements Runnable {
+        private String _command;
+        
+        public CommandExecution(String command) {
+            _command = command;
+        }
+        
+        @Override
+        public void run() {
+            StringBuilder status = new StringBuilder();
+            _QLLogic.executeCommand(_command, status);
+            afterCommandExecution(status.toString());
+        }
+        
+    }
 
 	private JPanel _taskList;
 	private JPanel _overviewPane;
@@ -105,8 +132,12 @@ public class QLGUI extends JFrame {
 
 	private CommandTips _commandTips;
 	private CommandHistory _commandHistory;
+	private UpdateUITask _updateUITask;
+	private Timer _timer;
+	private Thread _executionThread;
+	
 	private QLLogic _QLLogic;
-
+	
 	public QLGUI() {
 		super(MESSAGE_TITLE);
 
@@ -166,6 +197,8 @@ public class QLGUI extends JFrame {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setMinimumSize(new Dimension(600, 450));
 		setVisible(true);
+		
+		_timer = new Timer(true);
 
 		LOGGER.info(MESSAGE_GET_TASK_LIST_FROM_QL_LOGIC);
 		_QLLogic = QLLogic.getInstance();
@@ -368,17 +401,44 @@ public class QLGUI extends JFrame {
 	}
 
 	private void updateUI() {
-		updateTaskList();
+	    List<Task> displayList = _QLLogic.getDisplayList();
+		updateTaskList(displayList);
 		updateOverview();
 		clearTaskDetails();
+		scheduleNextUpdate(displayList);
 	}
 
-	private void clearTaskDetails() {
+	private void scheduleNextUpdate(List<Task> displayList) {
+        Calendar now = Calendar.getInstance();
+        Calendar nextUpdate = null;
+	    for (Task task : displayList) {
+            if (task.getDueDate() != null && task.getDueDate().compareTo(now) > 0) {
+                nextUpdate = (Calendar)task.getDueDate().clone();
+                nextUpdate.add(Calendar.MINUTE, 1);
+                nextUpdate.set(Calendar.SECOND, 0);
+                nextUpdate.set(Calendar.MILLISECOND, 0);
+                break;
+            }
+        }
+	    
+	    if (_updateUITask != null) {
+	        _updateUITask.cancel();
+	        _updateUITask = null;
+	    }
+	    
+	    _timer.purge();
+        if (nextUpdate != null) {
+            _updateUITask = new UpdateUITask();
+            _timer.schedule(_updateUITask, nextUpdate.getTime());
+        }
+    }
+
+    private void clearTaskDetails() {
 		// _taskDetails.setText("");
 		_taskDetails.setText("Mouse over task to show more...");
 	}
 
-	private void updateTaskList() {
+	private void updateTaskList(List<Task> tasks) {
 		_taskList.removeAll();
 		int taskPosition = STARTING_TASK_POSITION, taskIndex = STARTING_TASK_INDEX;
 		int headerCount = 0;
@@ -386,7 +446,6 @@ public class QLGUI extends JFrame {
 		String previousHeader = EMPTY_STRING;
 		Calendar now = Calendar.getInstance();
 
-		List<Task> tasks = _QLLogic.getDisplayList();
 		for (Task task : tasks) {
 			TaskPanel singleTaskPane = new TaskPanel(task, taskIndex);
 
@@ -500,17 +559,32 @@ public class QLGUI extends JFrame {
 		tomorrow.add(Calendar.DATE, 1);
 		return tomorrow;
 	}
-
+	
 	// Method for actionListener
-	public void executeCommand(String command) {
-		StringBuilder fb = new StringBuilder();
-		_QLLogic.executeCommand(command, fb);
-
-		if (!fb.toString().isEmpty()) {
-			_status.setText(fb.toString());
-		}
-		updateUI();
+	public boolean executeCommand(String command) {
+	    if ((_executionThread == null) && (!command.trim().isEmpty())) {
+    	    CommandExecution exec = new CommandExecution(command);
+    	    _executionThread = new Thread(exec);
+    	    _executionThread.start();
+    	    setStatus("Processing... Please wait...");
+    	    return true;
+	    }
+	    return false;
 	}
+	
+	public void afterCommandExecution(String status) {
+	    if (!status.isEmpty()) {
+            setStatus(status.toString());
+        } else {
+            setStatus(" ");
+        }
+        updateUI();
+        _executionThread = null;
+	}
+
+    private void setStatus(String status) {
+        _status.setText(status);
+    }
 
 	public void addCommandToCommandHistory(String command) {
 		// TODO Auto-generated method stub
@@ -519,10 +593,15 @@ public class QLGUI extends JFrame {
 
 	public void showTips() {
 		String tips = _commandTips.getTips(_command.getText());
-		if (!_tip.getText().equals(tips)) {
-			_tip.setText(tips);
-		}
+		setTips(tips);
 	}
+
+    private void setTips(String tips) {
+        if (!_tip.getText().equals(tips)) {
+			_tip.setText(tips);
+			_tip.setCaretPosition(0);
+		}
+    }
 
 	public static void main(String[] args) {
 		QLGUI g = new QLGUI();
