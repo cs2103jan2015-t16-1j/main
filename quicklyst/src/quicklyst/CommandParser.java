@@ -27,7 +27,7 @@ public class CommandParser {
 			{ "between", "btw" }, { "and", "&" }, { "today", "tdy" },
 			{ "tomorrow", "tmr" }, { "monday", "mon" }, { "tuesday", "tue" },
 			{ "wednesday", "wed" }, { "thursday", "thu" }, { "friday", "fri" },
-			{ "saturday", "sat" }, { "sunday", "sun" }};
+			{ "saturday", "sat" }, { "sunday", "sun" }, { "clear", "clr" } };
 
 	public CommandParser(String command) {
 		_feedback = new StringBuilder();
@@ -149,8 +149,8 @@ public class CommandParser {
 		for (String[] conversion : CONVERSION_TABLE) {
 			String natForm = conversion[0];
 			String primForm = conversion[1];
-			cmdString = cmdString.replaceAll(
-					"\\b" + "(?i)" + natForm + "\\b", primForm);
+			cmdString = cmdString.replaceAll("\\b" + "(?i)" + natForm + "\\b",
+					primForm);
 		}
 		return cmdString;
 	}
@@ -224,7 +224,14 @@ public class CommandParser {
 					.append("Please denote end of task name with the \"\\\" character. Unexpected error may occur. ");
 			return null;
 		} else if (quoteStart != -1 && quoteEnd != -1) {
+			
 			_taskName = fieldsString.substring(quoteStart + 1, quoteEnd).trim();
+			if (_taskName.isEmpty()) {
+				_feedback
+						.append("Task name is empty. ");
+				_taskName = null;
+			}
+			
 			String front = fieldsString.substring(0, quoteStart).trim();
 			String back;
 			if (quoteEnd == fieldsString.length() - 1) {

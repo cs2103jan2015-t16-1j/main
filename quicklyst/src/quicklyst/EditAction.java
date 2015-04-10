@@ -96,10 +96,16 @@ public class EditAction extends Action {
 	}
 
 	private void updatePriority(Field field) {
+		assert field.getPriority().equalsIgnoreCase("H")
+				|| field.getPriority().equalsIgnoreCase("M")
+				|| field.getPriority().equalsIgnoreCase("L");
+
 		if (field.shouldClearPriority()) {
 			_task.setPriority((String) null);
 			this._isSuccess = true;
 			this._feedback.append("Priority cleared. ");
+		} else if (field.getPriority() == null) {
+			this._isSuccess = false;
 		} else {
 			_task.setPriority(field.getPriority());
 			this._isSuccess = true;
@@ -109,6 +115,7 @@ public class EditAction extends Action {
 	}
 
 	private void updateTaskName() {
+		assert !_taskName.isEmpty();
 		_task.setName(_taskName);
 		this._feedback.append("Task name set to \"" + _taskName + "\". ");
 		this._isSuccess = true;
@@ -159,7 +166,7 @@ public class EditAction extends Action {
 
 			matchTaskStartDate(newDate);
 			hasDueTime = true;
-			
+
 			if (!field.isDateParsed() && _task.getStartDate() != null
 					&& newDate.compareTo(_task.getStartDate()) < 0) {
 				newDate.add(Calendar.DAY_OF_MONTH, 1);

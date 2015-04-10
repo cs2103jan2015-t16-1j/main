@@ -126,17 +126,15 @@ public class Task {
 	public String getPriority() {
 		if (_priority == null) {
 			return null;
-		}
-		if (_priority.equalsIgnoreCase(STRING_PRIORITY_LOW)) {
+		} else if (_priority.equalsIgnoreCase(STRING_PRIORITY_LOW)) {
 			return STRING_PRIORITY_LOW;
-		}
-		if (_priority.equalsIgnoreCase(STRING_PRIORITY_MEDIUM)) {
+		} else if (_priority.equalsIgnoreCase(STRING_PRIORITY_MEDIUM)) {
 			return STRING_PRIORITY_MEDIUM;
-		}
-		if (_priority.equalsIgnoreCase(STRING_PRIORITY_HIGH)) {
+		} else if (_priority.equalsIgnoreCase(STRING_PRIORITY_HIGH)) {
 			return STRING_PRIORITY_HIGH;
+		} else {
+			return null;
 		}
-		return null;
 	}
 
 	public String getGoogleID() {
