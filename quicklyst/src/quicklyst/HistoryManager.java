@@ -10,9 +10,14 @@ public class HistoryManager {
 	private Stack<LinkedList<Task>> _redoStack;
 	private LinkedList<Task> _displayList;
 	private LinkedList<Task> _masterList;
+	
+	private Stack<Boolean> _undoShowAllStack;
+	private Stack<Boolean> _redoShowAllStack;
+	private boolean _shouldShowAll;
+	
 
 	public HistoryManager(LinkedList<Task> displayList,
-			LinkedList<Task> masterList) {
+			LinkedList<Task> masterList, boolean shouldShowAll) {
 		_undoStack = new Stack<LinkedList<Task>>();
 		_redoStack = new Stack<LinkedList<Task>>();
 		LinkedList<Task> displayListInit = new LinkedList<Task>();
@@ -23,6 +28,11 @@ public class HistoryManager {
 		_undoStack.push(displayListInit);
 		_displayList = displayListInit;
 		_masterList = masterListInit;
+		
+		_shouldShowAll = shouldShowAll;
+		_undoShowAllStack = new Stack<Boolean>();
+		_redoShowAllStack = new Stack<Boolean>();
+		_undoShowAllStack.push(_shouldShowAll);
 	}
 
 	public LinkedList<Task> getDisplayList() {
@@ -31,6 +41,10 @@ public class HistoryManager {
 
 	public LinkedList<Task> getMasterList() {
 		return _masterList;
+	}
+	
+	public boolean getShouldShowAll() {
+		return _shouldShowAll;
 	}
 
 	private static void printStack(Stack<LinkedList<Task>> stack) {
@@ -54,7 +68,7 @@ public class HistoryManager {
 	}
 
 	public void updateUndoStack(LinkedList<Task> displayList,
-			LinkedList<Task> masterList) {
+			LinkedList<Task> masterList, boolean shouldShowAll) {
 		LinkedList<Task> workingListMaster = new LinkedList<Task>();
 		LinkedList<Task> workingList = new LinkedList<Task>();
 		copyListWithClone(displayList, masterList, workingList,
@@ -63,6 +77,9 @@ public class HistoryManager {
 		_undoStack.push(workingListMaster);
 		_undoStack.push(workingList);
 		_redoStack.clear();
+		
+		_undoShowAllStack.push(shouldShowAll);
+		_redoShowAllStack.clear();
 	}
 
 	public void undo(StringBuilder feedback) {
@@ -87,6 +104,10 @@ public class HistoryManager {
 		_displayList = updatedWL;
 		_masterList = updatedWLM;
 		
+		_redoShowAllStack.push(_undoShowAllStack.pop());
+		_shouldShowAll = _undoShowAllStack.pop();
+		_undoShowAllStack.push(_shouldShowAll);
+		
 	}
 
 	public void redo(StringBuilder feedback) {
@@ -109,6 +130,8 @@ public class HistoryManager {
 		_displayList = updatedWL;
 		_masterList = updatedWLM;
 
+		_shouldShowAll = _redoShowAllStack.pop();
+		_undoShowAllStack.push(_shouldShowAll);
 	}
 
 	private void copyListWithClone(LinkedList<Task> subList,

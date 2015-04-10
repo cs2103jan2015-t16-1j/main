@@ -1,5 +1,7 @@
 package quicklyst;
 
+import java.util.Calendar;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Scanner;
 
@@ -39,14 +41,14 @@ public class QLLogic {
 		}
 		_displayList = new LinkedList<Task>();
 		copyList(_masterList, _displayList);
-		_historyMgnr = new HistoryManager(_displayList, _masterList);
+		_historyMgnr = new HistoryManager(_displayList, _masterList, _shouldShowAllCompleted);
 	}
 
 	// Stub
 	public void setupStub() {
 		_displayList = new LinkedList<Task>();
 		_masterList = new LinkedList<Task>();
-		_historyMgnr = new HistoryManager(_displayList, _masterList);
+		_historyMgnr = new HistoryManager(_displayList, _masterList, _shouldShowAllCompleted);
 	}
 
 	// Stub
@@ -90,6 +92,18 @@ public class QLLogic {
 	}
 
 	public LinkedList<Task> getDisplayList() {
+		if (!_shouldShowAllCompleted) {
+			Calendar now = Calendar.getInstance();
+			Iterator<Task> iter = _displayList.listIterator();
+			while (iter.hasNext()) {
+				Task task = iter.next();
+				if (task.getIsCompleted()) {
+					if ((task.getDueDate() == null) || (task.getDueDate().compareTo(now) < 0)) {
+						iter.remove();
+					}
+				}
+			}
+		}
 		return _displayList;
 	}
 
@@ -101,6 +115,7 @@ public class QLLogic {
 		_historyMgnr.undo(feedback);
 		_displayList = _historyMgnr.getDisplayList();
 		_masterList = _historyMgnr.getMasterList();
+		_shouldShowAllCompleted = _historyMgnr.getShouldShowAll();
 		_QLStorage.saveFile(_masterList, _filePath);
 	}
 
@@ -108,6 +123,7 @@ public class QLLogic {
 		_historyMgnr.redo(feedback);
 		_displayList = _historyMgnr.getDisplayList();
 		_masterList = _historyMgnr.getMasterList();
+		_shouldShowAllCompleted = _historyMgnr.getShouldShowAll();
 		_QLStorage.saveFile(_masterList, _filePath);
 	}
 
@@ -164,7 +180,7 @@ public class QLLogic {
 						filepath);
 				_displayList = new LinkedList<Task>();
 				copyList(_masterList, _displayList);
-				_historyMgnr = new HistoryManager(_displayList, _masterList);
+				_historyMgnr = new HistoryManager(_displayList, _masterList, _shouldShowAllCompleted);
 				feedback.append("Directory changed. You are editing tasks in file: \"" + filepath + "\".");
 			} else {
 				feedback.append("Preferred task file does not exist. "  + "Directory is not changed. ");
@@ -184,16 +200,16 @@ public class QLLogic {
 
 		action.execute(_displayList, _masterList);
 		feedback.append(action.getFeedback().toString());
-
-		if (action.isSuccess()) {
-			_QLStorage.saveFile(_masterList, _filePath);
-			if (action.getType() != ActionType.PUSH) {
-				_historyMgnr.updateUndoStack(_displayList, _masterList);
-			}
-		}
 		
 		if(action.getType() == ActionType.FIND) {
 			_shouldShowAllCompleted = action.shouldShowAllCompleted();
+		}
+		
+		if (action.isSuccess()) {
+			_QLStorage.saveFile(_masterList, _filePath);
+			if (action.getType() != ActionType.PUSH) {
+				_historyMgnr.updateUndoStack(_displayList, _masterList, _shouldShowAllCompleted);
+			}
 		}
 	}
 
@@ -209,7 +225,7 @@ public class QLLogic {
 				_masterList = new LinkedList<Task>();
 				copyList(_displayList, _masterList);
 				_QLStorage.saveFile(_masterList, _filePath);
-				_historyMgnr.updateUndoStack(_displayList, _masterList);
+				_historyMgnr.updateUndoStack(_displayList, _masterList, _shouldShowAllCompleted);
 				feedback.append("Loaded from: \"" + filepath + "\". ");
 			} catch (Error e) {
 				feedback.append(e.getMessage());

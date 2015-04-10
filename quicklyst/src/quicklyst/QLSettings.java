@@ -28,11 +28,14 @@ public class QLSettings {
     		Gson gson = new Gson();
     		_prefFilePath = gson.fromJson(f, String.class);
     	} catch (FileNotFoundException e) {
-			_prefFilePath = FILEPATH_DEFAULT_SAVE;
+    		_prefFilePath = null;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+    	if (_prefFilePath == null) {
+    		_prefFilePath = FILEPATH_DEFAULT_SAVE;
+    	}
     }
     
     public String getPrefFilePath() {

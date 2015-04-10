@@ -502,6 +502,8 @@ public class QLGoogleIntegration {
         if ((t.getTitle().isEmpty()) && (t.getDue() == null) && (t.getNotes() == null)) {
             return true;
         }
+        //Fixes an issue where empty tasks is added
+        //because google calendar web interface is used on the browser Opera 12.14
         if ((t.getTitle().length() == 1) && (t.getTitle().equals("\n"))) {
         	return true;
         }
