@@ -23,6 +23,7 @@ public class Task {
 	private String _googleID;
 	private Calendar _startDate;
 	private Calendar _dueDate;
+	private Calendar _lastUpdated;
 	private boolean _isCompleted;
 	private boolean _isOverdue;
 	private boolean _shouldSync;
@@ -35,6 +36,7 @@ public class Task {
 		_isCompleted = false;
 		_hasDueTime = false;
 		_hasStartTime = false;
+		_lastUpdated = Calendar.getInstance();
 	}
 
 	/* Mutators */
@@ -73,6 +75,10 @@ public class Task {
 
 	public void setIsCompleted(boolean isCompleted) {
 		_isCompleted = isCompleted;
+	}
+	
+	public void setLastUpdated(Calendar lastUpdated) {
+		_lastUpdated = lastUpdated;
 	}
 
 	public void toggleCompleted() {
@@ -225,6 +231,10 @@ public class Task {
 			duration++;
 		}
 		return duration;
+	}
+	
+	public Calendar getLastUpdated() {
+		return _lastUpdated;
 	}
 
 	/* Other methods */

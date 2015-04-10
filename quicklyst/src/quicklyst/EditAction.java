@@ -57,6 +57,7 @@ public class EditAction extends Action {
 		System.out.println(this._isSuccess);
 
 		if (this._isSuccess) {
+			_task.setLastUpdated(Calendar.getInstance());
 			_defaultSort.execute(displayList, masterList);
 			System.out.println("sorted");
 		}

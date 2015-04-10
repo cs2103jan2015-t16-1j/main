@@ -66,6 +66,8 @@ public class CommandParser {
 			return new PushAction();
 		case PULL:
 			return new PullAction();
+		case SYNC:
+			return new SyncAction();
 		default:
 			return null;
 		}
@@ -123,6 +125,7 @@ public class CommandParser {
 
 		switch (_actionType) {
 		case ADD:
+			
 			if (actionAndContents.length == 1) {
 				_feedback.append("No task name detected. ");
 				return;
@@ -138,9 +141,11 @@ public class CommandParser {
 					.replaceFirst(Pattern.quote("\\"), "").trim();
 			System.out.println(actionAndContents[1]);
 			break;
+			
 		case EDIT:
 		case DELETE:
 		case COMPLETE:
+			
 			if (actionAndContents.length == 1) {
 				return;
 			}
@@ -155,9 +160,10 @@ public class CommandParser {
 					actionAndContents[1] = commandWithNoName;
 				}
 			}
-
 			break;
+			
 		case FIND:
+			
 			if (actionAndContents.length == 1) {
 				return;
 			}
@@ -166,6 +172,14 @@ public class CommandParser {
 				actionAndContents[1] = commandWithNoName;
 			}
 			break;
+			
+		case PUSH:
+		case PULL:
+		case SYNC:
+		case LOG_OUT:
+			
+			return;
+			
 		default:
 			break;
 		}
@@ -334,7 +348,18 @@ public class CommandParser {
 
 			_actionType = ActionType.PULL;
 
-		} else {
+		} else if (actionString.equalsIgnoreCase("SYNC")
+				|| actionString.equalsIgnoreCase("SG")) {
+
+			_actionType = ActionType.SYNC;
+			
+		} else if (actionString.equalsIgnoreCase("LOGOUT")
+				|| actionString.equalsIgnoreCase("LG")) {
+
+			_actionType = ActionType.LOG_OUT;
+			
+		}
+		else {
 			_feedback.append("Invalid action type. ");
 			return;
 		}

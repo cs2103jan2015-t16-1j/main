@@ -8,6 +8,8 @@ public abstract class Action {
 	protected ActionType _type;
 	protected StringBuilder _feedback;
 	protected boolean _isSuccess;
+	private String _deletedTaskID;
+	private LinkedList<String> _deletedList;
 	
 	public abstract void execute(LinkedList<Task> displayList,
 			LinkedList<Task> masterList);
@@ -38,5 +40,21 @@ public abstract class Action {
 	
 	public boolean shouldShowAllCompleted() {
 		return false;
+	}
+	
+	public void setDeletedTaskID(String ID) {
+		_deletedTaskID = ID;
+	}
+	
+	public String getDeletedTaskID() {
+		return _deletedTaskID;
+	}
+	
+	public void attachDeletedList(LinkedList<String> list) {
+		_deletedList = list;
+	}
+	
+	public LinkedList<String> getDeletedList() {
+		return _deletedList;
 	}
 }

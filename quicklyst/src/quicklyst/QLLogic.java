@@ -8,47 +8,59 @@ import java.util.Scanner;
 //@author A0102015H
 public class QLLogic {
 
-	public LinkedList<Task> _displayList; // TODO change back to private
+	private LinkedList<Task> _displayList;
 	private LinkedList<Task> _masterList;
+	private LinkedList<String> _deletedList;
+
 	private String _filePath;
 	private boolean _shouldShowAllCompleted;
 
 	private HistoryManager _historyMgnr;
 	private QLStorage _QLStorage;
 	private QLSettings _QLSettings;
-	
+
 	private static QLLogic _instance;
-	
+
 	public static QLLogic getInstance() {
 		if (_instance == null) {
-            _instance = new QLLogic();
-        }
-        return _instance;
+			_instance = new QLLogic();
+		}
+		return _instance;
 	}
-	
+
 	/** General methods **/
 	public void setup(StringBuilder feedback) {
 		_QLStorage = QLStorage.getInstance();
 		_QLSettings = QLSettings.getInstance();
-		
+
 		try {
 			_filePath = _QLSettings.getPrefFilePath();
-			_masterList = _QLStorage.loadFile(new LinkedList<Task>(), _filePath);
+			_masterList = _QLStorage
+					.loadFile(new LinkedList<Task>(), _filePath);
+			// _deletedList = QLStroage.loadDeletedList //TODO add Storage API
 		} catch (Error e) {
-			feedback.append("Preferred task file does not exist. " + "Default task file is used. ");
+			feedback.append("Preferred task file does not exist. "
+					+ "Default task file is used. ");
 			_filePath = _QLSettings.getDefaultFilePath();
-			_masterList = _QLStorage.loadFile(new LinkedList<Task>(), _filePath);
+			_masterList = _QLStorage
+					.loadFile(new LinkedList<Task>(), _filePath);
+			// _deletedList = QLStroage.loadDeletedList //TODO add Storage API
 		}
+
 		_displayList = new LinkedList<Task>();
 		copyList(_masterList, _displayList);
-		_historyMgnr = new HistoryManager(_displayList, _masterList, _shouldShowAllCompleted);
+
+		_historyMgnr = new HistoryManager(_displayList, _masterList,
+				_deletedList, _shouldShowAllCompleted);
 	}
 
 	// Stub
 	public void setupStub() {
 		_displayList = new LinkedList<Task>();
 		_masterList = new LinkedList<Task>();
-		_historyMgnr = new HistoryManager(_displayList, _masterList, _shouldShowAllCompleted);
+		_deletedList = new LinkedList<String>();
+		_historyMgnr = new HistoryManager(_displayList, _masterList,
+				_deletedList, _shouldShowAllCompleted);
 	}
 
 	// Stub
@@ -98,7 +110,8 @@ public class QLLogic {
 			while (iter.hasNext()) {
 				Task task = iter.next();
 				if (task.getIsCompleted()) {
-					if ((task.getDueDate() == null) || (task.getDueDate().compareTo(now) < 0)) {
+					if ((task.getDueDate() == null)
+							|| (task.getDueDate().compareTo(now) < 0)) {
 						iter.remove();
 					}
 				}
@@ -162,7 +175,7 @@ public class QLLogic {
 		executeAction(command, feedback);
 
 	}
-	
+
 	public boolean shouldShowAllCompleted() {
 		return _shouldShowAllCompleted;
 	}
@@ -174,16 +187,25 @@ public class QLLogic {
 		} else {
 			String filepath = commandAndPath[1].trim();
 			if (_QLStorage.isValidFile(filepath)) {
+
 				_QLSettings.updatePrefFilePath(filepath);
+
 				_filePath = filepath;
+
 				_masterList = _QLStorage.loadFile(new LinkedList<Task>(),
 						filepath);
-				_displayList = new LinkedList<Task>();
 				copyList(_masterList, _displayList);
-				_historyMgnr = new HistoryManager(_displayList, _masterList, _shouldShowAllCompleted);
-				feedback.append("Directory changed. You are editing tasks in file: \"" + filepath + "\".");
+				_displayList = new LinkedList<Task>();
+				// _deletedList = QLStroage.loadDeletedList //TODO add Storage
+				// API
+
+				_historyMgnr = new HistoryManager(_displayList, _masterList,
+						_deletedList, _shouldShowAllCompleted);
+				feedback.append("Directory changed. You are editing tasks in file: \""
+						+ filepath + "\".");
 			} else {
-				feedback.append("Preferred task file does not exist. "  + "Directory is not changed. ");
+				feedback.append("Preferred task file does not exist. "
+						+ "Directory is not changed. ");
 			}
 		}
 	}
@@ -197,18 +219,29 @@ public class QLLogic {
 		if (action == null) {
 			return;
 		}
+		
+		if(action.getType() == ActionType.SYNC) {
+			action.attachDeletedList(_deletedList);
+		}
 
 		action.execute(_displayList, _masterList);
 		feedback.append(action.getFeedback().toString());
-		
-		if(action.getType() == ActionType.FIND) {
+
+		if (action.getType() == ActionType.FIND) {
 			_shouldShowAllCompleted = action.shouldShowAllCompleted();
 		}
 		
 		if (action.isSuccess()) {
+
+			if (action.getType() == ActionType.DELETE) {
+				_deletedList.add(action.getDeletedTaskID());
+			}
+
 			_QLStorage.saveFile(_masterList, _filePath);
+
 			if (action.getType() != ActionType.PUSH) {
-				_historyMgnr.updateUndoStack(_displayList, _masterList, _shouldShowAllCompleted);
+				_historyMgnr.updateUndoStack(_displayList, _masterList,
+						_deletedList, _shouldShowAllCompleted);
 			}
 		}
 	}
@@ -224,8 +257,10 @@ public class QLLogic {
 						filepath);
 				_masterList = new LinkedList<Task>();
 				copyList(_displayList, _masterList);
+				// _deletedList = QLStroage.loadDeletedList //TODO add Storage API
 				_QLStorage.saveFile(_masterList, _filePath);
-				_historyMgnr.updateUndoStack(_displayList, _masterList, _shouldShowAllCompleted);
+				_historyMgnr.updateUndoStack(_displayList, _masterList,
+						_deletedList, _shouldShowAllCompleted);
 				feedback.append("Loaded from: \"" + filepath + "\". ");
 			} catch (Error e) {
 				feedback.append(e.getMessage());
@@ -240,7 +275,8 @@ public class QLLogic {
 		} else {
 			String filepath = commandAndPath[1].trim();
 			try {
-				_QLStorage.saveFile(_masterList, filepath);
+				_QLStorage.saveFile(_masterList, filepath); // TODO add save
+															// deleted list API
 				feedback.append("Saved to: \"" + filepath + "\". ");
 			} catch (Error e) {
 				feedback.append(e.getMessage());
@@ -250,8 +286,7 @@ public class QLLogic {
 
 	/** Multi-command methods **/
 
-	private <E> void copyList(LinkedList<E> fromList,
-			LinkedList<E> toList) {
+	private <E> void copyList(LinkedList<E> fromList, LinkedList<E> toList) {
 		toList.clear();
 		for (int i = 0; i < fromList.size(); i++)
 			toList.add(fromList.get(i));
