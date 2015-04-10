@@ -15,7 +15,7 @@ import quicklyst.Task;
 
 public class EditActionTest {
 
-	private static final String DEFAULT_TASK_ADD_COMMAND = "add one\\ s start 11/12/2012 7:30 due 12/12/2012 7:30 priority M";
+	private static final String DEFAULT_TASK_ADD_COMMAND = "add one\\ start 11/12/2012 7:30 due 12/12/2012 7:30 priority M";
 
 	private Action edit;
 	private CommandParser cp;
@@ -25,7 +25,6 @@ public class EditActionTest {
 
 	@Before
 	public void setUp() throws Exception {
-
 		reset();
 	}
 

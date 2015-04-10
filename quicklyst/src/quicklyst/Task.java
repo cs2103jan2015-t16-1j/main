@@ -77,18 +77,10 @@ public class Task {
 
 	public void toggleCompleted() {
 		if (_isCompleted) {
-			setNotCompleted();
+			_isCompleted = false;
 		} else {
-			setCompleted();
+			_isCompleted = true;
 		}
-	}
-
-	public void setCompleted() {
-		_isCompleted = true;
-	}
-
-	public void setNotCompleted() {
-		_isCompleted = false;
 	}
 
 	public void updateIsOverdue() {
