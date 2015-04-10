@@ -15,7 +15,11 @@ public class CommandParser {
 	private LinkedList<Field> _fields;
 
 	private Boolean _completeYesNo;
-	private boolean _all;
+	private boolean _findAll;
+	
+	/* Test variable */
+	private String _fieldStringPrim;
+	private String _fieldStringClean;
 
 	private static final String[][] CONVERSION_TABLE = { { "from", "-s" },
 			{ "start", "-s" }, { "to", "-d" }, { "due", "-d" }, { "by", "-d" },
@@ -55,7 +59,7 @@ public class CommandParser {
 		case SORT:
 			return new SortAction(_fields);
 		case FIND:
-			return new FindAction(_fields, _all, _taskName);
+			return new FindAction(_fields, _findAll, _taskName);
 		case COMPLETE:
 			return new CompleteAction(_taskNumber, _completeYesNo);
 		case PUSH:
@@ -70,7 +74,38 @@ public class CommandParser {
 	public LinkedList<Field> getFields() {
 		return _fields;
 	}
-
+	
+	/* Test method */
+	public int getTastNumber() {
+		return _taskNumber;
+	}
+	
+	/* Test method */
+	public String getTaskName() {
+		return _taskName;
+	}
+	
+	/* Test method */
+	public String getFieldStringPrim() {
+		return _fieldStringPrim;
+	}
+	
+	/* Test method */
+	public boolean getFindAll() {
+		return _findAll;
+	}
+	
+	/* Test method */
+	public boolean getCompleteYesNo() {
+		return _completeYesNo;
+	}
+	
+	/* Test method */
+	public String getFieldStringClean() {
+		return _fieldStringClean;
+	}
+	
+	
 	private void processCmdString(String cmdString) {
 
 		if (cmdString.trim().equals("")) {
@@ -89,13 +124,13 @@ public class CommandParser {
 		switch (_actionType) {
 		case ADD:
 			if (actionAndContents.length == 1) {
-				_feedback.append("No task name deteced. ");
+				_feedback.append("No task name detected. ");
 				return;
 			}
 			System.out.println(actionAndContents[1]);
 			extractTaskName(actionAndContents[1]);
 			if (_taskName == null) {
-				_feedback.append("No task name deteced. ");
+				_feedback.append("No task name detected. ");
 				return;
 			}
 			actionAndContents[1] = actionAndContents[1]
@@ -152,6 +187,10 @@ public class CommandParser {
 			cmdString = cmdString.replaceAll("\\b" + "(?i)" + natForm + "\\b",
 					primForm);
 		}
+		
+		// for testing purpose;
+		_fieldStringPrim = cmdString;
+		
 		return cmdString;
 	}
 
@@ -175,7 +214,7 @@ public class CommandParser {
 		int stopIndex = fieldsString.indexOf(92);
 		if (stopIndex == -1) {
 			_feedback
-					.append("Please denote end of task name with the \"\\\" character");
+					.append("Please denote end of task name with the \"\\\" character. Unexpected error may occur. ");
 			return;
 		} else if (stopIndex == 0) {
 			_feedback.append("Task name entered is blank. ");
@@ -338,9 +377,9 @@ public class CommandParser {
 		case FIND:
 		case DELETE:
 			if (fieldsString.trim().equalsIgnoreCase("all")) {
-				_all = true;
+				_findAll = true;
 			} else {
-				_all = false;
+				_findAll = false;
 			}
 			break;
 
@@ -374,11 +413,14 @@ public class CommandParser {
 			} else {
 				wrongFields = fieldsString;
 			}
-			_feedback.append("Invalid field format in \"" + wrongFields
+			_feedback.append("Invalid field format in \"" + wrongFields.trim()
 					+ "\". ");
 			fieldsString = fieldsString.replaceFirst(
 					Pattern.quote(wrongFields), "");
 		}
+		
+		// For testing purposes
+		_fieldStringClean = fieldsString;
 		return fieldsString;
 	}
 

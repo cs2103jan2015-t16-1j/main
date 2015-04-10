@@ -15,4 +15,11 @@ public class MessageConstants {
 	public static final String MESSAGE_START_DATE_CLEARED =  "Start date cleared. ";
 	public static final String MESSAGE_PRIORITY_CLEARED =  "Priority cleared. ";
 
+	public static final String MESSAGE_INVALID_ACTION_TYPE = "Invalid action type. ";
+	public static final String MESSAGE_NAME_NO_CLOSE = "Please denote end of task name with the \"\\\" character. Unexpected error may occur. ";
+	public static final String MESSAGE_NO_TASK_NAME = "No task name detected. ";
+	public static final String MESSAGE_TASK_NAME_BLANK = "Task name entered is blank. ";
+	
+	public static final String MESSAGE_INVALID_FIELD_FORMAT_IN = "Invalid field format in \"%s\". ";
+	public static final String MESSAGE_INVALID_FIELD_CRITERIA =  "Invalid field criteria \"%s\". ";
 }

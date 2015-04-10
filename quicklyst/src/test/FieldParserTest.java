@@ -14,6 +14,7 @@ import quicklyst.Field;
 import quicklyst.FieldCriteria;
 import quicklyst.FieldParser;
 import quicklyst.FieldType;
+import quicklyst.MessageConstants;
 
 //@author A0102015H
 /*
@@ -406,7 +407,7 @@ public class FieldParserTest {
 		assertNull(field.getCriteria());
 		assertEquals("Invalid field criteria \"y\". ",
 				fieldParser.getFeedback());
-		
+
 		fieldParser = new FieldParser("s clr 12/12/12 & 13/12/12");
 		fieldParser.setActionType(ActionType.FIND);
 		field = fieldParser.getField();
@@ -418,22 +419,44 @@ public class FieldParserTest {
 		assertNull(field.getCriteria());
 		assertEquals("Invalid field criteria \"clr\". ",
 				fieldParser.getFeedback());
+
+		fieldParser = new FieldParser("s 12/12/12 & 13/12/12");
+		fieldParser.setActionType(ActionType.FIND);
+		field = fieldParser.getField();
+		assertNull(field.getDateRange());
+		assertEquals(FieldType.START_DATE, field.getFieldType());
+		assertNull(field.getCriteria());
+		assertEquals(String.format(
+				MessageConstants.MESSAGE_INVALID_FIELD_CRITERIA, "12/12/12"),
+				fieldParser.getFeedback());
 		
+		fieldParser = new FieldParser("d tdy");
+		fieldParser.setActionType(ActionType.FIND);
+		field = fieldParser.getField();
+		assertNull(field.getDate());
+		assertEquals(FieldType.DUE_DATE, field.getFieldType());
+		assertNull(field.getCriteria());
+		assertEquals(String.format(
+				MessageConstants.MESSAGE_INVALID_FIELD_CRITERIA, "tdy"),
+				fieldParser.getFeedback());
+
 		/* Overdue status for FIND */
 		fieldParser = new FieldParser("o on");
 		fieldParser.setActionType(ActionType.FIND);
 		field = fieldParser.getField();
 		assertNull(field.getCriteria());
 		assertEquals(FieldType.OVERDUE, field.getFieldType());
-		assertEquals("Invalid field criteria \"on\". ", fieldParser.getFeedback());
-		
+		assertEquals("Invalid field criteria \"on\". ",
+				fieldParser.getFeedback());
+
 		fieldParser = new FieldParser("o af");
 		fieldParser.setActionType(ActionType.FIND);
 		field = fieldParser.getField();
 		assertNull(field.getCriteria());
 		assertEquals(FieldType.OVERDUE, field.getFieldType());
-		assertEquals("Invalid field criteria \"af\". ", fieldParser.getFeedback());
-		
+		assertEquals("Invalid field criteria \"af\". ",
+				fieldParser.getFeedback());
+
 		/* Completed status for FIND */
 		fieldParser = new FieldParser("c btw");
 		fieldParser.setActionType(ActionType.FIND);
@@ -442,7 +465,7 @@ public class FieldParserTest {
 		assertEquals(FieldType.COMPLETED, field.getFieldType());
 		assertEquals("Invalid field criteria \"btw\". ",
 				fieldParser.getFeedback());
-		
+
 		fieldParser = new FieldParser("c bf");
 		fieldParser.setActionType(ActionType.FIND);
 		field = fieldParser.getField();
