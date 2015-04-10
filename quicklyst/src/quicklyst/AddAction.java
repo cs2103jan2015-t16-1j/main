@@ -10,6 +10,8 @@ public class AddAction extends Action {
 	private SortAction _defaultSort;
 
 	public AddAction(String taskName, LinkedList<Field> fields) {
+		
+		assert !taskName.isEmpty() && taskName != null;
 
 		this._feedback = new StringBuilder();
 		this._type = ActionType.ADD;
