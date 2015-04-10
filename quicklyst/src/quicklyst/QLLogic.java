@@ -9,6 +9,7 @@ public class QLLogic {
 	public LinkedList<Task> _displayList; // TODO change back to private
 	private LinkedList<Task> _masterList;
 	private String _filePath;
+	private boolean _shouldShowAllCompleted;
 
 	private HistoryManager _historyMgnr;
 	private QLStorage _QLStorage;
@@ -145,6 +146,10 @@ public class QLLogic {
 		executeAction(command, feedback);
 
 	}
+	
+	public boolean shouldShowAllCompleted() {
+		return _shouldShowAllCompleted;
+	}
 
 	private void executeChangeDir(String command, StringBuilder feedback) {
 		String commandAndPath[] = command.split(" ", 2);
@@ -185,6 +190,10 @@ public class QLLogic {
 			if (action.getType() != ActionType.PUSH) {
 				_historyMgnr.updateUndoStack(_displayList, _masterList);
 			}
+		}
+		
+		if(action.getType() == ActionType.FIND) {
+			_shouldShowAllCompleted = action.shouldShowAllCompleted();
 		}
 	}
 

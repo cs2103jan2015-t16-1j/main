@@ -12,7 +12,8 @@ public class FindAction extends Action {
 	private LinkedList<Field> _fields;
 	private boolean _findAll;
 	private int _failCount;
-	private String _taskName; 
+	private String _taskName;
+	private boolean _shouldShowAllCompleted;
 
 	public FindAction(LinkedList<Field> fields, boolean findAll, String taskName) {
 		this._isSuccess = false;
@@ -22,6 +23,7 @@ public class FindAction extends Action {
 		_findAll = findAll;
 		_fields = fields;
 		_failCount = 0;
+		_shouldShowAllCompleted = false;
 	}
 
 	@Override
@@ -41,8 +43,8 @@ public class FindAction extends Action {
 
 		LinkedList<Task> bufferList = new LinkedList<Task>();
 		copyList(masterList, bufferList);
-		
-		if(_taskName != null) {
+
+		if (_taskName != null) {
 			filterByName(_taskName, bufferList);
 			if (bufferList.isEmpty()) {
 				this._feedback.append("No matches found. ");
@@ -57,8 +59,9 @@ public class FindAction extends Action {
 				return;
 			}
 		}
-		
-		int totalUpdateSize = (_taskName == null) ? _fields.size() : _fields.size() + 1;
+
+		int totalUpdateSize = (_taskName == null) ? _fields.size() : _fields
+				.size() + 1;
 
 		if (_failCount == totalUpdateSize) {
 			this._feedback.append("No matches found. ");
@@ -69,6 +72,10 @@ public class FindAction extends Action {
 			this._feedback.append(displayList.size() + " matches found. ");
 			new SortAction().execute(displayList, masterList);
 		}
+	}
+
+	public boolean shouldShowAllCompleted() {
+		return _shouldShowAllCompleted;
 	}
 
 	private void filterdisplayList(Field field, LinkedList<Task> displayList) {
@@ -177,7 +184,7 @@ public class FindAction extends Action {
 
 	private void filterByOverdueStatus(FieldCriteria criteria,
 			LinkedList<Task> displayList) {
-		
+
 		if (criteria != FieldCriteria.YES && criteria != FieldCriteria.NO) {
 			_feedback.append("Overdue criteria not entered. ");
 			_failCount++;
@@ -202,6 +209,10 @@ public class FindAction extends Action {
 			_feedback.append("Completed criteria not entered. ");
 			_failCount++;
 			return;
+		} 
+		
+		if (criteria == FieldCriteria.YES) {
+			_shouldShowAllCompleted = true;
 		}
 
 		LinkedList<Task> bufferList = new LinkedList<Task>();
@@ -375,7 +386,7 @@ public class FindAction extends Action {
 
 		copyList(bufferList, displayList);
 	}
-
+	
 	private <E> void copyList(LinkedList<E> fromList, LinkedList<E> toList) {
 		toList.clear();
 		for (int i = 0; i < fromList.size(); i++)

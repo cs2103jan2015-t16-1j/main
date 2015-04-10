@@ -35,4 +35,8 @@ public abstract class Action {
 	public void setType(ActionType type) {
 		_type = type;
 	}
+	
+	public boolean shouldShowAllCompleted() {
+		return false;
+	}
 }
