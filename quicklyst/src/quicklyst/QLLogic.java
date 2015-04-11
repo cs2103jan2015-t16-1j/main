@@ -17,9 +17,9 @@ public class QLLogic {
 
 	private HistoryManager _historyMgnr;
 
-	private QLStorage _QLStorage;
+	private QLStorage _qLStorage;
 
-	private QLSettings _QLSettings;
+	private QLSettings _qLSettings;
 
 	private static QLLogic _instance;
 
@@ -33,24 +33,24 @@ public class QLLogic {
 	/** General methods **/
 	public void setup(StringBuilder feedback) {
 
-		_QLStorage = QLStorage.getInstance();
-		_QLSettings = QLSettings.getInstance();
+		_qLStorage = QLStorage.getInstance();
+		_qLSettings = QLSettings.getInstance();
 
 		try {
 
-			_filePath = _QLSettings.getPrefFilePath();
+			_filePath = _qLSettings.getPrefFilePath();
 			_masterList = new LinkedList<Task>();
 			_deletedList = new LinkedList<String>();
-			_QLStorage.loadFile(_masterList, _deletedList, _filePath);
+			_qLStorage.loadFile(_masterList, _deletedList, _filePath);
 
 		} catch (Error e) {
 
 			feedback.append("Preferred task file does not exist. "
 					+ "Default task file is used. ");
-			_filePath = _QLSettings.getDefaultFilePath();
+			_filePath = _qLSettings.getDefaultFilePath();
 			_masterList = new LinkedList<Task>();
 			_deletedList = new LinkedList<String>();
-			_QLStorage.loadFile(_masterList, _deletedList, _filePath);
+			_qLStorage.loadFile(_masterList, _deletedList, _filePath);
 		}
 
 		_displayList = new LinkedList<Task>();
@@ -65,8 +65,8 @@ public class QLLogic {
 
 		_filePath = "test.json";
 		_shouldShowAllCompleted = false;
-		_QLStorage = QLStorage.getInstance();
-		_QLSettings = QLSettings.getInstance();
+		_qLStorage = QLStorage.getInstance();
+		_qLSettings = QLSettings.getInstance();
 		_displayList = new LinkedList<Task>();
 		_masterList = new LinkedList<Task>();
 		_deletedList = new LinkedList<String>();
@@ -113,7 +113,7 @@ public class QLLogic {
 		_shouldShowAllCompleted = _historyMgnr.getShouldShowAll();
 		_deletedList = _historyMgnr.getDeletedList();
 
-		_QLStorage.saveFile(_masterList, _deletedList, _filePath);
+		_qLStorage.saveFile(_masterList, _deletedList, _filePath);
 	}
 
 	public void executeRedo(StringBuilder feedback) {
@@ -125,7 +125,7 @@ public class QLLogic {
 		_shouldShowAllCompleted = _historyMgnr.getShouldShowAll();
 		_deletedList = _historyMgnr.getDeletedList();
 
-		_QLStorage.saveFile(_masterList, _deletedList, _filePath);
+		_qLStorage.saveFile(_masterList, _deletedList, _filePath);
 	}
 
 	public void executeCommand(String command, StringBuilder feedback) {
@@ -179,16 +179,16 @@ public class QLLogic {
 
 			String filepath = commandAndPath[1].trim();
 
-			if (_QLStorage.isValidFile(filepath)) {
+			if (_qLStorage.isValidFile(filepath)) {
 
 				_filePath = filepath;
 
-				_QLSettings.updatePrefFilePath(filepath);
+				_qLSettings.updatePrefFilePath(filepath);
 
 				_masterList = new LinkedList<Task>();
 				_deletedList = new LinkedList<String>();
 
-				_QLStorage.loadFile(_masterList, _deletedList, filepath);
+				_qLStorage.loadFile(_masterList, _deletedList, filepath);
 
 				copyList(_masterList, _displayList);
 
@@ -238,9 +238,9 @@ public class QLLogic {
 				_deletedList.add(action.getDeletedTaskID());
 			}
 
-			_QLStorage.saveFile(_masterList, _deletedList, _filePath);
+			_qLStorage.saveFile(_masterList, _deletedList, _filePath);
 
-			if (action.getType() != ActionType.PUSH) {
+			if (action.getType() != ActionType.LOG_OUT) {
 
 				_historyMgnr.updateUndoStack(_displayList, _masterList,
 						_deletedList, _shouldShowAllCompleted);
@@ -265,13 +265,13 @@ public class QLLogic {
 				_displayList = new LinkedList<Task>();
 				_deletedList = new LinkedList<String>();
 
-				_QLStorage.loadFile(_displayList, _deletedList, filepath);
+				_qLStorage.loadFile(_displayList, _deletedList, filepath);
 
 				_masterList = new LinkedList<Task>();
 
 				copyList(_displayList, _masterList);
 
-				_QLStorage.saveFile(_masterList, _deletedList, _filePath);
+				_qLStorage.saveFile(_masterList, _deletedList, _filePath);
 
 				_historyMgnr.updateUndoStack(_displayList, _masterList,
 						_deletedList, _shouldShowAllCompleted);
@@ -298,7 +298,7 @@ public class QLLogic {
 
 			try {
 
-				_QLStorage.saveFile(_masterList, _deletedList, filepath);
+				_qLStorage.saveFile(_masterList, _deletedList, filepath);
 				feedback.append("Saved to: \"" + filepath + "\". ");
 
 			} catch (Error e) {

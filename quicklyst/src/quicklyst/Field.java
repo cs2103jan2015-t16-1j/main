@@ -15,8 +15,8 @@ public class Field {
 
 	private FieldCriteria _fieldCriteria;
 
-	private boolean _dateParsed = false;
-	private boolean _timeParsed = false;
+	private boolean _isDateParsed = false;
+	private boolean _isTimeParsed = false;
 
 	public Field(FieldType fieldType) {
 		_fieldType = fieldType;
@@ -45,11 +45,6 @@ public class Field {
 	private void updateFieldContent(Object content) {
 		
 		switch (_fieldType) {
-		
-		case TASK_NAME:
-			
-			_taskName = (String) content;
-			break;
 			
 		case START_DATE:
 		case DUE_DATE:
@@ -76,11 +71,11 @@ public class Field {
 	}
 
 	public void setDateParsed(boolean yesNo) {
-		_dateParsed = yesNo;
+		_isDateParsed = yesNo;
 	}
 
 	public void setTimeParsed(boolean yesNo) {
-		_timeParsed = yesNo;
+		_isTimeParsed = yesNo;
 	}
 
 	public FieldType getFieldType() {
@@ -108,11 +103,11 @@ public class Field {
 	}
 
 	public boolean isDateParsed() {
-		return _dateParsed;
+		return _isDateParsed;
 	}
 
 	public boolean isTimeParsed() {
-		return _timeParsed;
+		return _isTimeParsed;
 	}
 
 	public boolean shouldClearDate() {

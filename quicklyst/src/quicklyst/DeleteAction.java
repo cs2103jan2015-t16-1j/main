@@ -6,7 +6,10 @@ import java.util.LinkedList;
 public class DeleteAction extends Action {
 
 	private static final String STRING_DELETED = "deleted";
+	
 	private int _taskIndex;
+	
+	private String _deletedTaskID;
 
 	public DeleteAction(int taskNumber) {
 		this._feedback = new StringBuilder();
@@ -29,7 +32,7 @@ public class DeleteAction extends Action {
 			workingList.remove(taskToDel);
 			workingListMaster.remove(taskToDel);
 			
-			setDeletedTaskID(taskToDel.getGoogleID());
+			_deletedTaskID = taskToDel.getGoogleID();
 			
 			this._isSuccess = true;
 			this._feedback.append(String.format(MessageConstants.TASK_NO_IS,
@@ -41,6 +44,10 @@ public class DeleteAction extends Action {
 			this._feedback.append(MessageConstants.TASK_NO_OUT_OF_RANGE);
 			return;
 		}
+	}
+
+	public String getDeletedTaskID() {
+		return _deletedTaskID;
 	}
 
 	private boolean isTaskIndexInRange(LinkedList<Task> workingList) {

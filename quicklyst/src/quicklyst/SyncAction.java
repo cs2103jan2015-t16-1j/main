@@ -10,6 +10,8 @@ import quicklyst.Task;
 public class SyncAction extends Action {
 
 	private SortAction _defaultSort;
+	
+	private LinkedList<String> _deletedList;
 
 	public SyncAction() {
 		setSuccess(false);
@@ -24,8 +26,10 @@ public class SyncAction extends Action {
 
 		try {
 
+			assert _deletedList != null;
+			
 			QLGoogleIntegration.getInstance()
-					.sync(masterList, getDeletedList());
+					.sync(masterList, _deletedList);
 
 			copyList(masterList, displayList);
 
@@ -38,7 +42,11 @@ public class SyncAction extends Action {
 			getFeedback().append(e.getMessage());
 		}
 	}
-
+	
+	public void attachDeletedList(LinkedList<String> list) {
+		_deletedList = list;
+	}
+	
 	private <E> void copyList(LinkedList<E> fromList,
 			LinkedList<E> toList) {
 
