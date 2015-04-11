@@ -7,6 +7,17 @@ import java.util.regex.Pattern;
 //@author A0102015H
 public class CommandParser {
 
+	private static final String STRING_SPACE = " ";
+	private static final String STRING_DASH = "-";
+	private static final char CHAR_DASH = '-';
+	private static final String STRING_EMPTY = "";
+	private static final String PRIM_NAME = "-n";
+	private static final String STRING_NAME = "name";
+	private static final String STRING_NO = "no";
+	private static final String STRING_YES = "yes";
+	private static final String STRING_N = "n";
+	private static final String STRING_Y = "y";
+	private static final String STRING_ALL = "all";
 	private static final String COMMAND_LOGOUT_ABBREV = "LG";
 	private static final String COMMAND_LOGOUT = "LOGOUT";
 	private static final String COMMAND_SYNC_ABBREV = "SG";
@@ -21,19 +32,22 @@ public class CommandParser {
 	private static final String COMMAND_EDIT = "EDIT";
 	private static final String COMMAND_ADD_ABBREV = "A";
 	private static final String COMMAND_ADD = "ADD";
-	
+
+	private static final char IDENTIFIER_CHAR_BACKSLASH = '\\';
+	private static final String IDENTIFIER_BACKSLASH = "\\\\";
+
 	private static final String[][] CONVERSION_TABLE = { { "from", "-s" },
-		{ "start", "-s" }, { "to", "-d" }, { "due", "-d" }, { "by", "-d" },
-		{ "end", "-d" }, { "priority", "-p" }, { "prio", "-p" },
-		{ "overdue", "-o" }, { "completed", "-c" }, { "duration", "-l" },
-		{ "ascend", "a" }, { "descend", "d" }, { "high", "h" },
-		{ "medium", "m" }, { "low", "l" }, { "yes", "y" }, { "no", "n" },
-		{ "before", "bf" }, { "after", "af" }, { "on", "on" },
-		{ "between", "btw" }, { "and", "&" }, { "today", "tdy" },
-		{ "tomorrow", "tmr" }, { "monday", "mon" }, { "tuesday", "tue" },
-		{ "wednesday", "wed" }, { "thursday", "thu" }, { "friday", "fri" },
-		{ "saturday", "sat" }, { "sunday", "sun" }, { "clear", "clr" } };
-	
+			{ "start", "-s" }, { "to", "-d" }, { "due", "-d" }, { "by", "-d" },
+			{ "end", "-d" }, { "priority", "-p" }, { "prio", "-p" },
+			{ "overdue", "-o" }, { "completed", "-c" }, { "duration", "-l" },
+			{ "ascend", "a" }, { "descend", "d" }, { "high", "h" },
+			{ "medium", "m" }, { "low", "l" }, { "yes", "y" }, { "no", "n" },
+			{ "before", "bf" }, { "after", "af" }, { "on", "on" },
+			{ "between", "btw" }, { "and", "&" }, { "today", "tdy" },
+			{ "tomorrow", "tmr" }, { "monday", "mon" }, { "tuesday", "tue" },
+			{ "wednesday", "wed" }, { "thursday", "thu" }, { "friday", "fri" },
+			{ "saturday", "sat" }, { "sunday", "sun" }, { "clear", "clr" } };
+
 	private StringBuilder _feedback;
 	private String _taskName;
 	private int _taskNumber;
@@ -42,6 +56,7 @@ public class CommandParser {
 
 	private Boolean _completeYesNo;
 	private boolean _findAll;
+	private boolean _noTaskName;
 
 	/* Test variable */
 	private String _fieldStringPrim;
@@ -50,6 +65,7 @@ public class CommandParser {
 	public CommandParser(String command) {
 		_feedback = new StringBuilder();
 		_fields = new LinkedList<Field>();
+		_noTaskName = false;
 		command = command.trim();
 		processCmdString(command);
 	}
@@ -83,14 +99,14 @@ public class CommandParser {
 		case SYNC:
 			return new SyncAction();
 		case LOG_OUT:
-		    return new LogOutAction();
+			return new LogOutAction();
 		default:
 			return null;
 		}
 	}
 
 	/* Test method */
-	public int getTastNumber() {
+	public int getTaskNumber() {
 		return _taskNumber;
 	}
 
@@ -118,7 +134,7 @@ public class CommandParser {
 	public String getFieldStringClean() {
 		return _fieldStringClean;
 	}
-	
+
 	/* Test method */
 	public LinkedList<Field> getFields() {
 		return _fields;
@@ -126,12 +142,12 @@ public class CommandParser {
 
 	private void processCmdString(String cmdString) {
 
-		if (cmdString.trim().equals("")) {
-			_feedback.append("Please enter a command. ");
+		if (cmdString.trim().equals(STRING_EMPTY)) {
+			_feedback.append(MessageConstants.NO_COMMAND);
 			return;
 		}
 
-		String[] actionAndContents = cmdString.split(" ", 2);
+		String[] actionAndContents = cmdString.split(STRING_SPACE, 2);
 
 		determineActionType(actionAndContents[0].trim());
 
@@ -139,75 +155,18 @@ public class CommandParser {
 			return;
 		}
 
-		switch (_actionType) {
-		case ADD:
-
-			if (actionAndContents.length == 1) {
-				_feedback.append("No task name detected. ");
-				return;
-			}
-			
-			extractTaskName(actionAndContents[1]);
-			
-			if (_taskName == null) {
-				_feedback.append("No task name detected. ");
-				return;
-			}
-			
-			actionAndContents[1] = actionAndContents[1]
-					.substring(actionAndContents[1].indexOf(92))
-					.replaceFirst(Pattern.quote("\\"), "").trim();
-			
-			break;
-
-		case EDIT:
-		case DELETE:
-		case COMPLETE:
-
-			if (actionAndContents.length == 1) {
-				return;
-			}
-			extractTaskNumber(actionAndContents[1].trim());
-
-			actionAndContents[1] = actionAndContents[1].trim()
-					.replaceFirst(String.valueOf(_taskNumber), "").trim();
-
-			if (_actionType == ActionType.EDIT) {
-				String commandWithNoName = extractFindEditName(actionAndContents[1]);
-				if (commandWithNoName != null) {
-					actionAndContents[1] = commandWithNoName;
-				}
-			}
-			break;
-
-		case FIND:
-
-			if (actionAndContents.length == 1) {
-				return;
-			}
-			String commandWithNoName = extractFindEditName(actionAndContents[1]);
-			if (commandWithNoName != null) {
-				actionAndContents[1] = commandWithNoName;
-			}
-			break;
-
-		case PUSH:
-		case PULL:
-		case SYNC:
-		case LOG_OUT:
-
-			return;
-
-		default:
-			break;
-		}
-
 		if (actionAndContents.length == 1
 				|| actionAndContents[1].trim().isEmpty()) {
+
+			if (_actionType == ActionType.ADD) {
+				_feedback.append(MessageConstants.NO_TASK_NAME);
+
+			}
 			return;
 		}
 
-		determineActionDetails(convertToPrim(actionAndContents[1]).trim());
+		System.out.println(actionAndContents[1].trim());
+		determineActionDetails(actionAndContents[1].trim());
 	}
 
 	private String convertToPrim(String cmdString) {
@@ -224,50 +183,56 @@ public class CommandParser {
 		return cmdString;
 	}
 
-	private void extractTaskNumber(String fieldsString) {
-		String[] numberAndFields = fieldsString.split(" ", 2);
+	private String extractTaskNumber(String fieldsString) {
+		String[] numberAndFields = fieldsString.split(STRING_SPACE, 2);
 		String taskNumString = numberAndFields[0].trim();
-		if (taskNumString.isEmpty() || taskNumString.charAt(0) == '-'
-				|| taskNumString.charAt(0) == '0') {
-			_taskNumber = 0;
-			return;
-		}
+
 		try {
 			_taskNumber = Integer.parseInt(taskNumString);
+			fieldsString = fieldsString.replaceFirst(
+					String.valueOf(_taskNumber), STRING_EMPTY).trim();
+			System.out.println("lala");
 		} catch (NumberFormatException e) {
 			_taskNumber = 0;
 		}
+		return fieldsString;
 	}
 
-	private void extractTaskName(String fieldsString) {
-		// check for '\' character - ascii 92
-		int stopIndex = fieldsString.indexOf(92);
+	private String extractTaskName(String fieldsString) {
+
+		int stopIndex = fieldsString.indexOf(IDENTIFIER_CHAR_BACKSLASH);
 		if (stopIndex == -1) {
-			_feedback
-					.append("Please denote end of task name with the \"\\\" character. Unexpected error may occur. ");
-			return;
+			_feedback.append(MessageConstants.NAME_NO_CLOSE);
 		} else if (stopIndex == 0) {
-			_feedback.append("Task name entered is blank. ");
-			return;
+			_feedback.append(MessageConstants.TASK_NAME_BLANK);
 		} else {
 			String taskName = fieldsString.substring(0, stopIndex).trim();
 			if (taskName.isEmpty()) {
-				_feedback.append("Task name entered is blank. ");
+				_feedback.append(MessageConstants.TASK_NAME_BLANK);
 			} else {
 				_taskName = taskName;
+				fieldsString = fieldsString
+						.substring(
+								fieldsString.indexOf(IDENTIFIER_CHAR_BACKSLASH))
+						.replaceFirst(IDENTIFIER_BACKSLASH, STRING_EMPTY)
+						.trim();
 			}
 		}
+		return fieldsString;
 	}
 
-	private String extractFindEditName(String content) {
-		content = content.replaceFirst("\\b(?i)name\\b", "-n");
-		int initLength = content.length();
-		content = content.replaceFirst("-n", "\\\\");
-		int endLength = content.length();
+	private String extractFindEditName(String fieldsString) {
+
+		fieldsString = fieldsString.replaceFirst("\\b(?i)" + STRING_NAME
+				+ "\\b", PRIM_NAME);
+		int initLength = fieldsString.length();
+		fieldsString = fieldsString.replaceFirst(PRIM_NAME,
+				IDENTIFIER_BACKSLASH);
+		int endLength = fieldsString.length();
 		if (initLength != endLength) {
-			return extractTaskNameWithBackSlash(content);
+			return extractTaskNameWithBackSlash(fieldsString);
 		} else {
-			return null;
+			return fieldsString;
 		}
 
 	}
@@ -276,43 +241,43 @@ public class CommandParser {
 		int quoteStart = -1, quoteEnd = -1;
 		int i, j;
 		for (i = 0; i < fieldsString.length(); i++) {
-			if (fieldsString.charAt(i) == 92) {
+			if (fieldsString.charAt(i) == IDENTIFIER_CHAR_BACKSLASH) {
 				quoteStart = i;
 				break;
 			}
 		}
 
 		for (j = fieldsString.length() - 1; j >= 0 && j > i; j--) {
-			if (fieldsString.charAt(j) == 92) {
+			if (fieldsString.charAt(j) == IDENTIFIER_CHAR_BACKSLASH) {
 				quoteEnd = j;
 				break;
 			}
 		}
 
 		if (quoteStart != -1 && quoteEnd == -1) {
-			_feedback
-					.append("Please denote end of task name with the \"\\\" character. Unexpected error may occur. ");
-			return null;
+			_feedback.append(MessageConstants.NAME_NO_CLOSE);
+
+			return fieldsString.replaceFirst(IDENTIFIER_BACKSLASH, STRING_NAME);
+
 		} else if (quoteStart != -1 && quoteEnd != -1) {
 
 			_taskName = fieldsString.substring(quoteStart + 1, quoteEnd).trim();
 
 			if (_taskName.isEmpty()) {
-				_feedback.append("Task name is empty. ");
+				_feedback.append(MessageConstants.NO_TASK_NAME);
 				_taskName = null;
 			}
 
 			String front = fieldsString.substring(0, quoteStart).trim();
 			String back;
 			if (quoteEnd == fieldsString.length() - 1) {
-				back = "";
+				back = STRING_EMPTY;
 			} else {
 				back = fieldsString.substring(quoteEnd + 1).trim();
 			}
-			String contentWithoutName = front + " " + back;
-			return contentWithoutName;
+			return front + STRING_SPACE + back;
 		} else {
-			return null;
+			return fieldsString;
 		}
 	}
 
@@ -342,16 +307,6 @@ public class CommandParser {
 
 			_actionType = ActionType.COMPLETE;
 
-		} else if (actionString.equalsIgnoreCase("PUSH")
-				|| actionString.equalsIgnoreCase("PS")) {
-
-			_actionType = ActionType.PUSH;
-
-		} else if (actionString.equalsIgnoreCase("PULL")
-				|| actionString.equalsIgnoreCase("PL")) {
-
-			_actionType = ActionType.PULL;
-
 		} else if (actionString.equalsIgnoreCase(COMMAND_SYNC)
 				|| actionString.equalsIgnoreCase(COMMAND_SYNC_ABBREV)) {
 
@@ -363,28 +318,29 @@ public class CommandParser {
 			_actionType = ActionType.LOG_OUT;
 
 		} else {
-			_feedback.append("Invalid action type. ");
+			_feedback.append(MessageConstants.INVALID_ACTION_TYPE);
 			return;
 		}
 	}
 
 	private void determineActionDetails(String fieldsString) {
 
-		determineNonFieldInputs(fieldsString);
-		fieldsString = removeWrongInputs(fieldsString);
-		determineFields(fieldsString);
+		fieldsString = determineNonFieldInputs(fieldsString).trim();
+		if (_actionType == ActionType.COMPLETE
+				|| _actionType == ActionType.DELETE
+				|| _actionType == ActionType.SYNC
+				|| _actionType == ActionType.LOG_OUT || _noTaskName || _findAll) {
+			return;
+		} else {
+			fieldsString = convertToPrim(fieldsString).trim();
+			fieldsString = removeWrongInputs(fieldsString).trim();
+			determineFields(fieldsString);
+		}
 	}
 
 	private void determineFields(String fieldsString) {
-		if (fieldsString.equalsIgnoreCase("all")
-				|| fieldsString.equalsIgnoreCase("y")
-				|| fieldsString.equalsIgnoreCase("n")
-				|| _actionType == ActionType.PUSH
-				|| _actionType == ActionType.PULL) {
-			return;
-		}
 
-		String[] fieldStringArray = fieldsString.split("-");
+		String[] fieldStringArray = fieldsString.split(STRING_DASH);
 
 		for (String fieldString : fieldStringArray) {
 			fieldString = fieldString.trim();
@@ -400,46 +356,81 @@ public class CommandParser {
 		}
 	}
 
-	private void determineNonFieldInputs(String fieldsString) {
+	private String determineNonFieldInputs(String fieldsString) {
+
 		switch (_actionType) {
-		case FIND:
+		case ADD:
+
+			fieldsString = extractTaskName(fieldsString);
+
+			if (_taskName == null) {
+				_feedback.append(MessageConstants.NO_TASK_NAME);
+				_noTaskName = true;
+			} else {
+				_noTaskName = false;
+			}
+
+			break;
+
+		case EDIT:
 		case DELETE:
-			if (fieldsString.trim().equalsIgnoreCase("all")) {
+		case COMPLETE:
+
+			fieldsString = extractTaskNumber(fieldsString);
+
+			if (_actionType == ActionType.EDIT && _taskNumber > 0) {
+				fieldsString = extractFindEditName(fieldsString);
+			}
+
+			if (_actionType == ActionType.COMPLETE && _taskNumber > 0) {
+				if (fieldsString.trim().equalsIgnoreCase(STRING_Y)
+						|| fieldsString.trim().equalsIgnoreCase(STRING_YES)) {
+					_completeYesNo = true;
+				} else if (fieldsString.trim().equalsIgnoreCase(STRING_N)
+						|| fieldsString.trim().equalsIgnoreCase(STRING_NO)) {
+					_completeYesNo = false;
+				} else {
+					_completeYesNo = null;
+				}
+			}
+
+			break;
+
+		case FIND:
+
+			if (fieldsString.trim().equalsIgnoreCase(STRING_ALL)) {
 				_findAll = true;
 			} else {
 				_findAll = false;
 			}
-			break;
 
-		case COMPLETE:
-			if (fieldsString.trim().equalsIgnoreCase("y")) {
-				_completeYesNo = true;
-			} else if (fieldsString.trim().equalsIgnoreCase("n")) {
-				_completeYesNo = false;
-			} else {
-				_completeYesNo = null;
-			}
+			fieldsString = extractFindEditName(fieldsString);
 			break;
 
 		default:
 			break;
 		}
+
+		return fieldsString;
 	}
 
 	private String removeWrongInputs(String fieldsString) {
-		if (fieldsString.charAt(0) != '-'
-				&& !fieldsString.equalsIgnoreCase("all")
-				&& !fieldsString.equalsIgnoreCase("y")
-				&& !fieldsString.equalsIgnoreCase("n")
-				&& _actionType != ActionType.PUSH
-				&& _actionType != ActionType.PULL) {
 
-			int indexDash = fieldsString.indexOf('-');
+		if (fieldsString.isEmpty()) {
+			return fieldsString;
+		}
+
+		if (fieldsString.charAt(0) != CHAR_DASH
+				&& !fieldsString.equalsIgnoreCase(STRING_ALL)
+				&& !fieldsString.equalsIgnoreCase(STRING_Y)
+				&& !fieldsString.equalsIgnoreCase(STRING_N)) {
+
+			int indexDash = fieldsString.indexOf(CHAR_DASH);
 			String wrongFields;
 
 			if (indexDash != -1) {
 				wrongFields = fieldsString.substring(0,
-						fieldsString.indexOf('-'));
+						fieldsString.indexOf(CHAR_DASH));
 			} else {
 				wrongFields = fieldsString;
 			}
@@ -449,7 +440,7 @@ public class CommandParser {
 					wrongFields.trim()));
 
 			fieldsString = fieldsString.replaceFirst(
-					Pattern.quote(wrongFields), "");
+					Pattern.quote(wrongFields), STRING_EMPTY);
 		}
 
 		// For testing purposes

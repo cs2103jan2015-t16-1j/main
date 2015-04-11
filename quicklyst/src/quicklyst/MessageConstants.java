@@ -33,4 +33,6 @@ public class MessageConstants {
 	
 	public static final String TASK_ADDED = "Task: \"%s\" added. ";
 	
+	public static final String NO_COMMAND =  "Please enter a command. ";
+	
 }

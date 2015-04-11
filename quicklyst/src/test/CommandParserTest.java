@@ -31,18 +31,18 @@ public class CommandParserTest {
 
 		testCommandParser = new CommandParser("xxx task 1\\");
 		assertNull(testCommandParser.getAction());
-		assertEquals(MessageConstants.INVALID_ACTION_TYPE,
-				testCommandParser.getFeedback().toString());
+		assertEquals(MessageConstants.INVALID_ACTION_TYPE, testCommandParser
+				.getFeedback().toString());
 
 		testCommandParser = new CommandParser("adds task 1\\");
 		assertNull(testCommandParser.getAction());
-		assertEquals(MessageConstants.INVALID_ACTION_TYPE,
-				testCommandParser.getFeedback().toString());
+		assertEquals(MessageConstants.INVALID_ACTION_TYPE, testCommandParser
+				.getFeedback().toString());
 
 		testCommandParser = new CommandParser("ad task 1\\");
 		assertNull(testCommandParser.getAction());
-		assertEquals(MessageConstants.INVALID_ACTION_TYPE,
-				testCommandParser.getFeedback().toString());
+		assertEquals(MessageConstants.INVALID_ACTION_TYPE, testCommandParser
+				.getFeedback().toString());
 	}
 
 	@Test
@@ -89,29 +89,29 @@ public class CommandParserTest {
 
 		testCommandParser = new CommandParser("edit 1");
 		assertEquals(ActionType.EDIT, testCommandParser.getAction().getType());
-		assertEquals(1, testCommandParser.getTastNumber());
+		assertEquals(1, testCommandParser.getTaskNumber());
 		assertEquals("", testCommandParser.getFeedback().toString());
 
 		testCommandParser = new CommandParser("eDIt 0");
 		assertEquals(ActionType.EDIT, testCommandParser.getAction().getType());
-		assertEquals(0, testCommandParser.getTastNumber());
+		assertEquals(0, testCommandParser.getTaskNumber());
 		assertEquals("", testCommandParser.getFeedback().toString());
 
 		testCommandParser = new CommandParser("e -1");
 		assertEquals(ActionType.EDIT, testCommandParser.getAction().getType());
-		assertEquals(0, testCommandParser.getTastNumber());
+		assertEquals(-1, testCommandParser.getTaskNumber());
 		assertEquals("", testCommandParser.getFeedback().toString());
 
 		testCommandParser = new CommandParser("E a");
 		assertEquals(ActionType.EDIT, testCommandParser.getAction().getType());
-		assertEquals(0, testCommandParser.getTastNumber());
-		assertEquals(String.format(
-				MessageConstants.INVALID_FIELD_FORMAT_IN, "a"),
+		assertEquals(0, testCommandParser.getTaskNumber());
+		assertEquals(
+				String.format(MessageConstants.INVALID_FIELD_FORMAT_IN, "a"),
 				testCommandParser.getFeedback().toString());
 
 		testCommandParser = new CommandParser("e ");
 		assertEquals(ActionType.EDIT, testCommandParser.getAction().getType());
-		assertEquals(0, testCommandParser.getTastNumber());
+		assertEquals(0, testCommandParser.getTaskNumber());
 		assertEquals("", testCommandParser.getFeedback().toString());
 	}
 
@@ -155,7 +155,7 @@ public class CommandParserTest {
 		assertTrue(testCommandParser.getFields().isEmpty());
 		assertTrue(testCommandParser.getFindAll());
 		assertEquals(ActionType.FIND, testCommandParser.getAction().getType());
-		assertEquals("all", testCommandParser.getFieldStringPrim());
+		assertNull(testCommandParser.getFieldStringPrim());
 		assertEquals("", testCommandParser.getFeedback().toString());
 
 		/* Invalid fields */
@@ -164,12 +164,10 @@ public class CommandParserTest {
 		assertEquals(ActionType.FIND, testCommandParser.getAction().getType());
 		assertEquals("-s tdy -d tmr", testCommandParser.getFieldStringPrim());
 		assertEquals(
-				String.format(MessageConstants.INVALID_FIELD_CRITERIA,
-						"tdy")
+				String.format(MessageConstants.INVALID_FIELD_CRITERIA, "tdy")
 						+ String.format(
-								MessageConstants.INVALID_FIELD_CRITERIA,
-								"tmr"), testCommandParser.getFeedback()
-						.toString());
+								MessageConstants.INVALID_FIELD_CRITERIA, "tmr"),
+				testCommandParser.getFeedback().toString());
 
 		testCommandParser = new CommandParser("find start before due after");
 		assertFalse(testCommandParser.getFields().isEmpty());
@@ -184,14 +182,14 @@ public class CommandParserTest {
 		/* Valid task name */
 		testCommandParser = new CommandParser("edit 1 name task 1\\");
 		assertEquals(ActionType.EDIT, testCommandParser.getAction().getType());
-		assertNull(testCommandParser.getFieldStringPrim());
+		assertEquals("", testCommandParser.getFieldStringPrim());
 		assertEquals("task 1", testCommandParser.getTaskName());
 		assertEquals("", testCommandParser.getFeedback().toString());
 
 		testCommandParser = new CommandParser(
 				"edit 1 name task 1\\ due tmr priority H");
 		assertEquals(ActionType.EDIT, testCommandParser.getAction().getType());
-		assertEquals(" -d tmr -p H", testCommandParser.getFieldStringPrim());
+		assertEquals("-d tmr -p H", testCommandParser.getFieldStringPrim());
 		assertEquals("task 1", testCommandParser.getTaskName());
 		assertEquals("", testCommandParser.getFeedback().toString());
 
@@ -204,14 +202,14 @@ public class CommandParserTest {
 
 		testCommandParser = new CommandParser("find name task 1\\");
 		assertEquals(ActionType.FIND, testCommandParser.getAction().getType());
-		assertNull(testCommandParser.getFieldStringPrim());
+		assertEquals("", testCommandParser.getFieldStringPrim());	
 		assertEquals("task 1", testCommandParser.getTaskName());
 		assertEquals("", testCommandParser.getFeedback().toString());
 
 		testCommandParser = new CommandParser(
 				"find due on tmr start between 12/12 and 12/12 name task 1\\");
 		assertEquals(ActionType.FIND, testCommandParser.getAction().getType());
-		assertEquals("-d on tmr -s btw 12/12 & 12/12 ",
+		assertEquals("-d on tmr -s btw 12/12 & 12/12",
 				testCommandParser.getFieldStringPrim());
 		assertEquals("task 1", testCommandParser.getTaskName());
 		assertEquals("", testCommandParser.getFeedback().toString());
@@ -237,25 +235,25 @@ public class CommandParserTest {
 		/* Valid task number */
 		testCommandParser = new CommandParser("delete 1");
 		assertEquals(ActionType.DELETE, testCommandParser.getAction().getType());
-		assertEquals(1, testCommandParser.getTastNumber());
+		assertEquals(1, testCommandParser.getTaskNumber());
 		assertEquals("", testCommandParser.getFeedback().toString());
 
 		testCommandParser = new CommandParser("d 1");
 		assertEquals(ActionType.DELETE, testCommandParser.getAction().getType());
-		assertEquals(1, testCommandParser.getTastNumber());
+		assertEquals(1, testCommandParser.getTaskNumber());
 		assertEquals("", testCommandParser.getFeedback().toString());
 
 		testCommandParser = new CommandParser("complete 1 y");
 		assertEquals(ActionType.COMPLETE, testCommandParser.getAction()
 				.getType());
-		assertEquals(1, testCommandParser.getTastNumber());
+		assertEquals(1, testCommandParser.getTaskNumber());
 		assertTrue(testCommandParser.getCompleteYesNo());
 		assertEquals("", testCommandParser.getFeedback().toString());
 
 		testCommandParser = new CommandParser("c 1 n");
 		assertEquals(ActionType.COMPLETE, testCommandParser.getAction()
 				.getType());
-		assertEquals(1, testCommandParser.getTastNumber());
+		assertEquals(1, testCommandParser.getTaskNumber());
 		assertFalse(testCommandParser.getCompleteYesNo());
 		assertEquals("", testCommandParser.getFeedback().toString());
 
@@ -263,19 +261,19 @@ public class CommandParserTest {
 		testCommandParser = new CommandParser("complete 0");
 		assertEquals(ActionType.COMPLETE, testCommandParser.getAction()
 				.getType());
-		assertEquals(0, testCommandParser.getTastNumber());
+		assertEquals(0, testCommandParser.getTaskNumber());
 		assertEquals("", testCommandParser.getFeedback().toString());
 
 		testCommandParser = new CommandParser("complete 0 y");
 		assertEquals(ActionType.COMPLETE, testCommandParser.getAction()
 				.getType());
-		assertEquals(0, testCommandParser.getTastNumber());
+		assertEquals(0, testCommandParser.getTaskNumber());
 		assertEquals("", testCommandParser.getFeedback().toString());
 
 		testCommandParser = new CommandParser("complete -1 n");
 		assertEquals(ActionType.COMPLETE, testCommandParser.getAction()
 				.getType());
-		assertEquals(0, testCommandParser.getTastNumber());
+		assertEquals(-1, testCommandParser.getTaskNumber());
 		assertEquals("", testCommandParser.getFeedback().toString());
 	}
 
@@ -284,20 +282,21 @@ public class CommandParserTest {
 
 		testCommandParser = new CommandParser("find xxx xxx due on tmr");
 		assertEquals("-d on tmr", testCommandParser.getFieldStringClean());
-		assertEquals(String.format(
-				MessageConstants.INVALID_FIELD_FORMAT_IN, "xxx xxx"),
-				testCommandParser.getFeedback().toString());
+		assertEquals(String.format(MessageConstants.INVALID_FIELD_FORMAT_IN,
+				"xxx xxx"), testCommandParser.getFeedback().toString());
 
 		testCommandParser = new CommandParser("e tdy due tmr start");
 		assertEquals("-d tmr -s", testCommandParser.getFieldStringClean());
-		assertEquals(String.format(
-				MessageConstants.INVALID_FIELD_FORMAT_IN, "tdy"),
+		assertEquals(
+				String.format(MessageConstants.INVALID_FIELD_FORMAT_IN, "tdy"),
 				testCommandParser.getFeedback().toString());
 
 		testCommandParser = new CommandParser("find low priority due tmr");
 		assertEquals("-p -d tmr", testCommandParser.getFieldStringClean());
-		assertEquals(String.format(
-				MessageConstants.INVALID_FIELD_FORMAT_IN, "low"),
+		assertEquals(
+				String.format(MessageConstants.INVALID_FIELD_FORMAT_IN, "l")
+						+ String.format(
+								MessageConstants.INVALID_FIELD_CRITERIA, "tmr"),
 				testCommandParser.getFeedback().toString());
 
 	}
