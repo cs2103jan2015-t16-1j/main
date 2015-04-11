@@ -23,6 +23,7 @@ public class MessageConstants {
 	public static final String TASK_NO_OUT_OF_RANGE = "Task # out of range. ";
 
 	public static final String INVALID_FIELD  = "Invalid field %s. ";
+	public static final String INVALID_FIELD_TYPE  = "Invalid field type. ";
 	public static final String INVALID_FIELD_FORMAT_IN = "Invalid field format in \"%s\". ";
 	public static final String INVALID_FIELD_CRITERIA = "Invalid field criteria \"%s\". ";
 	public static final String INVALID_DAY_CRITERIA = "Invalid day criteria \"%s\". ";
