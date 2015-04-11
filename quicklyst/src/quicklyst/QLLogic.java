@@ -13,10 +13,13 @@ public class QLLogic {
 	private LinkedList<String> _deletedList;
 
 	private String _filePath;
+
 	private boolean _shouldShowAllCompleted;
 
 	private HistoryManager _historyMgnr;
+
 	private QLStorage _QLStorage;
+
 	private QLSettings _QLSettings;
 
 	private static QLLogic _instance;
@@ -30,21 +33,25 @@ public class QLLogic {
 
 	/** General methods **/
 	public void setup(StringBuilder feedback) {
+
 		_QLStorage = QLStorage.getInstance();
 		_QLSettings = QLSettings.getInstance();
 
 		try {
+
 			_filePath = _QLSettings.getPrefFilePath();
 			_masterList = new LinkedList<Task>();
-            _deletedList = new LinkedList<String>();
-            _QLStorage.loadFile(_masterList, _deletedList, _filePath);
+			_deletedList = new LinkedList<String>();
+			_QLStorage.loadFile(_masterList, _deletedList, _filePath);
+
 		} catch (Error e) {
+
 			feedback.append("Preferred task file does not exist. "
 					+ "Default task file is used. ");
 			_filePath = _QLSettings.getDefaultFilePath();
 			_masterList = new LinkedList<Task>();
-            _deletedList = new LinkedList<String>();
-            _QLStorage.loadFile(_masterList, _deletedList, _filePath);
+			_deletedList = new LinkedList<String>();
+			_QLStorage.loadFile(_masterList, _deletedList, _filePath);
 		}
 
 		_displayList = new LinkedList<Task>();
@@ -56,6 +63,7 @@ public class QLLogic {
 
 	/* For testing */
 	public void setupStub() {
+
 		_filePath = "test.json";
 		_shouldShowAllCompleted = false;
 		_QLStorage = QLStorage.getInstance();
@@ -67,48 +75,30 @@ public class QLLogic {
 				_deletedList, _shouldShowAllCompleted);
 	}
 
-	/* For testing */
-	public void displayStub(StringBuilder feedback) {
-		System.out.println("Feedback: " + feedback.toString());
-		System.out.println("Name: start date: due date:");
-		for (int i = 0; i < _displayList.size(); i++) {
-			System.out.print(_displayList.get(i).getName() + " ");
-			try {
-				System.out
-						.print(_displayList.get(i).getStartDateString() + " ");
-			} catch (NullPointerException e) {
-				System.out.print("        ");
-			}
-			try {
-				System.out.print(_displayList.get(i).getDueDateString() + " ");
-			} catch (NullPointerException e) {
-				System.out.print("        ");
-			}
-			if (_displayList.get(i).getPriority() != null) {
-				System.out.print(_displayList.get(i).getPriority() + " ");
-			}
-			System.out.println();
-		}
-
-		System.out.println();
-		feedback.setLength(0);
-	}
-
 	public LinkedList<Task> getDisplayList() {
 		if (!_shouldShowAllCompleted) {
-			Calendar now = Calendar.getInstance();
-			Iterator<Task> iter = _displayList.listIterator();
-			while (iter.hasNext()) {
-				Task task = iter.next();
-				if (task.getIsCompleted()) {
-					if ((task.getDueDate() == null)
-							|| (task.getDueDate().compareTo(now) < 0)) {
-						iter.remove();
-					}
+			showStreamlinedList();
+		}
+		return _displayList;
+	}
+
+	private void showStreamlinedList() {
+
+		Calendar now = Calendar.getInstance();
+		Iterator<Task> iter = _displayList.listIterator();
+
+		while (iter.hasNext()) {
+
+			Task task = iter.next();
+
+			if (task.getIsCompleted()) {
+
+				if ((task.getDueDate() == null)
+						|| (task.getDueDate().compareTo(now) < 0)) {
+					iter.remove();
 				}
 			}
 		}
-		return _displayList;
 	}
 
 	public LinkedList<Task> getFullList() {
@@ -116,21 +106,27 @@ public class QLLogic {
 	}
 
 	public void executeUndo(StringBuilder feedback) {
+
 		_historyMgnr.undo(feedback);
+
 		_displayList = _historyMgnr.getDisplayList();
 		_masterList = _historyMgnr.getMasterList();
 		_shouldShowAllCompleted = _historyMgnr.getShouldShowAll();
 		_deletedList = _historyMgnr.getDeletedList();
-        _QLStorage.saveFile(_masterList, _deletedList, _filePath);
+
+		_QLStorage.saveFile(_masterList, _deletedList, _filePath);
 	}
 
 	public void executeRedo(StringBuilder feedback) {
+
 		_historyMgnr.redo(feedback);
+
 		_displayList = _historyMgnr.getDisplayList();
 		_masterList = _historyMgnr.getMasterList();
 		_shouldShowAllCompleted = _historyMgnr.getShouldShowAll();
 		_deletedList = _historyMgnr.getDeletedList();
-        _QLStorage.saveFile(_masterList, _deletedList, _filePath);
+
+		_QLStorage.saveFile(_masterList, _deletedList, _filePath);
 	}
 
 	public void executeCommand(String command, StringBuilder feedback) {
@@ -166,7 +162,6 @@ public class QLLogic {
 		}
 
 		executeAction(command, feedback);
-
 	}
 
 	public boolean shouldShowAllCompleted() {
@@ -174,32 +169,38 @@ public class QLLogic {
 	}
 
 	private void executeChangeDir(String command, StringBuilder feedback) {
-		String commandAndPath[] = command.split(" ", 2);
-		if (commandAndPath.length == 1 || commandAndPath[1].trim().isEmpty()) {
-			feedback.append("No file path entered. ");
-		} else {
-			String filepath = commandAndPath[1].trim();
-			if (_QLStorage.isValidFile(filepath)) {
 
-				_QLSettings.updatePrefFilePath(filepath);
+		String commandAndPath[] = command.split(" ", 2);
+
+		if (commandAndPath.length == 1 || commandAndPath[1].trim().isEmpty()) {
+
+			feedback.append("No file path entered. ");
+
+		} else {
+
+			String filepath = commandAndPath[1].trim();
+
+			if (_QLStorage.isValidFile(filepath)) {
 
 				_filePath = filepath;
 
-				_masterList = new LinkedList<Task>();
-                _deletedList = new LinkedList<String>();
+				_QLSettings.updatePrefFilePath(filepath);
 
-                _QLStorage.loadFile(_masterList, _deletedList,
-                        filepath);
+				_masterList = new LinkedList<Task>();
+				_deletedList = new LinkedList<String>();
+
+				_QLStorage.loadFile(_masterList, _deletedList, filepath);
+
 				copyList(_masterList, _displayList);
-				_displayList = new LinkedList<Task>();
-				// _deletedList = QLStroage.loadDeletedList //TODO add Storage
-				// API
 
 				_historyMgnr = new HistoryManager(_displayList, _masterList,
 						_deletedList, _shouldShowAllCompleted);
+
 				feedback.append("Directory changed. You are editing tasks in file: \""
 						+ filepath + "\".");
+
 			} else {
+
 				feedback.append("Preferred task file does not exist. "
 						+ "Directory is not changed. ");
 			}
@@ -209,7 +210,9 @@ public class QLLogic {
 	private void executeAction(String command, StringBuilder feedback) {
 
 		CommandParser cp = new CommandParser(command);
+
 		feedback.append(cp.getFeedback().toString());
+
 		Action action = cp.getAction();
 
 		if (action == null) {
@@ -221,6 +224,7 @@ public class QLLogic {
 		}
 
 		action.execute(_displayList, _masterList);
+
 		feedback.append(action.getFeedback().toString());
 
 		if (action.getType() == ActionType.FIND) {
@@ -231,12 +235,14 @@ public class QLLogic {
 
 			if (action.getType() == ActionType.DELETE
 					&& action.getDeletedTaskID() != null) {
+
 				_deletedList.add(action.getDeletedTaskID());
 			}
 
 			_QLStorage.saveFile(_masterList, _deletedList, _filePath);
 
 			if (action.getType() != ActionType.PUSH) {
+
 				_historyMgnr.updateUndoStack(_displayList, _masterList,
 						_deletedList, _shouldShowAllCompleted);
 			}
@@ -244,22 +250,35 @@ public class QLLogic {
 	}
 
 	private void executeLoad(String command, StringBuilder feedback) {
+
 		String commandAndPath[] = command.split(" ", 2);
+
 		if (commandAndPath.length == 1 || commandAndPath[1].trim().isEmpty()) {
+
 			feedback.append("No file path entered. ");
+
 		} else {
+
 			String filepath = commandAndPath[1].trim();
+
 			try {
-			    _displayList = new LinkedList<Task>();
-                _deletedList = new LinkedList<String>();
-                _QLStorage.loadFile(_displayList, _deletedList, 
-                        filepath);
+
+				_displayList = new LinkedList<Task>();
+				_deletedList = new LinkedList<String>();
+
+				_QLStorage.loadFile(_displayList, _deletedList, filepath);
+
 				_masterList = new LinkedList<Task>();
+
 				copyList(_displayList, _masterList);
+
 				_QLStorage.saveFile(_masterList, _deletedList, _filePath);
+
 				_historyMgnr.updateUndoStack(_displayList, _masterList,
 						_deletedList, _shouldShowAllCompleted);
+
 				feedback.append("Loaded from: \"" + filepath + "\". ");
+
 			} catch (Error e) {
 				feedback.append(e.getMessage());
 			}
@@ -267,40 +286,31 @@ public class QLLogic {
 	}
 
 	private void executeSave(String command, StringBuilder feedback) {
+
 		String commandAndPath[] = command.split(" ", 2);
+
 		if (commandAndPath.length == 1 || commandAndPath[1].trim().isEmpty()) {
+
 			feedback.append("No file path entered. ");
+
 		} else {
+
 			String filepath = commandAndPath[1].trim();
+
 			try {
-			    _QLStorage.saveFile(_masterList, _deletedList, filepath);
+
+				_QLStorage.saveFile(_masterList, _deletedList, filepath);
 				feedback.append("Saved to: \"" + filepath + "\". ");
+
 			} catch (Error e) {
 				feedback.append(e.getMessage());
 			}
 		}
 	}
 
-	/** Multi-command methods **/
-
 	private <E> void copyList(LinkedList<E> fromList, LinkedList<E> toList) {
 		toList.clear();
 		for (int i = 0; i < fromList.size(); i++)
 			toList.add(fromList.get(i));
 	}
-
-	/** Main method **/
-	@SuppressWarnings("resource")
-	public void main(String args[]) {
-		setupStub();
-		StringBuilder feedback = new StringBuilder();
-		Scanner sc = new Scanner(System.in);
-		while (true) {
-			System.out.println("Enter command: ");
-			String command = sc.nextLine();
-			executeCommand(command, feedback);
-			displayStub(feedback);
-		}
-	}
-
 }

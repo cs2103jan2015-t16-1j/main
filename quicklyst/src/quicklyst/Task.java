@@ -100,15 +100,7 @@ public class Task {
 		}
 	}
 
-	public void setShouldSync() {
-		_shouldSync = true;
-	}
-
-	public void setShouldNotSync() {
-		_shouldSync = false;
-	}
-
-	public void setIsShouldSync(boolean shouldSync) {
+	public void setShouldSync(boolean shouldSync) {
 		_shouldSync = shouldSync;
 	}
 
@@ -122,6 +114,7 @@ public class Task {
 	}
 
 	public String getPriority() {
+		
 		if (_priority == null) {
 			return null;
 		} else if (_priority.equalsIgnoreCase(STRING_PRIORITY_LOW)) {
@@ -140,19 +133,18 @@ public class Task {
 	}
 
 	public int getPriorityInt() {
+		
 		if (_priority == null) {
 			return 0;
-		}
-		if (_priority.equalsIgnoreCase(STRING_PRIORITY_LOW)) {
+		} else if (_priority.equalsIgnoreCase(STRING_PRIORITY_LOW)) {
 			return NUM_PRIORITY_LOW;
-		}
-		if (_priority.equalsIgnoreCase(STRING_PRIORITY_MEDIUM)) {
+		} else if (_priority.equalsIgnoreCase(STRING_PRIORITY_MEDIUM)) {
 			return NUM_PRIORITY_MEDIUM;
-		}
-		if (_priority.equalsIgnoreCase(STRING_PRIORITY_HIGH)) {
+		} else if (_priority.equalsIgnoreCase(STRING_PRIORITY_HIGH)) {
 			return NUM_PRIORITY_HIGH;
+		} else {
+			return 0;
 		}
-		return 0;
 	}
 
 	public Calendar getStartDate() {
@@ -164,7 +156,9 @@ public class Task {
 	}
 
 	public String getStartDateString() {
+		
 		SimpleDateFormat sdf;
+		
 		if (_startDate == null) {
 			return "no start date";
 		}
@@ -179,7 +173,9 @@ public class Task {
 	}
 
 	public String getDueDateString() {
+		
 		SimpleDateFormat sdf;
+		
 		if (_dueDate == null) {
 			return "no due date";
 		}
@@ -213,25 +209,6 @@ public class Task {
 	public boolean getShouldSync() {
 		return _shouldSync;
 	}
-
-	public int getDuration() {
-		if (_dueDate == null || _startDate == null
-				|| _dueDate.compareTo(_startDate) < 0) {
-			return -1;
-		}
-		Calendar _dueDateDummy = new GregorianCalendar(
-				_dueDate.get(Calendar.YEAR), _dueDate.get(Calendar.MONTH),
-				_dueDate.get(Calendar.DAY_OF_MONTH));
-		Calendar _startDateDummy = new GregorianCalendar(
-				_startDate.get(Calendar.YEAR), _startDate.get(Calendar.MONTH),
-				_startDate.get(Calendar.DAY_OF_MONTH));
-		int duration = 0;
-		while (!_dueDateDummy.equals(_startDateDummy)) {
-			_startDateDummy.add(Calendar.DAY_OF_MONTH, 1);
-			duration++;
-		}
-		return duration;
-	}
 	
 	public Calendar getLastUpdated() {
 		return _lastUpdated;
@@ -240,10 +217,15 @@ public class Task {
 	/* Other methods */
 
 	public Task clone() {
+		
 		Task clonedTask = new Task(_name);
+		
 		if (_startDate == null) {
+			
 			clonedTask.setStartDate((Calendar) null);
+			
 		} else {
+			
 			Calendar startdate = new GregorianCalendar(
 					_startDate.get(Calendar.YEAR),
 					_startDate.get(Calendar.MONTH),
@@ -253,9 +235,13 @@ public class Task {
 					_startDate.get(Calendar.SECOND));
 			clonedTask.setStartDate(startdate);
 		}
+		
 		if (_dueDate == null) {
+			
 			clonedTask.setStartDate((Calendar) null);
+			
 		} else {
+			
 			Calendar dueDate = new GregorianCalendar(
 					_dueDate.get(Calendar.YEAR), _dueDate.get(Calendar.MONTH),
 					_dueDate.get(Calendar.DAY_OF_MONTH),
@@ -264,14 +250,16 @@ public class Task {
 					_dueDate.get(Calendar.SECOND));
 			clonedTask.setDueDate(dueDate);
 		}
+		
 		clonedTask.setLastUpdated(_lastUpdated);
 		clonedTask.setGoogleID(_googleID);
 		clonedTask.setDescription(_description);
 		clonedTask.setIsCompleted(_isCompleted);
 		clonedTask.setPriority(_priority);
-		clonedTask.setIsShouldSync(_shouldSync);
+		clonedTask.setShouldSync(_shouldSync);
 		clonedTask.setHasDueTime(_hasDueTime);
 		clonedTask.setHasStartTime(_hasStartTime);
+		
 		return clonedTask;
 	}
 }
