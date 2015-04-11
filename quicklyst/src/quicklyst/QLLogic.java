@@ -90,19 +90,6 @@ public class QLLogic {
 			System.out.println();
 		}
 
-		/*
-		 * System.out.println("	workingListMaster: "); for(int i = 0; i <
-		 * _workingListMaster.size(); i++) {
-		 * System.out.print(_workingListMaster.get(i).getName() + " "); try {
-		 * System.out.print(_workingListMaster.get(i).getStartDateString() +
-		 * " "); } catch(NullPointerException e) {} try {
-		 * System.out.print(_workingListMaster.get(i).getDueDateString() + " ");
-		 * } catch(NullPointerException e) {}
-		 * if(_workingListMaster.get(i).getPriority() != null) {
-		 * System.out.print(_workingListMaster.get(i).getPriority() + " "); }
-		 * System.out.println(); }
-		 */
-
 		System.out.println();
 		feedback.setLength(0);
 	}

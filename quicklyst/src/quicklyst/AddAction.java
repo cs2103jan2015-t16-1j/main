@@ -10,11 +10,11 @@ public class AddAction extends Action {
 	private SortAction _defaultSort;
 
 	public AddAction(String taskName, LinkedList<Field> fields) {
-		
+
 		assert !taskName.isEmpty() && taskName != null;
 
-		this._feedback = new StringBuilder();
-		this._type = ActionType.ADD;
+		_feedback = new StringBuilder();
+		_type = ActionType.ADD;
 		_defaultSort = new SortAction();
 
 		if (taskName != null) {
@@ -30,24 +30,32 @@ public class AddAction extends Action {
 			LinkedList<Task> masterList) {
 
 		if (_newTask == null) {
-			this._feedback.append("Nothing is added. ");
-			this._isSuccess = false;
+
+			_feedback.append(MessageConstants.NOTHING_ADDED);
+			_isSuccess = false;
 			return;
+
 		} else {
+
 			displayList.add(_newTask);
 			masterList.add(_newTask);
 
-			this._isSuccess = true;
-			this._feedback.append("Task: \"" + _newTask.getName()
-					+ "\" added. ");
+			_isSuccess = true;
+			_feedback.append(String.format(MessageConstants.TASK_ADDED,
+					_newTask.getName()));
 
 			if (_editAction != null) {
+
 				_editAction.execute(displayList, masterList);
-				this._feedback.append(_editAction.getFeedback().toString());
+				_feedback.append(_editAction.getFeedback().toString());
+
 				if (!_editAction.isSuccess()) {
+					LOGGER.info(MessageConstants.SORTING_DISPLAY_LIST);
 					_defaultSort.execute(displayList, masterList);
 				}
+
 			} else {
+				LOGGER.info(MessageConstants.SORTING_DISPLAY_LIST);
 				_defaultSort.execute(displayList, masterList);
 			}
 		}

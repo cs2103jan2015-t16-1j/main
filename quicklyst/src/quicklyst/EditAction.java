@@ -1,12 +1,15 @@
 package quicklyst;
 
 import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.LinkedList;
 
 //@author A0102015H
 public class EditAction extends Action {
 
+	private static final String STRING_L = "L";
+	private static final String STRING_M = "M";
+	private static final String STRING_H = "H";
+	
 	private int _taskIndex;
 	private LinkedList<Field> _fields;
 	private Task _task;
@@ -15,9 +18,9 @@ public class EditAction extends Action {
 
 	public EditAction(int taskNumber, LinkedList<Field> fields, String taskName) {
 
-		this._isSuccess = false;
-		this._feedback = new StringBuilder();
-		this._type = ActionType.EDIT;
+		_isSuccess = false;
+		_feedback = new StringBuilder();
+		_type = ActionType.EDIT;
 		_taskName = taskName;
 		_defaultSort = new SortAction();
 
@@ -33,9 +36,9 @@ public class EditAction extends Action {
 	/* For add action */
 	public EditAction(Task task, LinkedList<Field> fields) {
 
-		this._isSuccess = false;
-		this._feedback = new StringBuilder();
-		this._type = ActionType.EDIT;
+		_isSuccess = false;
+		_feedback = new StringBuilder();
+		_type = ActionType.EDIT;
 		_task = task;
 		_fields = fields;
 		_defaultSort = new SortAction();
@@ -51,83 +54,91 @@ public class EditAction extends Action {
 			_task = displayList.get(_taskIndex);
 			execute();
 		} else {
-			this._feedback.append("Task # out of range. ");
+			_feedback.append(MessageConstants.TASK_NO_OUT_OF_RANGE);
 		}
 
-		System.out.println(this._isSuccess);
+		System.out.println(_isSuccess);
 
-		if (this._isSuccess) {
+		if (_isSuccess) {
+			LOGGER.info(MessageConstants.SORTING_DISPLAY_LIST);
 			_task.setLastUpdated(Calendar.getInstance());
 			_defaultSort.execute(displayList, masterList);
-			System.out.println("sorted");
 		}
 	}
 
 	private void execute() {
+		
 		if (_taskName != null) {
 			updateTaskName();
 		}
 
 		for (Field field : _fields) {
 			FieldType fieldType = field.getFieldType();
+
 			switch (fieldType) {
 			case START_DATE:
+
 				updateStartDate(field);
-				/*
-				 * if (_task.getStartDate() != null) { updateStartDate(field); }
-				 * else { addStartDate(field); }
-				 */
 				break;
 
 			case DUE_DATE:
+
 				updateDueDate(field);
-				/*
-				 * if (_task.getDueDate() != null) { updateDueDate(field); }
-				 * else { addDueDate(field); }
-				 */
 				break;
 
 			case PRIORITY:
+
 				updatePriority(field);
 				break;
+
 			default:
+
 				break;
 			}
 		}
 	}
 
 	private void updatePriority(Field field) {
-		assert field.getPriority().equalsIgnoreCase("H")
-				|| field.getPriority().equalsIgnoreCase("M")
-				|| field.getPriority().equalsIgnoreCase("L");
+		
+		assert field.getPriority().equalsIgnoreCase(STRING_H)
+				|| field.getPriority().equalsIgnoreCase(STRING_M)
+				|| field.getPriority().equalsIgnoreCase(STRING_L);
 
 		if (field.shouldClearPriority()) {
+
 			_task.setPriority((String) null);
-			this._isSuccess = true;
-			this._feedback.append("Priority cleared. ");
+			_isSuccess = true;
+			_feedback.append(MessageConstants.PRIORITY_CLEARED);
+
 		} else if (field.getPriority() == null) {
-			this._isSuccess = false;
+
+			_isSuccess = false;
+
 		} else {
+
 			_task.setPriority(field.getPriority());
-			this._isSuccess = true;
-			this._feedback.append("Priority set to \"" + field.getPriority()
-					+ "\". ");
+			_isSuccess = true;
+			_feedback.append(String.format(MessageConstants.PRIORITY_SET,
+					field.getPriority()));
 		}
 	}
 
 	private void updateTaskName() {
+		
 		assert !_taskName.isEmpty();
 		_task.setName(_taskName);
-		this._feedback.append("Task name set to \"" + _taskName + "\". ");
-		this._isSuccess = true;
+		_feedback.append(String.format(MessageConstants.TASK_NAME_SET,
+				_taskName));
+		_isSuccess = true;
 	}
 
 	private void updateDueDate(Field field) {
+		
 		if (field.shouldClearDate()) {
 			_task.setDueDate((Calendar) null);
 			_task.setHasDueTime(false);
-			this._isSuccess = true;
-			this._feedback.append("Due date cleared. ");
+			_isSuccess = true;
+			_feedback.append(MessageConstants.DUE_DATE_CLEARED);
 		} else if (field.getDate() == null) {
 			return;
 		} else {
@@ -139,17 +150,17 @@ public class EditAction extends Action {
 
 	private void setDueDate(Calendar newDate, boolean hasDueTime,
 			boolean isTimeParsed) {
+		
 		if (_task.getStartDate() != null
 				&& newDate.compareTo(_task.getStartDate()) < 0) {
-			this._feedback
-					.append("Due date/time entered is smaller than start date/time of task. ");
+			_feedback.append(MessageConstants.DUE_SMALLER_THAN_START);
 		} else {
 
 			_task.setDueDate(newDate);
 			_task.setHasDueTime(hasDueTime);
-			this._isSuccess = true;
-			this._feedback.append("Due date set to " + _task.getDueDateString()
-					+ ". ");
+			_isSuccess = true;
+			_feedback.append(String.format(MessageConstants.DUE_DATE_SET,
+					_task.getDueDateString()));
 		}
 	}
 
@@ -187,14 +198,20 @@ public class EditAction extends Action {
 	}
 
 	private void updateStartDate(Field field) {
+		
 		if (field.shouldClearDate()) {
+			
 			_task.setStartDate((Calendar) null);
 			_task.setHasStartTime(false);
-			this._isSuccess = true;
-			this._feedback.append("Start date cleared. ");
+			_isSuccess = true;
+			_feedback.append(MessageConstants.START_DATE_CLEARED);
+			
 		} else if (field.getDate() == null) {
+			
 			return;
+			
 		} else {
+			
 			Calendar newDate = (Calendar) field.getDate().clone();
 			boolean hasStartTime = calibrateStartDate(field, newDate);
 			setStartDate(newDate, hasStartTime);
@@ -202,17 +219,20 @@ public class EditAction extends Action {
 	}
 
 	private void setStartDate(Calendar newDate, boolean hasStartTime) {
+		
 		if (_task.getDueDate() != null
 				&& newDate.compareTo(_task.getDueDate()) > 0) {
-			this._feedback
-					.append("Start date/time entered is bigger than due date/time of task. ");
+			
+			_feedback.append(MessageConstants.START_BIGGER_THAN_DUE);
+			
 		} else {
 
 			_task.setStartDate(newDate);
 			_task.setHasStartTime(hasStartTime);
-			this._isSuccess = true;
-			this._feedback.append("Start date set to "
-					+ _task.getStartDateString() + ". ");
+			_isSuccess = true;
+			_feedback
+					.append(String.format(MessageConstants.START_DATE_SET,
+							_task.getStartDateString()));
 		}
 	}
 
@@ -282,80 +302,4 @@ public class EditAction extends Action {
 		newDate.set(Calendar.DAY_OF_MONTH,
 				_task.getStartDate().get(Calendar.DAY_OF_MONTH));
 	}
-
-	/*
-	 * old implementation private void updateStartDate(Field field) { Calendar
-	 * newDate = new GregorianCalendar();
-	 * 
-	 * if (field.isDateParsed() && field.isTimeParsed()) { addStartDate(field);
-	 * return; } else if (field.isDateParsed()) {
-	 * 
-	 * newDate.set(Calendar.YEAR, field.getDate().get(Calendar.YEAR));
-	 * newDate.set(Calendar.MONTH, field.getDate().get(Calendar.MONTH));
-	 * newDate.set(Calendar.DAY_OF_MONTH,
-	 * field.getDate().get(Calendar.DAY_OF_MONTH));
-	 * 
-	 * newDate.set(Calendar.HOUR_OF_DAY,
-	 * _task.getStartDate().get(Calendar.HOUR_OF_DAY));
-	 * newDate.set(Calendar.MINUTE, _task.getStartDate().get(Calendar.MINUTE));
-	 * 
-	 * } else if (field.isTimeParsed()) { newDate.set(Calendar.HOUR_OF_DAY,
-	 * field.getDate().get(Calendar.HOUR_OF_DAY)); newDate.set(Calendar.MINUTE,
-	 * field.getDate().get(Calendar.MINUTE));
-	 * 
-	 * matchTaskStartDate(newDate);
-	 * 
-	 * } else { return; }
-	 * 
-	 * if (_task.getDueDate() != null && newDate.compareTo(_task.getDueDate()) >
-	 * 0) { this._feedback
-	 * .append("Start date/time entered is bigger than due date/time of task. "
-	 * ); } else { _task.setStartDate(newDate); if (field.isTimeParsed()) {
-	 * _task.setHasStartTime(true); } this._isSuccess = true;
-	 * this._feedback.append("Start date set to " + _task.getStartDateString() +
-	 * ". "); } }
-	 */
-
-	/*
-	 * older implementation
-	 * 
-	 * private void updateDueDate(Field field) {
-	 * 
-	 * Calendar newDate = (Calendar) field.getDate().clone();
-	 * 
-	 * if (field.isDateParsed() && field.isTimeParsed()) {
-	 * 
-	 * addDueDate(field); return;
-	 * 
-	 * } else if (!field.isDateParsed() && field.isTimeParsed() &&
-	 * _task.getStartDate() != null) {
-	 * 
-	 * 
-	 * 
-	 * }
-	 * 
-	 * else if (field.isDateParsed()) {
-	 * 
-	 * } else if (field.isTimeParsed()) { newDate.set(Calendar.HOUR_OF_DAY,
-	 * field.getDate().get(Calendar.HOUR_OF_DAY)); newDate.set(Calendar.MINUTE,
-	 * field.getDate().get(Calendar.MINUTE));
-	 * 
-	 * newDate.set(Calendar.YEAR, _task.getDueDate().get(Calendar.YEAR));
-	 * newDate.set(Calendar.MONTH, _task.getDueDate().get(Calendar.MONTH));
-	 * newDate.set(Calendar.DAY_OF_MONTH,
-	 * _task.getDueDate().get(Calendar.DAY_OF_MONTH)); } else { return; }
-	 * 
-	 * if (_task.getStartDate() != null &&
-	 * newDate.compareTo(_task.getStartDate()) < 0) { this._feedback
-	 * .append("Due date/time entered is smaller than start date/time of task. "
-	 * ); } else { _task.setDueDate(newDate); if (field.isTimeParsed()) {
-	 * _task.setHasDueTime(true); } this._isSuccess = true;
-	 * this._feedback.append("Due date set to " + _task.getDueDateString() +
-	 * ". ");
-	 * 
-	 * }
-	 * 
-	 * }
-	 */
-
 }

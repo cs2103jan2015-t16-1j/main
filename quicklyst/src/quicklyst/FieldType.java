@@ -7,7 +7,6 @@ public enum FieldType {
 	START_DATE("start date"),
 	DUE_DATE("due date"),
 	PRIORITY("priority"),
-	DURATION("duration"),
 	COMPLETED("completed"),
 	OVERDUE("overdue");
 	

@@ -3,9 +3,7 @@ package quicklyst;
 //@author A0102015H
 public enum FieldCriteria {
 	
-	//start date, due date
-	//duration
-	//priority
+	//Sorting
 	ASCEND,
 	DESCEND,
 	
@@ -25,8 +23,4 @@ public enum FieldCriteria {
 	
 	//priority
 	CLEAR_PRIORITY,
-	
-	//sync
-	TO,
-	FROM;
 }

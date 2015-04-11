@@ -8,8 +8,9 @@ public class Field {
 	private FieldType _fieldType;
 
 	private String _taskName;
-	private Calendar _date;
 	private String _priority;
+	
+	private Calendar _date;
 	private Calendar[] _dateRange;
 
 	private FieldCriteria _fieldCriteria;
@@ -42,24 +43,29 @@ public class Field {
 	}
 
 	private void updateFieldContent(Object content) {
+		
 		switch (_fieldType) {
+		
 		case TASK_NAME:
+			
 			_taskName = (String) content;
 			break;
+			
 		case START_DATE:
 		case DUE_DATE:
+			
 			try {
 				_date = (Calendar) content;
 			} catch (ClassCastException e) {
 				_dateRange = (Calendar[]) content;
 			}
 			break;
+			
 		case PRIORITY:
+			
 			_priority = (String) content;
 			break;
-		case COMPLETED:
-		case OVERDUE:
-			break;
+
 		default:
 			break;
 		}
@@ -123,48 +129,5 @@ public class Field {
 		} else {
 			return false;
 		}
-	}
-
-	/* For debugging purposes */
-	public String toString() {
-		String output = _fieldType.toString() + " ";
-		switch (_fieldType) {
-		case TASK_NAME:
-			output += getTaskName();
-			break;
-		case START_DATE:
-		case DUE_DATE:
-			if (_fieldCriteria == FieldCriteria.BETWEEN) {
-				output += _fieldCriteria.toString() + " "
-						+ getDateRange()[0].getTime().toString() + " "
-						+ getDateRange()[1].getTime().toString();
-			} else if (_fieldCriteria == null && getDate() != null) {
-				output += getDate().getTime().toString() + _dateParsed
-						+ _timeParsed;
-			} else if (_fieldCriteria != null && getDate() == null) {
-				output += _fieldCriteria.toString() + " " + _dateParsed
-						+ _timeParsed;
-			} else if (_fieldCriteria != null && getDate() != null) {
-				output += _fieldCriteria.toString() + " "
-						+ getDate().getTime().toString() + _dateParsed
-						+ _timeParsed;
-			}
-			break;
-		case PRIORITY:
-			if (_fieldCriteria == null) {
-				output += getPriority();
-			} else {
-				output += _fieldCriteria.toString() + " " + getPriority();
-			}
-			break;
-		case DURATION:
-		case COMPLETED:
-		case OVERDUE:
-			output += _fieldCriteria.toString();
-			break;
-		default:
-			break;
-		}
-		return output;
 	}
 }

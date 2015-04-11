@@ -92,10 +92,6 @@ public class CommandParser {
 			return new FindAction(_fields, _findAll, _taskName);
 		case COMPLETE:
 			return new CompleteAction(_taskNumber, _completeYesNo);
-		case PUSH:
-			return new PushAction();
-		case PULL:
-			return new PullAction();
 		case SYNC:
 			return new SyncAction();
 		case LOG_OUT:

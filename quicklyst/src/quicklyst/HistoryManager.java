@@ -6,16 +6,19 @@ import java.util.Stack;
 //@author A0102015H
 public class HistoryManager {
 
-	private Stack<LinkedList<Task>> _undoStack;
-	private Stack<LinkedList<Task>> _redoStack;
 	private LinkedList<Task> _displayList;
 	private LinkedList<Task> _masterList;
 
+	private LinkedList<String> _deletedList;
+
 	private boolean _shouldShowAll;
+
+	private Stack<LinkedList<Task>> _undoMainStack;
+	private Stack<LinkedList<Task>> _redoMainStack;
+
 	private Stack<Boolean> _undoShowAllStack;
 	private Stack<Boolean> _redoShowAllStack;
 
-	private LinkedList<String> _deletedList;
 	private Stack<LinkedList<String>> _undoDeletedListStack;
 	private Stack<LinkedList<String>> _redoDeletedListStack;
 
@@ -23,25 +26,33 @@ public class HistoryManager {
 			LinkedList<Task> masterList, LinkedList<String> deletedList,
 			boolean shouldShowAll) {
 
-		_undoStack = new Stack<LinkedList<Task>>();
-		_redoStack = new Stack<LinkedList<Task>>();
+		_undoMainStack = new Stack<LinkedList<Task>>();
+		_redoMainStack = new Stack<LinkedList<Task>>();
+
 		LinkedList<Task> displayListInit = new LinkedList<Task>();
 		LinkedList<Task> masterListInit = new LinkedList<Task>();
+
 		copyListWithClone(displayList, masterList, displayListInit,
 				masterListInit);
-		_undoStack.push(masterListInit);
-		_undoStack.push(displayListInit);
+
+		_undoMainStack.push(masterListInit);
+		_undoMainStack.push(displayListInit);
+
 		_displayList = displayListInit;
 		_masterList = masterListInit;
 
 		_shouldShowAll = shouldShowAll;
+
 		_undoShowAllStack = new Stack<Boolean>();
 		_redoShowAllStack = new Stack<Boolean>();
+
 		_undoShowAllStack.push(_shouldShowAll);
 
 		_deletedList = new LinkedList<String>(deletedList);
+
 		_undoDeletedListStack = new Stack<LinkedList<String>>();
 		_redoDeletedListStack = new Stack<LinkedList<String>>();
+
 		_undoDeletedListStack.push(_deletedList);
 	}
 
@@ -61,63 +72,47 @@ public class HistoryManager {
 		return _deletedList;
 	}
 
-	private static void printStack(Stack<LinkedList<Task>> stack) {
-		Stack<LinkedList<Task>> buffer = new Stack<LinkedList<Task>>();
-		int stackCount = 0;
-		while (!stack.isEmpty()) {
-			stackCount++;
-			buffer.push(stack.pop());
-			LinkedList<Task> list = buffer.peek();
-			if (stackCount % 2 != 0) {
-				System.out.println("Stack " + stackCount);
-				for (Task task : list) {
-					System.out.println(task.getName());
-				}
-			}
-		}
-
-		while (!buffer.isEmpty()) {
-			stack.push(buffer.pop());
-		}
-	}
-
 	public void updateUndoStack(LinkedList<Task> displayList,
-			LinkedList<Task> masterList, LinkedList<String> deletedList, boolean shouldShowAll) {
-		
+			LinkedList<Task> masterList, LinkedList<String> deletedList,
+			boolean shouldShowAll) {
+
 		LinkedList<Task> workingListMaster = new LinkedList<Task>();
 		LinkedList<Task> workingList = new LinkedList<Task>();
+
 		copyListWithClone(displayList, masterList, workingList,
 				workingListMaster);
 
-		_undoStack.push(workingListMaster);
-		_undoStack.push(workingList);
-		_redoStack.clear();
+		_undoMainStack.push(workingListMaster);
+		_undoMainStack.push(workingList);
+		_redoMainStack.clear();
 
 		_undoShowAllStack.push(shouldShowAll);
 		_redoShowAllStack.clear();
-		
+
 		_undoDeletedListStack.push(new LinkedList<String>(deletedList));
 		_redoDeletedListStack.clear();
 	}
 
 	public void undo(StringBuilder feedback) {
-		if (_undoStack.size() == 2) {
-			feedback.append("Nothing to undo. ");
+
+		if (_undoMainStack.size() == 2) {
+			feedback.append(MessageConstants.NOTHING_TO_UNDO);
 			return;
 		}
-		_redoStack.push(_undoStack.pop());
-		_redoStack.push(_undoStack.pop());
 
-		LinkedList<Task> displayList = _undoStack.pop();
-		LinkedList<Task> masterList = _undoStack.pop();
+		_redoMainStack.push(_undoMainStack.pop());
+		_redoMainStack.push(_undoMainStack.pop());
+
+		LinkedList<Task> displayList = _undoMainStack.pop();
+		LinkedList<Task> masterList = _undoMainStack.pop();
 
 		LinkedList<Task> updatedWL = new LinkedList<Task>();
 		LinkedList<Task> updatedWLM = new LinkedList<Task>();
 
 		copyListWithClone(displayList, masterList, updatedWL, updatedWLM);
 
-		_undoStack.push(masterList);
-		_undoStack.push(displayList);
+		_undoMainStack.push(masterList);
+		_undoMainStack.push(displayList);
 
 		_displayList = updatedWL;
 		_masterList = updatedWLM;
@@ -125,7 +120,7 @@ public class HistoryManager {
 		_redoShowAllStack.push(_undoShowAllStack.pop());
 		_shouldShowAll = _undoShowAllStack.pop();
 		_undoShowAllStack.push(_shouldShowAll);
-		
+
 		_redoDeletedListStack.push(_undoDeletedListStack.pop());
 		LinkedList<String> deletedList = _undoDeletedListStack.pop();
 		LinkedList<String> updatedDL = new LinkedList<String>(deletedList);
@@ -134,49 +129,52 @@ public class HistoryManager {
 	}
 
 	public void redo(StringBuilder feedback) {
-		if (_redoStack.isEmpty()) {
-			feedback.append("Nothing to redo. ");
+
+		if (_redoMainStack.isEmpty()) {
+			feedback.append(MessageConstants.NOTHING_TO_REDO);
 			return;
 		}
 
-		LinkedList<Task> masterList = _redoStack.pop();
-		LinkedList<Task> displayList = _redoStack.pop();
+		LinkedList<Task> masterList = _redoMainStack.pop();
+		LinkedList<Task> displayList = _redoMainStack.pop();
 
 		LinkedList<Task> updatedWL = new LinkedList<Task>();
 		LinkedList<Task> updatedWLM = new LinkedList<Task>();
 
 		copyListWithClone(displayList, masterList, updatedWL, updatedWLM);
 
-		_undoStack.push(masterList);
-		_undoStack.push(displayList);
+		_undoMainStack.push(masterList);
+		_undoMainStack.push(displayList);
 
 		_displayList = updatedWL;
 		_masterList = updatedWLM;
 
 		_shouldShowAll = _redoShowAllStack.pop();
 		_undoShowAllStack.push(_shouldShowAll);
-		
+
 		LinkedList<String> deletedList = _redoDeletedListStack.pop();
 		LinkedList<String> updatedDL = new LinkedList<String>(deletedList);
 		_undoDeletedListStack.push(deletedList);
 		_deletedList = updatedDL;
-
 	}
 
 	private void copyListWithClone(LinkedList<Task> subList,
 			LinkedList<Task> masterList, LinkedList<Task> subListNew,
 			LinkedList<Task> masterListNew) {
 
-		LinkedList<Integer> indexesInListMasterForRepeatTask = new LinkedList<Integer>();
+		LinkedList<Integer> indexesInMasterListForRepeatTask = new LinkedList<Integer>();
+
 		for (int i = 0; i < subList.size(); i++) {
-			indexesInListMasterForRepeatTask.add(masterList.indexOf(subList
+			indexesInMasterListForRepeatTask.add(masterList.indexOf(subList
 					.get(i)));
 		}
+
 		for (int i = 0; i < masterList.size(); i++) {
 			masterListNew.add(masterList.get(i).clone());
 		}
-		for (int i = 0; i < indexesInListMasterForRepeatTask.size(); i++) {
-			subListNew.add(masterListNew.get(indexesInListMasterForRepeatTask
+
+		for (int i = 0; i < indexesInMasterListForRepeatTask.size(); i++) {
+			subListNew.add(masterListNew.get(indexesInMasterListForRepeatTask
 					.get(i)));
 		}
 	}

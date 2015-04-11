@@ -64,20 +64,23 @@ public class DateParser {
 		String nextAndDay[] = dateTimeStr.split(SPACE, 2);
 		String day;
 
-		if (nextAndDay.length == 2 && nextAndDay[0].trim().equalsIgnoreCase(STRING_NEXT)) {
-			
-				day = nextAndDay[1];
-				parseDay(day, true);
-			
-		} else if (nextAndDay.length == 2 && !nextAndDay[0].trim().equalsIgnoreCase(STRING_NEXT)){
-			
+		if (nextAndDay.length == 2
+				&& nextAndDay[0].trim().equalsIgnoreCase(STRING_NEXT)) {
+
+			day = nextAndDay[1];
+			parseDay(day, true);
+
+		} else if (nextAndDay.length == 2
+				&& !nextAndDay[0].trim().equalsIgnoreCase(STRING_NEXT)) {
+
 			_dateTime = null;
-			_feedback.append(String.format(
-					MessageConstants.INVALID_DAY_CRITERIA,
-					nextAndDay[0].trim()));
-			
+			_feedback
+					.append(String.format(
+							MessageConstants.INVALID_DAY_CRITERIA,
+							nextAndDay[0].trim()));
+
 		} else if (nextAndDay.length == 1) {
-			
+
 			day = nextAndDay[0];
 			parseDay(day, false);
 		}
@@ -89,24 +92,25 @@ public class DateParser {
 		String time;
 
 		if (dayAndTime.length == 3) {
-			
+
 			if (dayAndTime[0].trim().equalsIgnoreCase(STRING_NEXT)) {
-				
+
 				day = dayAndTime[1];
 				time = dayAndTime[2];
 				parseDay(day, true);
 				parseTime(time);
-				
+
 			} else {
-				
+
 				_dateTime = null;
-				_feedback.append(String.format(MessageConstants.INVALID_DAY_CRITERIA,
+				_feedback.append(String.format(
+						MessageConstants.INVALID_DAY_CRITERIA,
 						dayAndTime[0].trim()));
-				
+
 			}
-			
+
 		} else if (dayAndTime.length == 2) {
-			
+
 			day = dayAndTime[0];
 			time = dayAndTime[1];
 			parseDay(day, false);

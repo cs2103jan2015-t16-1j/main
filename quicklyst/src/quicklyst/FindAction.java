@@ -9,21 +9,29 @@ import org.joda.time.chrono.AssembledChronology.Fields;
 //@author A0102015H
 public class FindAction extends Action {
 
+	private static final String SPACE = " ";
 	private LinkedList<Field> _fields;
+
 	private boolean _findAll;
-	private int _failCount;
-	private String _taskName;
 	private boolean _shouldShowAllCompleted;
 
+	private int _failCount;
+
+	private String _taskName;
+
+	private SortAction _defaultSort;
+
 	public FindAction(LinkedList<Field> fields, boolean findAll, String taskName) {
-		this._isSuccess = false;
-		this._feedback = new StringBuilder();
-		this._type = ActionType.FIND;
+
+		_isSuccess = false;
+		_feedback = new StringBuilder();
+		_type = ActionType.FIND;
 		_taskName = taskName;
 		_findAll = findAll;
 		_fields = fields;
 		_failCount = 0;
 		_shouldShowAllCompleted = false;
+		_defaultSort = new SortAction();
 	}
 
 	@Override
@@ -32,12 +40,12 @@ public class FindAction extends Action {
 
 		if (_findAll) {
 			copyList(masterList, displayList);
-			this._isSuccess = true;
+			_isSuccess = true;
 			return;
 		}
 
 		if (_taskName == null && (_fields == null || _fields.isEmpty())) {
-			System.out.println("No field entered. ");
+			System.out.println(MessageConstants.NO_FIELD);
 			return;
 		}
 
@@ -45,17 +53,21 @@ public class FindAction extends Action {
 		copyList(masterList, bufferList);
 
 		if (_taskName != null) {
+
 			filterByName(_taskName, bufferList);
+
 			if (bufferList.isEmpty()) {
-				this._feedback.append(MessageConstants.NO_MATCHES_FOUND);
+				_feedback.append(MessageConstants.NO_MATCHES_FOUND);
 				return;
 			}
 		}
 
 		for (Field field : _fields) {
+
 			filterdisplayList(field, bufferList);
+
 			if (bufferList.isEmpty()) {
-				this._feedback.append(MessageConstants.NO_MATCHES_FOUND);
+				_feedback.append(MessageConstants.NO_MATCHES_FOUND);
 				return;
 			}
 		}
@@ -64,13 +76,20 @@ public class FindAction extends Action {
 				.size() + 1;
 
 		if (_failCount == totalUpdateSize) {
-			this._feedback.append((MessageConstants.NO_MATCHES_FOUND));
+
+			_feedback.append((MessageConstants.NO_MATCHES_FOUND));
 			return;
+
 		} else {
+
 			copyList(bufferList, displayList);
-			this._isSuccess = true;
-			this._feedback.append(String.format(MessageConstants.MATCHES_FOUND, displayList.size()));
-			new SortAction().execute(displayList, masterList);
+
+			_isSuccess = true;
+			_feedback.append(String.format(MessageConstants.MATCHES_FOUND,
+					displayList.size()));
+
+			LOGGER.info(MessageConstants.SORTING_DISPLAY_LIST);
+			_defaultSort.execute(displayList, masterList);
 		}
 	}
 
@@ -105,80 +124,99 @@ public class FindAction extends Action {
 			filterByOverdueStatus(yesNoO, displayList);
 			break;
 		default:
-			_feedback.append("Invalid field. ");
+			_feedback.append(MessageConstants.INVALID_FIELD);
 			return;
 		}
 	}
 
 	private void filterByName(String taskName, LinkedList<Task> displayList) {
+
 		if (taskName == null || taskName.trim().isEmpty()) {
-			this._feedback.append("No task name keywords entered. ");
+
+			_feedback.append(MessageConstants.NO_KEYWORDS);
 			_failCount++;
 			return;
 		}
-		String keywords[] = taskName.split(" ");
+
+		String keywords[] = taskName.split(SPACE);
 
 		LinkedList<Object[]> tasksWithMatchScore = new LinkedList<Object[]>();
 
 		for (Task currTask : displayList) {
+
 			int matchScore = 0;
+
 			for (String keyword : keywords) {
+
 				keyword = keyword.trim();
 				matchScore += matchKeywordScore(currTask, keyword);
-				System.out.println(currTask.getName() + " " + keyword + " "
-						+ matchScore);
 			}
+
 			if (matchScore != 0) {
+
 				tasksWithMatchScore.add(new Object[] { currTask,
 						Integer.valueOf(matchScore) });
 			}
 		}
 
 		copyList(sortFoundTasksByMatchScore(tasksWithMatchScore), displayList);
-		System.out.println(displayList.size());
-		System.out.println(sortFoundTasksByMatchScore(tasksWithMatchScore)
-				.size());
 	}
 
 	private LinkedList<Task> sortFoundTasksByMatchScore(
 			LinkedList<Object[]> tasksWithMatchScore) {
 
 		for (int i = tasksWithMatchScore.size() - 1; i >= 0; i--) {
+
 			boolean isSorted = true;
+
 			for (int j = 0; j < i; j++) {
+
 				Object[] taskLeft = tasksWithMatchScore.get(j);
 				Object[] taskRight = tasksWithMatchScore.get(j + 1);
+
 				if ((int) taskLeft[1] < (int) taskRight[1]) {
+
 					tasksWithMatchScore.set(j + 1, taskLeft);
 					tasksWithMatchScore.set(j, taskRight);
 					isSorted = false;
 				}
 			}
+
 			if (isSorted) {
 				break;
 			}
 		}
 
 		LinkedList<Task> newdisplayList = new LinkedList<Task>();
+
 		for (Object[] taskWithMatchScore : tasksWithMatchScore) {
 			newdisplayList.add((Task) taskWithMatchScore[0]);
 		}
+
 		return newdisplayList;
 	}
 
 	private int matchKeywordScore(Task currTask, String keyword) {
+
 		keyword = keyword.toLowerCase();
-		String[] taskNameWords = currTask.getName().split(" ");
+
+		String[] taskNameWords = currTask.getName().split(SPACE);
+
 		int totalScore = 0;
+
 		for (String currWord : taskNameWords) {
+
 			currWord = currWord.trim().toLowerCase();
+
 			if (currWord.contains(keyword)) {
 				totalScore++;
 			}
+
 			if (currWord.equals(keyword)) {
 				totalScore++;
 			}
 		}
+
 		return totalScore;
 	}
 
@@ -194,11 +232,14 @@ public class FindAction extends Action {
 		LinkedList<Task> bufferList = new LinkedList<Task>();
 
 		for (Task currTask : displayList) {
+
 			if ((currTask.getIsOverdue() && criteria == FieldCriteria.YES)
 					|| (!currTask.getIsOverdue() && criteria == FieldCriteria.NO)) {
+
 				bufferList.add(currTask);
 			}
 		}
+
 		copyList(bufferList, displayList);
 	}
 
@@ -209,19 +250,23 @@ public class FindAction extends Action {
 			_feedback.append(MessageConstants.NO_COMPLETE_CRITERIA);
 			_failCount++;
 			return;
-		} 
-		
+		}
+
 		if (criteria == FieldCriteria.YES) {
 			_shouldShowAllCompleted = true;
 		}
 
 		LinkedList<Task> bufferList = new LinkedList<Task>();
+
 		for (Task currTask : displayList) {
+
 			if ((currTask.getIsCompleted() && criteria == FieldCriteria.YES)
 					|| (!currTask.getIsCompleted() && criteria == FieldCriteria.NO)) {
+
 				bufferList.add(currTask);
 			}
 		}
+
 		copyList(bufferList, displayList);
 	}
 
@@ -235,11 +280,14 @@ public class FindAction extends Action {
 
 		LinkedList<Task> bufferList = new LinkedList<Task>();
 		for (Task currTask : displayList) {
+
 			if (currTask.getPriority() != null
 					&& currTask.getPriority().equalsIgnoreCase(priority)) {
+
 				bufferList.add(currTask);
 			}
 		}
+
 		copyList(bufferList, displayList);
 	}
 
@@ -266,7 +314,7 @@ public class FindAction extends Action {
 			filterByDateRange(dateRange, fieldType, criteria, displayList);
 			break;
 		default:
-			return;
+			break;
 		}
 	}
 
@@ -290,8 +338,7 @@ public class FindAction extends Action {
 		toDate.set(Calendar.SECOND, 59);
 
 		if (fromDate.compareTo(toDate) > 0) {
-			this._feedback
-					.append(MessageConstants.INVALID_DATE_RANGE);
+			_feedback.append(MessageConstants.INVALID_DATE_RANGE);
 			return;
 		}
 
@@ -315,6 +362,7 @@ public class FindAction extends Action {
 
 			if (currTaskDate != null && currTaskDate.compareTo(fromDate) >= 0
 					&& currTaskDate.compareTo(toDate) <= 0) {
+
 				bufferList.add(currTask);
 			}
 		}
@@ -346,38 +394,48 @@ public class FindAction extends Action {
 			if (currTaskDate != null) {
 				switch (criteria) {
 				case BEFORE:
+
 					date.set(Calendar.HOUR_OF_DAY, 23);
 					date.set(Calendar.MINUTE, 59);
 					date.set(Calendar.SECOND, 59);
 					date.set(Calendar.MILLISECOND, 999);
+
 					if (currTaskDate.compareTo(date) <= 0) {
 						bufferList.add(currTask);
 					}
+
 					break;
+
 				case AFTER:
+
 					date.set(Calendar.HOUR_OF_DAY, 0);
 					date.set(Calendar.MINUTE, 0);
 					date.set(Calendar.SECOND, 0);
 					date.set(Calendar.MILLISECOND, 0);
+
 					if (currTaskDate.compareTo(date) >= 0) {
 						bufferList.add(currTask);
 					}
+
 					break;
+
 				case ON:
+
 					date.set(Calendar.HOUR_OF_DAY, 0);
 					date.set(Calendar.MINUTE, 0);
 					date.set(Calendar.SECOND, 0);
 					date.set(Calendar.MILLISECOND, 0);
+
 					currTaskDate = new GregorianCalendar(
 							currTaskDate.get(Calendar.YEAR),
 							currTaskDate.get(Calendar.MONTH),
 							currTaskDate.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
-					System.out.println(date.getTime().toString());
-					System.out.println(currTaskDate.getTime().toString());
+
 					if (currTaskDate.equals(date)) {
 						bufferList.add(currTask);
 					}
 					break;
+
 				default:
 					break;
 				}
@@ -386,7 +444,7 @@ public class FindAction extends Action {
 
 		copyList(bufferList, displayList);
 	}
-	
+
 	private <E> void copyList(LinkedList<E> fromList, LinkedList<E> toList) {
 		toList.clear();
 		for (int i = 0; i < fromList.size(); i++)

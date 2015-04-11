@@ -7,9 +7,10 @@ public class LogOutAction extends Action {
 	QLGoogleIntegration _googleInt; 
 	
 	public LogOutAction() {
+		
 		setSuccess(false);
-		this._feedback = new StringBuilder();
-		this._type = ActionType.LOG_OUT;
+		_feedback = new StringBuilder();
+		_type = ActionType.LOG_OUT;
 		_googleInt = QLGoogleIntegration.getInstance(); 
 	}
 
@@ -18,14 +19,17 @@ public class LogOutAction extends Action {
 			LinkedList<Task> masterList) {
 		
 		try {
+			
 			if (_googleInt.logout()) {
-			    getFeedback().append("Logged out from Google. ");
+				_feedback.append("Logged out from Google. ");
 			} else {
-			    getFeedback().append("Not logged in to Google. ");
+				_feedback.append("Not logged in to Google. ");
 			}
+			
 			setSuccess(true);
+			
 		} catch (Error e) {
-			getFeedback().append(e.getMessage());
+			_feedback.append(e.getMessage());
 		}
 	}
 }

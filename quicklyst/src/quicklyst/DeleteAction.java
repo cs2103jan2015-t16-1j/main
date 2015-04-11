@@ -5,6 +5,7 @@ import java.util.LinkedList;
 //@author A0102015H
 public class DeleteAction extends Action {
 
+	private static final String STRING_DELETED = "deleted";
 	private int _taskIndex;
 
 	public DeleteAction(int taskNumber) {
@@ -22,22 +23,28 @@ public class DeleteAction extends Action {
 			LinkedList<Task> workingListMaster) {
 
 		if (isTaskIndexInRange(workingList)) {
+
 			Task taskToDel = workingList.get(_taskIndex);
+			
 			workingList.remove(taskToDel);
 			workingListMaster.remove(taskToDel);
-			this._isSuccess = true;
+			
 			setDeletedTaskID(taskToDel.getGoogleID());
-			this._feedback.append("Task #" + 
-					(_taskIndex + 1) +
-					" deleted. ");
+			
+			this._isSuccess = true;
+			this._feedback.append(String.format(MessageConstants.TASK_NO_IS,
+					_taskIndex + 1, STRING_DELETED));
+
 		} else {
+
 			this._isSuccess = false;
-			this._feedback.append("Task # out of range. ");
+			this._feedback.append(MessageConstants.TASK_NO_OUT_OF_RANGE);
 			return;
 		}
 	}
 
 	private boolean isTaskIndexInRange(LinkedList<Task> workingList) {
+
 		if (_taskIndex < 0 || _taskIndex >= workingList.size()) {
 			return false;
 		} else {

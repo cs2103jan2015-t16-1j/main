@@ -20,18 +20,24 @@ public class MessageConstants {
 	public static final String NO_TASK_NAME = "No task name detected. ";
 	public static final String TASK_NAME_BLANK = "Task name entered is blank. ";
 
-	public static final String TASK_OUT_OF_RANGE = "Task # out of range. ";
+	public static final String TASK_NO_OUT_OF_RANGE = "Task # out of range. ";
 
+	public static final String INVALID_FIELD  = "Invalid field %s. ";
 	public static final String INVALID_FIELD_FORMAT_IN = "Invalid field format in \"%s\". ";
 	public static final String INVALID_FIELD_CRITERIA = "Invalid field criteria \"%s\". ";
 	public static final String INVALID_DAY_CRITERIA = "Invalid day criteria \"%s\". ";
 
-	public static final String MATCHES_FOUND = "%d matches found. ";
+	public static final String INVALID_PRIORITY_LEVEL = "Invalid priority level \"%s\". ";
+	
+			public static final String MATCHES_FOUND = "%d matches found. ";
 	public static final String NO_MATCHES_FOUND = "No matches found. ";
 	public static final String NO_COMPLETE_CRITERIA = "Completed criteria not entered. ";
 	public static final String NO_PRIORITY_LEVEL = "Priority level not entered. ";
 	public static final String NO_DATE_CRITERIA = "Date criteria not entered. ";
-	public static final String INVALID_DATE_RANGE = "Invalid date range. Start date is later than end date. ";
+	public static final String NO_FIELD = "No field entered. ";
+	public static final String NO_KEYWORDS = "No task name keywords entered. ";
+	
+	public static final String INVALID_DATE_RANGE = "Invalid date range. ";
 	public static final String INVALID_DATE_AND_TIME_FORMAT = "Invalid date and time format. ";
 	public static final String INVALID_DATE_FORMAT =  "Invalid date format. ";
 	
@@ -41,8 +47,15 @@ public class MessageConstants {
 	public static final String NO_OVERDUE_CRITERIA = "Overdue criteria not entered. ";
 
 	public static final String TASK_ADDED = "Task: \"%s\" added. ";
-	public static final String TASK_COMPLETE = "Task # %d is %s. ";
+	public static final String TASK_NO_IS = "Task # %d is %s. ";
 
 	public static final String NO_COMMAND = "Please enter a command. ";
+	
+	public static final String SORTING_DISPLAY_LIST = "Sorting display list. ";
 
+	public static final String NOTHING_TO_UNDO =  "Nothing to undo. ";
+	public static final String NOTHING_TO_REDO = "Nothing to redo. ";
+	
+	public static final String LOGGED_OUT = "Logged out from Google. ";
+	public static final String NOT_LOGGED_IN = "Not logged in to Google. ";
 }

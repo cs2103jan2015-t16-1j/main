@@ -39,19 +39,19 @@ public class EditActionTest {
 		cp = new CommandParser("edit 2 priority L");
 		edit = cp.getAction();
 		edit.execute(displayList, masterList);
-		assertEquals(MessageConstants.TASK_OUT_OF_RANGE, edit.getFeedback().toString());
+		assertEquals(MessageConstants.TASK_NO_OUT_OF_RANGE, edit.getFeedback().toString());
 
 		/* Task # too small */
 		cp = new CommandParser("edit 0 priority L");
 		edit = cp.getAction();
 		edit.execute(displayList, masterList);
-		assertEquals(MessageConstants.TASK_OUT_OF_RANGE, edit.getFeedback().toString());
+		assertEquals(MessageConstants.TASK_NO_OUT_OF_RANGE, edit.getFeedback().toString());
 
 		/* Task # negative */
 		cp = new CommandParser("edit -1 priority L");
 		edit = cp.getAction();
 		edit.execute(displayList, masterList);
-		assertEquals(MessageConstants.TASK_OUT_OF_RANGE, edit.getFeedback().toString());
+		assertEquals(MessageConstants.TASK_NO_OUT_OF_RANGE, edit.getFeedback().toString());
 
 	}
 
