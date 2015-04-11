@@ -18,8 +18,11 @@ public class LogOutAction extends Action {
 			LinkedList<Task> masterList) {
 		
 		try {
-			//_googleInt.logOut(); // TODO change to new API
-			getFeedback().append("Logged out from Google Calendar. ");
+			if (_googleInt.logout()) {
+			    getFeedback().append("Logged out from Google. ");
+			} else {
+			    getFeedback().append("Not logged in to Google. ");
+			}
 			setSuccess(true);
 		} catch (Error e) {
 			getFeedback().append(e.getMessage());

@@ -21,9 +21,11 @@ public class QLStorage {
 	
 	private class TasksWrapper {
 		private ArrayList<Task> tasks;
+		private ArrayList<String> deleted;
 
-		public TasksWrapper(List<Task> t) {
+		public TasksWrapper(List<Task> t, List<String> d) {
 			tasks = new ArrayList<Task>(t);
+			deleted = new ArrayList<String>(d);
 		}
 	}
 	
@@ -75,14 +77,13 @@ public class QLStorage {
 		return false;
 	}
 
-	public <T extends List<Task>> T loadFile(T taskList, String filePath) {
+	public void loadFile(List<Task> taskList, List<String> deletedList, String filePath) {
 		assert taskList != null;
 		assert taskList.isEmpty();
 		assert filePath != null;
 
 		if (!hasFile(filePath)) {
 			LOGGER.info(String.format("%s does not exist", filePath));
-			return taskList;
 		}
 
 		if (isDirectory(filePath)) {
@@ -96,12 +97,11 @@ public class QLStorage {
 		}
 
 		LOGGER.info(String.format("Reading %s", filePath));
-		readListFromFile(taskList, filePath);
+		readListFromFile(taskList, deletedList, filePath);
 
-		return taskList;
 	}
 
-	public void saveFile(List<Task> taskList, String filePath) {
+	public void saveFile(List<Task> taskList, List<String> deletedList, String filePath) {
 		assert taskList != null;
 		assert filePath != null;
 
@@ -114,10 +114,10 @@ public class QLStorage {
 
 		LOGGER.info(String.format("Writing %s", filePath));
 
-		writeListToFile(taskList, filePath);
+		writeListToFile(taskList, deletedList, filePath);
 	}
 
-	private <T extends List<Task>> void readListFromFile(T taskList,
+	private void readListFromFile(List<Task> taskList, List<String> deletedList,
 			String filePath) {
 		try (FileReader f = new FileReader(filePath)) {
 			Gson gson = new GsonBuilder().registerTypeAdapter(Task.class,
@@ -127,7 +127,12 @@ public class QLStorage {
 			TasksWrapper wrapper = gson.fromJson(f, TasksWrapper.class);
 
 			LOGGER.info("Adding loaded tasks into taskList");
-			taskList.addAll(wrapper.tasks);
+			if (wrapper.tasks != null) {
+			    taskList.addAll(wrapper.tasks);
+			}
+			if (wrapper.deleted != null) {
+			    deletedList.addAll(wrapper.deleted);
+			}
 
 		} catch (FileNotFoundException e) {
 			LOGGER.severe("FileNotFoundException was thrown");
@@ -138,9 +143,9 @@ public class QLStorage {
 		}
 	}
 
-	private void writeListToFile(List<Task> taskList, String filePath) {
+	private void writeListToFile(List<Task> taskList, List<String> deletedList, String filePath) {
 		try (FileWriter f = new FileWriter(filePath)) {
-			TasksWrapper wrapper = new TasksWrapper(taskList);
+			TasksWrapper wrapper = new TasksWrapper(taskList, deletedList);
 
 			Gson gson = new GsonBuilder().serializeNulls().setPrettyPrinting()
 					.create();

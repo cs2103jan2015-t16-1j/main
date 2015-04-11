@@ -9,25 +9,34 @@ import quicklyst.Task;
 
 public class SyncAction extends Action {
 	
-	QLGoogleIntegration _googleInt; 
+	private SortAction _defaultSort;
 
 	public SyncAction() {
 		setSuccess(false);
 		this._feedback = new StringBuilder();
 		this._type = ActionType.SYNC;
-		_googleInt = QLGoogleIntegration.getInstance();
+		_defaultSort = new SortAction();
 	}
 	
 	@Override
 	public void execute(LinkedList<Task> displayList,
 			LinkedList<Task> masterList) {
 		try {
-			//_googleInt.syncTo(masterList, getDeletedList()); // TODO change to new API
-			getFeedback().append("Synced to Google Calendar. ");
+		    QLGoogleIntegration.getInstance().sync(masterList, getDeletedList());
+			copyList(masterList, displayList);
+			getFeedback().append("Synced with Google Calendar. ");
 			setSuccess(true);
+			_defaultSort.execute(displayList, masterList);
 		} catch (Error e) {
 			getFeedback().append(e.getMessage());
 		}
 	}
+	
+	private static <E> void copyList(LinkedList<E> fromList,
+            LinkedList<E> toList) {
+        toList.clear();
+        for (int i = 0; i < fromList.size(); i++)
+            toList.add(fromList.get(i));
+    }
 
 }

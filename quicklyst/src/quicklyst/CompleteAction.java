@@ -1,5 +1,6 @@
 package quicklyst;
 
+import java.util.Calendar;
 import java.util.LinkedList;
 
 //@author A0102015H
@@ -41,6 +42,8 @@ public class CompleteAction extends Action {
 					+ " is "
 					+ (taskToComplete.getIsCompleted() ? "completed"
 							: "not completed") + ". ");
+			
+			taskToComplete.setLastUpdated(Calendar.getInstance());
 		} else {
 			this._isSuccess = false;
 			this._feedback.append("Task # out of range. ");
