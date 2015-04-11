@@ -39,7 +39,7 @@ public class HistoryManager {
 		_redoShowAllStack = new Stack<Boolean>();
 		_undoShowAllStack.push(_shouldShowAll);
 
-		_deletedList = deletedList;
+		_deletedList = new LinkedList<String>(deletedList);
 		_undoDeletedListStack = new Stack<LinkedList<String>>();
 		_redoDeletedListStack = new Stack<LinkedList<String>>();
 		_undoDeletedListStack.push(_deletedList);
@@ -96,7 +96,7 @@ public class HistoryManager {
 		_undoShowAllStack.push(shouldShowAll);
 		_redoShowAllStack.clear();
 		
-		_undoDeletedListStack.push(deletedList);
+		_undoDeletedListStack.push(new LinkedList<String>(deletedList));
 		_redoDeletedListStack.clear();
 	}
 
@@ -127,8 +127,10 @@ public class HistoryManager {
 		_undoShowAllStack.push(_shouldShowAll);
 		
 		_redoDeletedListStack.push(_undoDeletedListStack.pop());
-		_deletedList = _undoDeletedListStack.pop();
-		_undoDeletedListStack.push(_deletedList);
+		LinkedList<String> deletedList = _undoDeletedListStack.pop();
+		LinkedList<String> updatedDL = new LinkedList<String>(deletedList);
+		_undoDeletedListStack.push(updatedDL);
+		_deletedList = updatedDL;
 	}
 
 	public void redo(StringBuilder feedback) {
@@ -154,8 +156,11 @@ public class HistoryManager {
 		_shouldShowAll = _redoShowAllStack.pop();
 		_undoShowAllStack.push(_shouldShowAll);
 		
-		_deletedList = _redoDeletedListStack.pop();
-		_undoDeletedListStack.push(_deletedList);
+		LinkedList<String> deletedList = _redoDeletedListStack.pop();
+		LinkedList<String> updatedDL = new LinkedList<String>(deletedList);
+		_undoDeletedListStack.push(deletedList);
+		_deletedList = updatedDL;
+
 	}
 
 	private void copyListWithClone(LinkedList<Task> subList,

@@ -264,6 +264,8 @@ public class Task {
 					_dueDate.get(Calendar.SECOND));
 			clonedTask.setDueDate(dueDate);
 		}
+		clonedTask.setLastUpdated(_lastUpdated);
+		clonedTask.setGoogleID(_googleID);
 		clonedTask.setDescription(_description);
 		clonedTask.setIsCompleted(_isCompleted);
 		clonedTask.setPriority(_priority);

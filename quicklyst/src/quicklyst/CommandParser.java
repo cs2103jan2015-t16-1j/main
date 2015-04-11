@@ -68,6 +68,8 @@ public class CommandParser {
 			return new PullAction();
 		case SYNC:
 			return new SyncAction();
+		case LOG_OUT:
+		    return new LogOutAction();
 		default:
 			return null;
 		}
