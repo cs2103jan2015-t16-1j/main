@@ -54,8 +54,12 @@ public class QLLogic {
 				_deletedList, _shouldShowAllCompleted);
 	}
 
-	// Stub
+	/* For testing */
 	public void setupStub() {
+		_filePath = "test.json";
+		_shouldShowAllCompleted = false;
+		_QLStorage = QLStorage.getInstance();
+		_QLSettings = QLSettings.getInstance();
 		_displayList = new LinkedList<Task>();
 		_masterList = new LinkedList<Task>();
 		_deletedList = new LinkedList<String>();
@@ -63,7 +67,7 @@ public class QLLogic {
 				_deletedList, _shouldShowAllCompleted);
 	}
 
-	// Stub
+	/* For testing */
 	public void displayStub(StringBuilder feedback) {
 		System.out.println("Feedback: " + feedback.toString());
 		System.out.println("Name: start date: due date:");
@@ -219,8 +223,8 @@ public class QLLogic {
 		if (action == null) {
 			return;
 		}
-		
-		if(action.getType() == ActionType.SYNC) {
+
+		if (action.getType() == ActionType.SYNC) {
 			action.attachDeletedList(_deletedList);
 		}
 
@@ -230,10 +234,11 @@ public class QLLogic {
 		if (action.getType() == ActionType.FIND) {
 			_shouldShowAllCompleted = action.shouldShowAllCompleted();
 		}
-		
+
 		if (action.isSuccess()) {
 
-			if (action.getType() == ActionType.DELETE) {
+			if (action.getType() == ActionType.DELETE
+					&& action.getDeletedTaskID() != null) {
 				_deletedList.add(action.getDeletedTaskID());
 			}
 
@@ -257,7 +262,8 @@ public class QLLogic {
 						filepath);
 				_masterList = new LinkedList<Task>();
 				copyList(_displayList, _masterList);
-				// _deletedList = QLStroage.loadDeletedList //TODO add Storage API
+				// _deletedList = QLStroage.loadDeletedList //TODO add Storage
+				// API
 				_QLStorage.saveFile(_masterList, _filePath);
 				_historyMgnr.updateUndoStack(_displayList, _masterList,
 						_deletedList, _shouldShowAllCompleted);

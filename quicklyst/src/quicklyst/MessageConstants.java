@@ -30,4 +30,7 @@ public class MessageConstants {
 	public static final String MESSAGE_NO_DATE_CRITERIA = "Date criteria not entered. ";
 	public static final String MESSAGE_INVALID_DATE_RANGE = "Invalid date range. Start date is later than end date. ";
 	public static final String MESSAGE_NO_OVERDUE_CRITERIA = "Overdue criteria not entered. ";
+	
+	public static final String MESSAGE_TASK_ADDED = "Task: \"%s\" added. ";
+	
 }
