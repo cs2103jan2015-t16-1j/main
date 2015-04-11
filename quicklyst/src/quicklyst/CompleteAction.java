@@ -6,11 +6,14 @@ import java.util.LinkedList;
 //@author A0102015H
 public class CompleteAction extends Action {
 
+	private static final String STRING_NOT_COMPLETED = "not completed";
+	private static final String STRING_COMPLETED = "completed";
+	
 	private int _taskIndex;
 	private Boolean _yesNo;
 
 	public CompleteAction(int taskNumber, Boolean yesNO) {
-		
+
 		this._feedback = new StringBuilder();
 		this._type = ActionType.COMPLETE;
 		_yesNo = yesNO;
@@ -30,23 +33,22 @@ public class CompleteAction extends Action {
 
 			Task taskToComplete = displayList.get(_taskIndex);
 
-			if(_yesNo == null) {
+			if (_yesNo == null) {
 				taskToComplete.toggleCompleted();
 			} else {
 				taskToComplete.setIsCompleted(_yesNo);
 			}
-				
+
 			this._isSuccess = true;
-			this._feedback.append("Task #"
-					+ (_taskIndex + 1)
-					+ " is "
-					+ (taskToComplete.getIsCompleted() ? "completed"
-							: "not completed") + ". ");
-			
+			this._feedback.append(String.format(MessageConstants.TASK_COMPLETE,
+					_taskIndex + 1,
+					(taskToComplete.getIsCompleted() ? STRING_COMPLETED
+							: STRING_NOT_COMPLETED)));
+
 			taskToComplete.setLastUpdated(Calendar.getInstance());
 		} else {
 			this._isSuccess = false;
-			this._feedback.append("Task # out of range. ");
+			this._feedback.append(MessageConstants.TASK_OUT_OF_RANGE);
 			return;
 		}
 	}
