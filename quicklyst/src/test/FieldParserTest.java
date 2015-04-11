@@ -427,7 +427,7 @@ public class FieldParserTest {
 		assertEquals(FieldType.START_DATE, field.getFieldType());
 		assertNull(field.getCriteria());
 		assertEquals(String.format(
-				MessageConstants.MESSAGE_INVALID_FIELD_CRITERIA, "12/12/12"),
+				MessageConstants.INVALID_FIELD_CRITERIA, "12/12/12"),
 				fieldParser.getFeedback());
 		
 		fieldParser = new FieldParser("d tdy");
@@ -437,7 +437,7 @@ public class FieldParserTest {
 		assertEquals(FieldType.DUE_DATE, field.getFieldType());
 		assertNull(field.getCriteria());
 		assertEquals(String.format(
-				MessageConstants.MESSAGE_INVALID_FIELD_CRITERIA, "tdy"),
+				MessageConstants.INVALID_FIELD_CRITERIA, "tdy"),
 				fieldParser.getFeedback());
 
 		/* Overdue status for FIND */

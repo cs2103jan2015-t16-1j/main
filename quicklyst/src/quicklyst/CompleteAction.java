@@ -31,10 +31,8 @@ public class CompleteAction extends Action {
 
 			if(_yesNo == null) {
 				taskToComplete.toggleCompleted();
-			} else if (_yesNo == true) {
-				taskToComplete.setIsCompleted(true);
-			} else if (_yesNo == false) {
-				taskToComplete.setIsCompleted(false);
+			} else {
+				taskToComplete.setIsCompleted(_yesNo);
 			}
 				
 			this._isSuccess = true;

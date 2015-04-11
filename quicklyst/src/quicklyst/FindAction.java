@@ -47,7 +47,7 @@ public class FindAction extends Action {
 		if (_taskName != null) {
 			filterByName(_taskName, bufferList);
 			if (bufferList.isEmpty()) {
-				this._feedback.append(MessageConstants.MESSAGE_NO_MATCHES_FOUND);
+				this._feedback.append(MessageConstants.NO_MATCHES_FOUND);
 				return;
 			}
 		}
@@ -55,7 +55,7 @@ public class FindAction extends Action {
 		for (Field field : _fields) {
 			filterdisplayList(field, bufferList);
 			if (bufferList.isEmpty()) {
-				this._feedback.append(MessageConstants.MESSAGE_NO_MATCHES_FOUND);
+				this._feedback.append(MessageConstants.NO_MATCHES_FOUND);
 				return;
 			}
 		}
@@ -64,12 +64,12 @@ public class FindAction extends Action {
 				.size() + 1;
 
 		if (_failCount == totalUpdateSize) {
-			this._feedback.append((MessageConstants.MESSAGE_NO_MATCHES_FOUND));
+			this._feedback.append((MessageConstants.NO_MATCHES_FOUND));
 			return;
 		} else {
 			copyList(bufferList, displayList);
 			this._isSuccess = true;
-			this._feedback.append(String.format(MessageConstants.MESSAGE_MATCHES_FOUND, displayList.size()));
+			this._feedback.append(String.format(MessageConstants.MATCHES_FOUND, displayList.size()));
 			new SortAction().execute(displayList, masterList);
 		}
 	}
@@ -186,7 +186,7 @@ public class FindAction extends Action {
 			LinkedList<Task> displayList) {
 
 		if (criteria != FieldCriteria.YES && criteria != FieldCriteria.NO) {
-			_feedback.append(MessageConstants.MESSAGE_NO_OVERDUE_CRITERIA);
+			_feedback.append(MessageConstants.NO_OVERDUE_CRITERIA);
 			_failCount++;
 			return;
 		}
@@ -206,7 +206,7 @@ public class FindAction extends Action {
 			LinkedList<Task> displayList) {
 
 		if (criteria != FieldCriteria.YES && criteria != FieldCriteria.NO) {
-			_feedback.append(MessageConstants.MESSAGE_NO_COMPLETE_CRITERIA);
+			_feedback.append(MessageConstants.NO_COMPLETE_CRITERIA);
 			_failCount++;
 			return;
 		} 
@@ -228,7 +228,7 @@ public class FindAction extends Action {
 	private void filterByPriority(String priority, LinkedList<Task> displayList) {
 
 		if (priority == null) {
-			_feedback.append(MessageConstants.MESSAGE_NO_PRIORITY_LEVEL);
+			_feedback.append(MessageConstants.NO_PRIORITY_LEVEL);
 			_failCount++;
 			return;
 		}
@@ -249,7 +249,7 @@ public class FindAction extends Action {
 		FieldCriteria criteria = field.getCriteria();
 
 		if (criteria == null) {
-			_feedback.append(MessageConstants.MESSAGE_NO_DATE_CRITERIA);
+			_feedback.append(MessageConstants.NO_DATE_CRITERIA);
 			_failCount++;
 			return;
 		}
@@ -291,7 +291,7 @@ public class FindAction extends Action {
 
 		if (fromDate.compareTo(toDate) > 0) {
 			this._feedback
-					.append(MessageConstants.MESSAGE_INVALID_DATE_RANGE);
+					.append(MessageConstants.INVALID_DATE_RANGE);
 			return;
 		}
 

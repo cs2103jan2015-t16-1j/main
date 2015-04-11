@@ -26,38 +26,14 @@ public class DateParser {
 		_dateTime = new GregorianCalendar();
 		_dateParsed = false;
 		_timeParsed = false;
-		parseDateTime(dateTimeStr);
+		parse(dateTimeStr);
 	}
 
-	private void parseDateTime(String dateTimeStr) {
+	private void parse(String dateTimeStr) {
 
 		if (dateTimeStr.contains(":") && dateTimeStr.contains("/")) {
 
-			try {
-				SimpleDateFormat dateTimeFormat = new SimpleDateFormat(
-						DATE_TIME_FORMAT_1);
-				_dateTime.setTime(dateTimeFormat.parse(dateTimeStr));
-				_dateParsed = true;
-				_timeParsed = true;
-			} catch (NullPointerException e) {
-				System.out.println(e.getMessage());
-				_dateTime = null;
-			} catch (ParseException e) {
-
-				try {
-					SimpleDateFormat dateTimeFormat = new SimpleDateFormat(
-							DATE_TIME_FORMAT_2);
-					_dateTime.setTime(dateTimeFormat.parse(dateTimeStr));
-					_dateTime.set(Calendar.YEAR,
-							Calendar.getInstance().get(Calendar.YEAR));
-					_dateParsed = true;
-					_timeParsed = true;
-				} catch (ParseException e2) {
-					_feedback.append("Invalid date and time format. ");
-					_dateTime = null;
-					System.out.println(e2.getMessage());
-				}
-			}
+			parseDateTime(dateTimeStr);
 
 		} else if (dateTimeStr.contains(":") && dateTimeStr.contains(" ")) {
 
@@ -112,23 +88,68 @@ public class DateParser {
 		}
 	}
 
-	private void parseDate(String dateStr) {
-		SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT_1);
+	private void parseDateTime(String dateTimeStr) {
 		try {
+			
+			SimpleDateFormat dateTimeFormat = new SimpleDateFormat(
+					DATE_TIME_FORMAT_1);
+			_dateTime.setTime(dateTimeFormat.parse(dateTimeStr));
+			_dateParsed = true;
+			_timeParsed = true;
+			
+		} catch (NullPointerException e) {
+			
+			System.out.println(e.getMessage());
+			_dateTime = null;
+			
+		} catch (ParseException e) {
+
+			try {
+				
+				SimpleDateFormat dateTimeFormat = new SimpleDateFormat(
+						DATE_TIME_FORMAT_2);
+				_dateTime.setTime(dateTimeFormat.parse(dateTimeStr));
+				_dateTime.set(Calendar.YEAR,
+						Calendar.getInstance().get(Calendar.YEAR));
+				_dateParsed = true;
+				_timeParsed = true;
+				
+			} catch (ParseException e2) {
+				
+				_feedback.append("Invalid date and time format. ");
+				_dateTime = null;
+				System.out.println(e2.getMessage());
+			}
+		}
+	}
+
+	private void parseDate(String dateStr) {
+		
+		SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT_1);
+		
+		try {
+			
 			_dateTime.setTime(dateFormat.parse(dateStr));
 			_dateParsed = true;
+			
 		} catch (NullPointerException e) {
+			
 			_dateTime = null;
 			System.out.println(e.getMessage());
+			
 		} catch (ParseException e) {
+			
 			try {
+				
 				SimpleDateFormat timeFormat = new SimpleDateFormat(
 						DATE_FORMAT_2);
 				_dateTime.setTime(timeFormat.parse(dateStr));
 				_dateTime.set(Calendar.YEAR,
 						Calendar.getInstance().get(Calendar.YEAR));
 				_dateParsed = true;
+				
 			} catch (ParseException e2) {
+				
 				_feedback.append("Invalid date format. ");
 				_dateTime = null;
 				System.out.println(e2.getMessage());
@@ -143,25 +164,33 @@ public class DateParser {
 		Calendar timeOfDay = new GregorianCalendar();
 
 		try {
+			
 			timeOfDay.setTime(timeFormat.parse(timeStr));
 			_timeParsed = true;
+			
 		} catch (NullPointerException e) {
+			
 			_dateTime = null;
 			return;
+			
 		} catch (ParseException e) {
+			
 			_dateTime = null;
 			_feedback.append("Invalid time \"" + timeStr + "\" entered. ");
 			return;
 		}
 
 		if (_dateTime != null) {
+			
 			_dateTime.set(Calendar.HOUR_OF_DAY,
 					timeOfDay.get(Calendar.HOUR_OF_DAY));
 			_dateTime.set(Calendar.MINUTE, timeOfDay.get(Calendar.MINUTE));
-
+			
 			if (!_dateParsed) {
+				
 				Calendar now = new GregorianCalendar();
-				if (_dateTime.getTimeInMillis() < now.getTimeInMillis()) {
+				
+				if (_dateTime.compareTo(now) < 0) {
 					_dateTime.add(Calendar.DAY_OF_MONTH, 1);
 				}
 			}
@@ -171,45 +200,60 @@ public class DateParser {
 	private void parseDay(String dayStr, boolean isNextWeek) {
 
 		if (dayStr.equalsIgnoreCase("tmr") || dayStr.equalsIgnoreCase("tdy")) {
+			
 			if (dayStr.equalsIgnoreCase("tmr")) {
 				_dateTime.add(Calendar.DAY_OF_MONTH, 1);
 			}
 			_dateParsed = true;
+			
 		} else {
 
 			SimpleDateFormat format = new SimpleDateFormat("EEE");
 			Calendar dayOfWeek = new GregorianCalendar();
 
 			try {
+				
 				dayOfWeek.setTime(format.parse(dayStr));
 				_dateParsed = true;
+				determineDateFromDay(isNextWeek, dayOfWeek);
+				
 			} catch (NullPointerException e) {
+				
 				_dateTime = null;
-				return;
+				
 			} catch (ParseException e) {
+				
 				_dateTime = null;
 				_feedback.append("Invalid day \"" + dayStr + "\" entered. ");
-				return;
+			}	
+		}
+	}
+
+	private void determineDateFromDay(boolean isNextWeek, Calendar dayOfWeek) {
+		int dayOfWeekInt = dayOfWeek.get(Calendar.DAY_OF_WEEK);
+
+		if (isNextWeek) {
+			
+			boolean weekCrossed = false;
+			int prevDay = _dateTime.get(Calendar.DAY_OF_WEEK);
+			
+			while (dayOfWeekInt != _dateTime.get(Calendar.DAY_OF_WEEK)
+					|| !weekCrossed) {
+				
+				_dateTime.add(Calendar.DAY_OF_MONTH, 1);
+				
+				if (!weekCrossed
+						&& _dateTime.get(Calendar.DAY_OF_WEEK) <= prevDay) {
+					
+					weekCrossed = true;
+				}
 			}
+			
+		} else {
+			
+			while (dayOfWeekInt != _dateTime.get(Calendar.DAY_OF_WEEK)) {
 
-			int dayOfWeekInt = dayOfWeek.get(Calendar.DAY_OF_WEEK);
-
-			if (isNextWeek) {
-				boolean weekCrossed = false;
-				int prevDay = _dateTime.get(Calendar.DAY_OF_WEEK);
-				while (dayOfWeekInt != _dateTime.get(Calendar.DAY_OF_WEEK)
-						|| !weekCrossed) {
-					_dateTime.add(Calendar.DAY_OF_MONTH, 1);
-					if (!weekCrossed
-							&& _dateTime.get(Calendar.DAY_OF_WEEK) <= prevDay) {
-						weekCrossed = true;
-					}
-				}
-			} else {
-				while (dayOfWeekInt != _dateTime.get(Calendar.DAY_OF_WEEK)) {
-
-					_dateTime.add(Calendar.DAY_OF_MONTH, 1);
-				}
+				_dateTime.add(Calendar.DAY_OF_MONTH, 1);
 			}
 		}
 	}
@@ -228,21 +272,5 @@ public class DateParser {
 
 	public boolean isTimeParsed() {
 		return _timeParsed;
-	}
-
-	public static void main(String args[]) {
-		SimpleDateFormat format = new SimpleDateFormat("EEE, dd/MM/yyyy, HH:mm");
-		Scanner sc = new Scanner(System.in);
-		while (true) {
-			String datetimeStr = sc.nextLine();
-			DateParser dp = new DateParser(datetimeStr);
-			Calendar cal = dp.getDateTime();
-			try {
-				System.out.println(format.format(cal.getTime()) + " "
-						+ dp.getFeedback());
-			} catch (NullPointerException e) {
-				System.out.println("       " + dp.getFeedback());
-			}
-		}
 	}
 }
