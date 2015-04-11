@@ -2,15 +2,12 @@ package test;
 
 import static org.junit.Assert.*;
 
-import java.util.LinkedList;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import quicklyst.ActionType;
 import quicklyst.CommandParser;
-import quicklyst.Field;
 import quicklyst.MessageConstants;
 
 public class CommandParserTest {

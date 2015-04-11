@@ -1,7 +1,6 @@
 package quicklyst;
 
 import java.util.LinkedList;
-import java.util.Scanner;
 import java.util.regex.Pattern;
 
 //@author A0102015H
@@ -161,7 +160,6 @@ public class CommandParser {
 			return;
 		}
 
-		System.out.println(actionAndContents[1].trim());
 		determineActionDetails(actionAndContents[1].trim());
 	}
 
@@ -184,10 +182,12 @@ public class CommandParser {
 		String taskNumString = numberAndFields[0].trim();
 
 		try {
+			
 			_taskNumber = Integer.parseInt(taskNumString);
+			
 			fieldsString = fieldsString.replaceFirst(
 					String.valueOf(_taskNumber), STRING_EMPTY).trim();
-			System.out.println("lala");
+			
 		} catch (NumberFormatException e) {
 			_taskNumber = 0;
 		}

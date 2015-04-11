@@ -57,8 +57,6 @@ public class EditAction extends Action {
 			_feedback.append(MessageConstants.TASK_NO_OUT_OF_RANGE);
 		}
 
-		System.out.println(_isSuccess);
-
 		if (_isSuccess) {
 			LOGGER.info(MessageConstants.SORTING_DISPLAY_LIST);
 			_task.setLastUpdated(Calendar.getInstance());
@@ -77,22 +75,15 @@ public class EditAction extends Action {
 
 			switch (fieldType) {
 			case START_DATE:
-
 				updateStartDate(field);
 				break;
-
 			case DUE_DATE:
-
 				updateDueDate(field);
 				break;
-
 			case PRIORITY:
-
 				updatePriority(field);
 				break;
-
 			default:
-
 				break;
 			}
 		}

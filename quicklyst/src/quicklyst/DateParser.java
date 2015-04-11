@@ -129,7 +129,6 @@ public class DateParser {
 
 		} catch (NullPointerException e) {
 
-			System.out.println(e.getMessage());
 			_dateTime = null;
 
 		} catch (ParseException e) {
@@ -148,7 +147,6 @@ public class DateParser {
 
 				_feedback.append(MessageConstants.INVALID_DATE_AND_TIME_FORMAT);
 				_dateTime = null;
-				System.out.println(e2.getMessage());
 			}
 		}
 	}
@@ -165,7 +163,6 @@ public class DateParser {
 		} catch (NullPointerException e) {
 
 			_dateTime = null;
-			System.out.println(e.getMessage());
 
 		} catch (ParseException e) {
 
@@ -182,7 +179,6 @@ public class DateParser {
 
 				_feedback.append(MessageConstants.INVALID_DATE_FORMAT);
 				_dateTime = null;
-				System.out.println(e2.getMessage());
 			}
 		}
 	}

@@ -3,7 +3,6 @@ package quicklyst;
 import java.util.Calendar;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.Scanner;
 
 //@author A0102015H
 public class QLLogic {

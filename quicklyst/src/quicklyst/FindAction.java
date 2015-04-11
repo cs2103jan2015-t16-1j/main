@@ -4,8 +4,6 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.LinkedList;
 
-import org.joda.time.chrono.AssembledChronology.Fields;
-
 //@author A0102015H
 public class FindAction extends Action {
 
@@ -45,7 +43,6 @@ public class FindAction extends Action {
 		}
 
 		if (_taskName == null && (_fields == null || _fields.isEmpty())) {
-			System.out.println(MessageConstants.NO_FIELD);
 			return;
 		}
 

@@ -40,7 +40,6 @@ public class SortAction extends Action {
 
 		if (_fields == null || _fields.isEmpty()) {
 
-			System.out.println("No field entered. ");
 			this._isSuccess = false;
 			return;
 		}
