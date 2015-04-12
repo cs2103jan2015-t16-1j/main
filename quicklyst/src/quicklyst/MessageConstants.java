@@ -3,12 +3,14 @@ package quicklyst;
 public class MessageConstants {
 
 	public static final String ADD_SUCCESS = "Task: \"%s\" added. ";
-	public static final String DEFAULT_TASK_FILE_CORRUPTED = "Default task file corrupted. ";
 	public static final String DEFAULT_TASK_FILE_USED = "Default task file is used. ";
-	public static final String DIR_CHANGED = "Directory changed. You are editing tasks in file: \"%s\". ";
 	public static final String DUE_DATE_CLEARED = "Due date cleared. ";
 	public static final String DUE_DATE_SET = "Due date set to %s. ";
 	public static final String DUE_SMALLER_THAN_START = "Due date/time entered is smaller than start date/time of task. ";
+	public static final String ERROR_READING_SETTINGS = "Error reading settings file. Using default settings. ";
+	public static final String ERROR_READING_DEFAULT_TASK_FILE = "Error reading default task file. ";
+    public static final String ERROR_READING_PREFFERED_TASK_FILE = "Error reading preferred task file. ";
+	public static final String FILE_CHANGED = "Filepath changed. You are editing tasks in file: \"%s\". ";
 	public static final String INVALID_ACTION_TYPE = "Invalid action type. ";
 	public static final String INVALID_DATE_AND_TIME_FORMAT = "Invalid date and time format. ";
 	public static final String INVALID_DATE_FORMAT = "Invalid date format. ";
@@ -19,7 +21,7 @@ public class MessageConstants {
 	public static final String INVALID_FIELD_CRITERIA = "Invalid field criteria \"%s\". ";
 	public static final String INVALID_FIELD_FORMAT_IN = "Invalid field format in \"%s\". ";
 	public static final String INVALID_FIELD_TYPE = "Invalid field type. ";
-	public static final String INVALID_FILEPATH = "Filepath is invalid. Directory is not changed. ";
+	public static final String INVALID_FILEPATH = "Filepath is invalid. Filepath is not changed. ";
 	public static final String INVALID_PRIORITY_LEVEL = "Invalid priority level \"%s\". ";
 	public static final String INVALID_TIME = "Invalid time \"%s\" entered. ";
 	public static final String LOADED_FROM = "Loaded from: \"%s\". ";
@@ -40,11 +42,9 @@ public class MessageConstants {
 	public static final String NOTHING_ADDED = "Nothing is added. ";
 	public static final String NOTHING_TO_REDO = "Nothing to redo. ";
 	public static final String NOTHING_TO_UNDO = "Nothing to undo. ";
-	public static final String PREFFERED_TASK_FILE_CORRUPTED = "Preferred task file corrupted. ";
 	public static final String PRIORITY_CLEARED = "Priority cleared. ";
 	public static final String PRIORITY_SET = "Priority set to \"%s\". ";
 	public static final String SAVED_TO = "Saved to: \"%s\". ";
-	public static final String SETTINGS_FILE_CORRUPTED = "Settings file corrupted. Using default settings. ";
 	public static final String SORTING_DISPLAY_LIST = "Sorting display list. ";
 	public static final String START_BIGGER_THAN_DUE = "Start date/time entered is bigger than due date/time of task. ";
 	public static final String START_DATE_CLEARED = "Start date cleared. ";
@@ -55,4 +55,22 @@ public class MessageConstants {
 	public static final String TASK_NAME_SET = "Task name set to \"%s\". ";
 	public static final String TASK_NO_IS = "Task # %d is %s. ";
 	public static final String TASK_NO_OUT_OF_RANGE = "Task # out of range. ";
+	
+	//Storage
+	public static final String ERROR_INVALID_FILEPATH = "Invalid filepath. ";
+	public static final String ERROR_WRITE_FILE = "Error writing file %s. ";
+	public static final String ERROR_READ_FILE = "Error reading file %s. ";
+	public static final String ERROR_UNABLE_READ_FILE = "Unable to read file %s. ";
+	public static final String ERROR_UNABLE_WRITE_FILE = "Unable to write file %s. ";
+	public static final String ERROR_DIRECTORY = "%s is a directory. ";
+	public static final String ERROR_UNABLE_MAKE_DIRECTORY = "Unable to make directory %s. ";
+	public static final String ERROR_DIRECTORY_FILE = "%s is a file. ";
+	
+	//Google Integration
+	public static final String ERROR_SYNC = "Unable to sync with Google services. ";
+	public static final String ERROR_SECURE_CONNECTION_UNAVAILABLE = "Unable to initialise secure connection. ";
+	
+	//Storage
+	public static final String ERROR_READ_SETTINGS = "Error reading settings. ";
+	public static final String ERROR_WRITE_SETTINGS = "Error writing settings. ";
 }

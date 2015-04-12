@@ -32,7 +32,7 @@ public class DeleteAction extends Action {
 			workingList.remove(taskToDel);
 			workingListMaster.remove(taskToDel);
 
-			_deletedTaskID = taskToDel.getGoogleID();
+			_deletedTaskID = taskToDel.getGoogleId();
 
 			this._isSuccess = true;
 			this._feedback.append(String.format(MessageConstants.TASK_NO_IS,
