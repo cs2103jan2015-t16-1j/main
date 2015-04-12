@@ -53,29 +53,24 @@ public class QLGoogleIntegration {
 
     private HttpTransport _httpTransport;
 
-    private QLGoogleIntegration() {
+    private QLGoogleIntegration() throws GeneralSecurityException, IOException {
         this(USER_ID, true);
     }
 
-    private QLGoogleIntegration(String userId, boolean shouldRememberLogin) {
+    private QLGoogleIntegration(String userId, boolean shouldRememberLogin) throws GeneralSecurityException, IOException {
         _userId = userId;
         _shouldRememberLogin = shouldRememberLogin;
 
-        try {
-            _httpTransport = GoogleNetHttpTransport.newTrustedTransport();
-        } catch (GeneralSecurityException | IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        _httpTransport = GoogleNetHttpTransport.newTrustedTransport();
+        
 
         DataStoreFactory dataStoreFactory = null;
         if (_shouldRememberLogin) {
-            File f = new File("googlecred");
+            File f = new File(System.getProperty("user.home"), ".quicklyst");
             try {
                 dataStoreFactory = new FileDataStoreFactory(f);
             } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                dataStoreFactory = new MemoryDataStoreFactory();
             }
         } else {
             dataStoreFactory = new MemoryDataStoreFactory();
@@ -87,7 +82,14 @@ public class QLGoogleIntegration {
 
     public static QLGoogleIntegration getInstance() {
         if (instance == null) {
-            instance = new QLGoogleIntegration();
+        
+            try {
+                instance = new QLGoogleIntegration();
+            } catch (GeneralSecurityException e) {
+                throw new Error("Unable to initialise secure connection");
+            } catch (IOException e) {
+                throw new Error("Unable to start Google Integration");
+            }
         }
         return instance;
     }
@@ -106,19 +108,17 @@ public class QLGoogleIntegration {
     }
 
     public boolean logout() {
-        _cred = null;
-        _googleCalendar = null;
-        _googleTasks = null;
         try {
+            _cred = null;
+            _googleCalendar = null;
+            _googleTasks = null;
             return _googleLogin.logout();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            return false;
         }
-        return false;
     }
 
-    public void sync(List<Task> taskList, List<String> deletedList) {
+    public void sync(List<Task> taskList, List<String> deletedIDs) {
 
         try {
             if (!isInitiated()) {
@@ -133,10 +133,10 @@ public class QLGoogleIntegration {
 
             createMapsForSync(taskList, calendarTask, tasksTask);
              
-            deletedList.removeAll(calendarTask.keySet());
-            deletedList.removeAll(tasksTask.keySet());
+            deletedIDs.removeAll(calendarTask.keySet());
+            deletedIDs.removeAll(tasksTask.keySet());
             
-            deleteFromGoogle(deletedList, _googleCalendar, _googleTasks, calId,
+            deleteFromGoogle(deletedIDs, _googleCalendar, _googleTasks, calId,
                     taskListId);
             syncWithGoogleCalendar(taskList, _googleCalendar, _googleTasks,
                     calId, taskListId, calendarTask);
@@ -267,10 +267,10 @@ public class QLGoogleIntegration {
         }
     }
 
-    private void deleteFromGoogle(List<String> deletedList,
+    private void deleteFromGoogle(List<String> deletedIDs,
             GoogleCalConn googleCalendar, GoogleTaskConn googleTasks,
             String calId, String taskListId) {
-        Iterator<String> iter = deletedList.iterator();
+        Iterator<String> iter = deletedIDs.iterator();
         while (iter.hasNext()) {
             String id = iter.next();
             try {
@@ -290,7 +290,7 @@ public class QLGoogleIntegration {
         }
     }
 
-    public List<Task> syncFrom(List<Task> taskList) {
+    public void syncFrom(List<Task> taskList) {
         try {
 
             if (!isInitiated()) {
@@ -303,8 +303,6 @@ public class QLGoogleIntegration {
             syncGoogleToTaskList(taskList, _googleCalendar, _googleTasks,
                     calId, taskListId);
 
-            return taskList;
-
         } catch (GeneralSecurityException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -312,7 +310,6 @@ public class QLGoogleIntegration {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        return null;
     }
 
     public void syncTo(List<Task> taskList) {
@@ -654,13 +651,14 @@ public class QLGoogleIntegration {
         e.setSummary(t.getName());
         e.setDescription(t.getDescription());
 
-        if ((e.getStart() != null) && (e.getStart().getDateTime() != null)) {
+        /*if ((e.getStart() != null) && (e.getStart().getDateTime() != null)) {
             DateTime startDT = calendarToDateTime(t.getStartDate());
             e.setStart(new EventDateTime().setDateTime(startDT));
 
             DateTime endDT = calendarToDateTime(t.getDueDate());
             e.setEnd(new EventDateTime().setDateTime(endDT));
-        } else if (t.getHasDueTime() != t.getHasStartTime()) {
+        } else*/
+        if (t.getHasDueTime() != t.getHasStartTime()) {
             DateTime startDT = calendarToDateTime(t.getStartDate());
             e.setStart(new EventDateTime().setDateTime(startDT));
 

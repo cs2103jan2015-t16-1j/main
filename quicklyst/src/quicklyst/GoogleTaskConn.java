@@ -32,12 +32,12 @@ public class GoogleTaskConn {
         _httpTransport = httpTransport;
     }
 
-    public Tasks getTasks(String taskListId) throws IOException {
-        return getService().tasks().list(taskListId).execute();
-    }
-
     public TaskLists getTaskLists() throws IOException {
         return getService().tasklists().list().execute();
+    }
+    
+    public Tasks getTasks(String taskListId) throws IOException {
+        return getService().tasks().list(taskListId).execute();
     }
 
     public TaskList getTaskList(String taskListId) throws IOException {

@@ -45,12 +45,16 @@ public class QLLogic {
 
 		} catch (Error e) {
 
-			feedback.append("Preferred task file does not exist. "
+			feedback.append("Preferred task file corrupted. "
 					+ "Default task file is used. ");
 			_filePath = _qLSettings.getDefaultFilePath();
 			_masterList = new LinkedList<Task>();
 			_deletedList = new LinkedList<String>();
-			_qLStorage.loadFile(_masterList, _deletedList, _filePath);
+			try {
+			    _qLStorage.loadFile(_masterList, _deletedList, _filePath);
+			} catch (Error err) {
+			    feedback.append("Default task file corrupted. ");
+			}
 		}
 
 		_displayList = new LinkedList<Task>();

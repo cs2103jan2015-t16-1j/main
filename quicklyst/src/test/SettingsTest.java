@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import quicklyst.QLSettings;
 
-public class QLSettingsTest {
+public class SettingsTest {
     
     QLSettings _settings = QLSettings.getInstance();
 
