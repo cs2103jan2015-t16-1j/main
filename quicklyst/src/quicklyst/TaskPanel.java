@@ -8,6 +8,7 @@ import javax.swing.JPanel;
 import javax.swing.SpringLayout;
 import javax.swing.border.LineBorder;
 
+//@author A0112971J
 public class TaskPanel extends JPanel {
     private static final String TO = " - ";
     private static final String STRING_ONE_SPACE = " ";

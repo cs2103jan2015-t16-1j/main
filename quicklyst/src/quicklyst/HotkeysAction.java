@@ -5,6 +5,7 @@ import java.util.logging.Logger;
 
 import javax.swing.AbstractAction;
 
+//@author A0112971J
 public class HotkeysAction extends AbstractAction {
     private static final Logger LOGGER = Logger
             .getLogger(HotkeysAction.class.getName());
