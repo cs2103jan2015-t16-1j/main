@@ -161,7 +161,7 @@ public class QLGUI extends JFrame {
 		setupCommand();
 
 		setupHotkeys();
-		_commandTips = CommandTips.getInstance();
+		_commandTips = new CommandTips();
 		_command.getDocument().addDocumentListener(new DocumentListener() {
 			public void changedUpdate(DocumentEvent e) {
 				showTips();
@@ -179,7 +179,7 @@ public class QLGUI extends JFrame {
 
 		showTips();
 
-		_commandHistory = CommandHistory.getInstance();
+		_commandHistory = new CommandHistory();
 		_command.addKeyListener(new CommandKeyListener(_commandHistory,
 				_command));
 
@@ -202,7 +202,11 @@ public class QLGUI extends JFrame {
 
 		LOGGER.info(MESSAGE_GET_TASK_LIST_FROM_QL_LOGIC);
 		_QLLogic = QLLogic.getInstance();
-		_QLLogic.setup(new StringBuilder());
+		StringBuilder status = new StringBuilder();
+		_QLLogic.setup(status);
+		if (!status.toString().isEmpty()) {
+		    setStatus(status.toString());
+		}
 		updateUI();
 
 	}

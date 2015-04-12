@@ -20,16 +20,8 @@ public class CommandTips {
             {"pull", null, "pull"},
         };
     
-    private static CommandTips _instance;
     
-    private CommandTips() {
-    }
-    
-    public static CommandTips getInstance() {
-        if (_instance == null) {
-            _instance = new CommandTips();
-        }
-        return _instance;
+    public CommandTips() {
     }
     
     public String getTips(String userInput) {
