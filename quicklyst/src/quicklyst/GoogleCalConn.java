@@ -31,13 +31,13 @@ public class GoogleCalConn {
         _credential = credential;
         _httpTransport = httpTransport;
     }
+    
+    public CalendarList getCalendars() throws IOException {
+        return getService().calendarList().list().execute();
+    }
 
     public Events getEvents(String calendarId) throws IOException {
         return getService().events().list(calendarId).execute();
-    }
-
-    public CalendarList getCalendars() throws IOException {
-        return getService().calendarList().list().execute();
     }
 
     public Calendar getCalendar(String calendarId) throws IOException {
