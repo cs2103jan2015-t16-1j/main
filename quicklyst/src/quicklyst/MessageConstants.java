@@ -4,6 +4,7 @@ public class MessageConstants {
 
 	public static final String ADD_SUCCESS = "Task: \"%s\" added. ";
 	public static final String DEFAULT_TASK_FILE_CORRUPTED = "Default task file corrupted. ";
+	public static final String DEFAULT_TASK_FILE_USED = "Default task file is used. ";
 	public static final String DIR_CHANGED = "Directory changed. You are editing tasks in file: \"%s\". ";
 	public static final String DUE_DATE_CLEARED = "Due date cleared. ";
 	public static final String DUE_DATE_SET = "Due date set to %s. ";
@@ -18,7 +19,7 @@ public class MessageConstants {
 	public static final String INVALID_FIELD_CRITERIA = "Invalid field criteria \"%s\". ";
 	public static final String INVALID_FIELD_FORMAT_IN = "Invalid field format in \"%s\". ";
 	public static final String INVALID_FIELD_TYPE = "Invalid field type. ";
-	public static final String INVALID_FILEPATH = "Preferred task file does not exist. Directory is not changed. ";
+	public static final String INVALID_FILEPATH = "Filepath is invalid. Directory is not changed. ";
 	public static final String INVALID_PRIORITY_LEVEL = "Invalid priority level \"%s\". ";
 	public static final String INVALID_TIME = "Invalid time \"%s\" entered. ";
 	public static final String LOADED_FROM = "Loaded from: \"%s\". ";
@@ -39,10 +40,11 @@ public class MessageConstants {
 	public static final String NOTHING_ADDED = "Nothing is added. ";
 	public static final String NOTHING_TO_REDO = "Nothing to redo. ";
 	public static final String NOTHING_TO_UNDO = "Nothing to undo. ";
-	public static final String PREFFERED_TASK_FILE_CORRUPTED = "Preferred task file corrupted. Default task file is used. ";
+	public static final String PREFFERED_TASK_FILE_CORRUPTED = "Preferred task file corrupted. ";
 	public static final String PRIORITY_CLEARED = "Priority cleared. ";
 	public static final String PRIORITY_SET = "Priority set to \"%s\". ";
 	public static final String SAVED_TO = "Saved to: \"%s\". ";
+	public static final String SETTINGS_FILE_CORRUPTED = "Settings file corrupted. Using default settings. ";
 	public static final String SORTING_DISPLAY_LIST = "Sorting display list. ";
 	public static final String START_BIGGER_THAN_DUE = "Start date/time entered is bigger than due date/time of task. ";
 	public static final String START_DATE_CLEARED = "Start date cleared. ";

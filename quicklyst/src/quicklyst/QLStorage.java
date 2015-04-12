@@ -139,6 +139,9 @@ public class QLStorage {
 	private static final String ERROR_DIRECTORY = "%s is a directory";
 	private static final String ERROR_UNABLE_MAKE_DIRECTORY = "unable to make directory %s";
 	private static final String ERROR_DIRECTORY_FILE = "%s is a file";
+	
+	private static final String REGEX_INVALID_CHAR = "^.*[" + Pattern.quote(":*?/\"<>|") + "].*$";
+	private static final String REGEX_DRIVE = "^[A-Z]:$";
 
 	private final static Logger LOGGER = Logger.getLogger(QLStorage.class
 			.getName());
@@ -324,6 +327,22 @@ public class QLStorage {
 	
 	private boolean isValidFilepath(String filePath) {
 	    //windows specific
-	    return !filePath.matches(".*[" + Pattern.quote(":*?\"<>|") + "].*");
+	    if (filePath.isEmpty()) {
+	        return false;
+	    }
+	    if (filePath.length() > 2) {
+	        if (filePath.substring(2).matches(REGEX_INVALID_CHAR)) {
+	            return false;
+	        } else if (filePath.substring(0, 2).matches(REGEX_DRIVE)) {
+	            return true;
+	        } else if (filePath.substring(0, 2).matches(REGEX_INVALID_CHAR)) {
+	            return false;
+	        } else {
+	            return true;
+	        }
+	    } else if (filePath.matches(REGEX_INVALID_CHAR)) {
+	        return false;
+	    }
+	    return true;
 	}
 }
