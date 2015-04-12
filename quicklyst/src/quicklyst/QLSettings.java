@@ -12,7 +12,7 @@ import com.google.gson.JsonSyntaxException;
 //@author A01112707N
 public class QLSettings {
 	
-	private static final String FILEPATH_SETTINGS = "settings.json";
+    private static final String FILEPATH_SETTINGS = "settings.json";
 	private static final String FILEPATH_DEFAULT_SAVE = "save.json";
 	
     public static QLSettings _instance;
@@ -55,9 +55,9 @@ public class QLSettings {
         } catch (FileNotFoundException e) {
             _prefFilePath = null;
         } catch (IOException e) {
-            throw new Error("Error reading settings.");
+            throw new Error(ERROR_READ_SETTINGS);
         } catch (JsonSyntaxException | JsonIOException e) {
-            throw new Error("Error reading settings.");
+            throw new Error(ERROR_READ_SETTINGS);
         }
     }
     
@@ -66,7 +66,7 @@ public class QLSettings {
     		Gson gson = new Gson();
     		gson.toJson(_prefFilePath, f);
     	} catch (IOException | JsonIOException e) {
-			e.printStackTrace();
+			throw new Error(ERROR_WRITE_SETTINGS)
 		}
     }
 }

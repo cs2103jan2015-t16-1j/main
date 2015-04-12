@@ -9,7 +9,7 @@ public class QLLogic {
 
 	private static final String SPACE = " ";
 	private static final String COMMAND_LOAD_ABBREV = "l";
-	private static final String COMMAND_CHANGE_DIR = "cd";
+	private static final String COMMAND_CHANGE_FILE = "cf";
 	private static final String COMMAND_LOAD = "load";
 	private static final String COMMAND_SAVE_ABBREV = "s";
 	private static final String COMMAND_SAVE = "save";
@@ -51,7 +51,7 @@ public class QLLogic {
 		try {
             _filePath = _qLSettings.getPrefFilePath();
         } catch (Error e) {
-            feedback.append(MessageConstants.SETTINGS_FILE_CORRUPTED);
+            feedback.append(MessageConstants.ERROR_READING_SETTINGS);
         }
         if (_filePath != null) {
             try {
@@ -59,7 +59,7 @@ public class QLLogic {
     
             } catch (Error e) {
     
-                feedback.append(MessageConstants.PREFFERED_TASK_FILE_CORRUPTED);
+                feedback.append(MessageConstants.ERROR_READING_PREFFERED_TASK_FILE);
                 _filePath = _qLSettings.getDefaultFilePath();
                 _masterList = new LinkedList<Task>();
                 _deletedList = new LinkedList<String>();
@@ -67,7 +67,7 @@ public class QLLogic {
                     _qLStorage.loadFile(_masterList, _deletedList, _filePath);
                     feedback.append(MessageConstants.DEFAULT_TASK_FILE_USED);
                 } catch (Error err) {
-                    feedback.append(MessageConstants.DEFAULT_TASK_FILE_CORRUPTED);
+                    feedback.append(MessageConstants.ERROR_READING_DEFAULT_TASK_FILE);
                 }
             }
         } else {
@@ -75,7 +75,7 @@ public class QLLogic {
             try {
                 _qLStorage.loadFile(_masterList, _deletedList, _filePath);
             } catch (Error err) {
-                feedback.append(MessageConstants.DEFAULT_TASK_FILE_CORRUPTED);
+                feedback.append(MessageConstants.ERROR_READING_DEFAULT_TASK_FILE);
             }
         }
 
@@ -140,7 +140,11 @@ public class QLLogic {
 		_shouldShowAllCompleted = _historyMgnr.getShouldShowAllCompleted();
 		_deletedList = _historyMgnr.getDeletedList();
 
-		_qLStorage.saveFile(_masterList, _deletedList, _filePath);
+		try {
+            _qLStorage.saveFile(_masterList, _deletedList, _filePath);
+        } catch (Error e) {
+            feedback.append(e.getMessage());
+        }
 	}
 
 	public void executeRedo(StringBuilder feedback) {
@@ -152,7 +156,11 @@ public class QLLogic {
 		_shouldShowAllCompleted = _historyMgnr.getShouldShowAllCompleted();
 		_deletedList = _historyMgnr.getDeletedList();
 
-		_qLStorage.saveFile(_masterList, _deletedList, _filePath);
+		try {
+            _qLStorage.saveFile(_masterList, _deletedList, _filePath);
+        } catch (Error e) {
+            feedback.append(e.getMessage());
+        }
 	}
 
 	public void executeCommand(String command, StringBuilder feedback) {
@@ -183,8 +191,8 @@ public class QLLogic {
 			return;
 		}
 
-		if (command.split(SPACE, 2)[0].equalsIgnoreCase(COMMAND_CHANGE_DIR)) {
-			executeChangeDir(command, feedback);
+		if (command.split(SPACE, 2)[0].equalsIgnoreCase(COMMAND_CHANGE_FILE)) {
+			executeChangeFile(command, feedback);
 			return;
 		}
 
@@ -195,7 +203,7 @@ public class QLLogic {
 		return _shouldShowAllCompleted;
 	}
 
-	private void executeChangeDir(String command, StringBuilder feedback) {
+	private void executeChangeFile(String command, StringBuilder feedback) {
 
 		String commandAndPath[] = command.split(SPACE, 2);
 
@@ -208,24 +216,31 @@ public class QLLogic {
 			String filepath = commandAndPath[1].trim();
 
 			if (_qLStorage.isValidFile(filepath)) {
-
-				_filePath = filepath;
-
-				_qLSettings.updatePrefFilePath(filepath);
-
-				_masterList = new LinkedList<Task>();
-				_deletedList = new LinkedList<String>();
-
-				_qLStorage.loadFile(_masterList, _deletedList, filepath);
-
-				copyList(_masterList, _displayList);
-
-				_historyMgnr = new HistoryManager(_displayList, _masterList,
-						_deletedList, _shouldShowAllCompleted);
-
-				feedback.append(String.format(MessageConstants.DIR_CHANGED,
-						filepath));
-
+			    try {
+    
+			        LinkedList<Task> tempMasterList = new LinkedList<Task>();
+			        LinkedList<String> tempDeletedList = new LinkedList<String>();
+    				
+    				
+    				_qLStorage.loadFile(tempMasterList, tempDeletedList, filepath);
+    				
+    				_qLSettings.updatePrefFilePath(filepath);
+    				
+    				_masterList = tempMasterList;
+    				_deletedList = tempDeletedList;
+    				
+    				_filePath = filepath;
+    
+    				copyList(_masterList, _displayList);
+    
+    				_historyMgnr = new HistoryManager(_displayList, _masterList,
+    						_deletedList, _shouldShowAllCompleted);
+    
+    				feedback.append(String.format(MessageConstants.FILE_CHANGED,
+    						filepath));
+			    } catch (Error e) {
+                    feedback.append(e.getMessage());
+                }
 			} else {
 
 				feedback.append(MessageConstants.INVALID_FILEPATH);
@@ -264,8 +279,11 @@ public class QLLogic {
 
 				_deletedList.add(action.getDeletedTaskID());
 			}
-
-			_qLStorage.saveFile(_masterList, _deletedList, _filePath);
+			try {
+			    _qLStorage.saveFile(_masterList, _deletedList, _filePath);
+			} catch (Error e) {
+			    feedback.append(e.getMessage());
+			}
 
 			if (action.getType() != ActionType.LOG_OUT) {
 
@@ -298,7 +316,11 @@ public class QLLogic {
 
 				copyList(_displayList, _masterList);
 
-				_qLStorage.saveFile(_masterList, _deletedList, _filePath);
+				try {
+	                _qLStorage.saveFile(_masterList, _deletedList, _filePath);
+	            } catch (Error e) {
+	                feedback.append(e.getMessage());
+	            }
 
 				_historyMgnr.updateUndoStack(_displayList, _masterList,
 						_deletedList, _shouldShowAllCompleted);

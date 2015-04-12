@@ -8,10 +8,8 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -27,24 +25,49 @@ import com.google.gson.reflect.TypeToken;
 //@author A01112707N
 public class QLStorage {
 	
-	private static final String ERROR_INVALID_FILEPATH = "Invalid filepath";
+	private static final int INDEX_OFFSET_FOUND = 1;
+    private static final int INDEX_NOT_FOUND = -1;
+    private static final int INDEX_PATH_START = 0;
+    
+    private static final String LOG_READING_FROM_FILE = "Reading %s";
+    private static final String LOG_EXCEPTION = "%s was thrown";
+    private static final String LOG_CREATED_DIRECTORY = "Directory %s created";
+    private static final String LOG_CREATE_DIRECTORY = "Creating %s";
+    private static final String LOG_INVALID_DIRECTORY = "%s is a file";
+    private static final String LOG_ENCODING_TASKLIST = "Encoding taskList into file";
+    private static final String LOG_ADDING_TASKS = "Adding loaded tasks into taskList";
+    private static final String LOG_DECODING_FILE = "Decoding taskList from file";
+    private static final String LOG_WRITING_TO_FILE = "Writing %s";
+    private static final String LOG_UNABLE_WRITE_FILE = "%s cannot be writen";
+    private static final String LOG_UNABLE_READ_FILE = "%s cannot be read";
+    private static final String LOG_DIRECTORY_FILEPATH = "%s points to a directory";
+    private static final String LOG_NO_SUCH_FILE = "%s does not exist";
+    private static final String LOG_INVALID_FILEPATH = "%s is invalid";
+    
+    private static final String JSON_OBJECT_DELETEDIDS = "deletedIds";
+    private static final String JSON_OBJECT_TASKS = "tasks";
+    private static final String JSON_OBJECT_TASKNAME = "_name";
+    
+    private static final String DEFAULT_TASK_NAME = "(No Title)";
+    
+    private final static Logger LOGGER = Logger.getLogger(QLStorage.class
+            .getName());
 
     private class TasksWrapper {
 		private ArrayList<Task> tasks;
-		private ArrayList<String> deletedIDs;
+		private ArrayList<String> deletedIds;
 
 		public TasksWrapper(List<Task> t, List<String> d) {
 			tasks = new ArrayList<Task>(t);
-			deletedIDs = new ArrayList<String>(d);
+			deletedIds = new ArrayList<String>(d);
 		}
 	}
     
     private class TaskWrapperDeserializer implements JsonDeserializer<TasksWrapper> {
+
         @Override
         public TasksWrapper deserialize(JsonElement json, Type typeOfT,
                 JsonDeserializationContext context) throws JsonParseException {
-            
-            System.out.println("taskwrapper deserialize");
             
             JsonObject taskObj = json.getAsJsonObject();
             Type stringListType = new TypeToken<List<String>>(){}.getType();
@@ -55,20 +78,20 @@ public class QLStorage {
                          .create();
             
             List<Task> tasks;
-            List<String> deletedIDs;
+            List<String> deletedIds;
             
-            if ((taskObj.has("tasks")) && (!taskObj.get("tasks").isJsonNull())) {
-                tasks = g.fromJson(taskObj.get("tasks"), taskListType);
+            if ((taskObj.has(JSON_OBJECT_TASKS)) && (!taskObj.get(JSON_OBJECT_TASKS).isJsonNull())) {
+                tasks = g.fromJson(taskObj.get(JSON_OBJECT_TASKS), taskListType);
             } else {
                 tasks = new ArrayList<Task>();
             }
-            if ((taskObj.has("deletedIDs")) && (!taskObj.get("deletedIDs").isJsonNull())) {
-                deletedIDs = g.fromJson(taskObj.get("deletedIDs"), stringListType);
+            if ((taskObj.has(JSON_OBJECT_DELETEDIDS)) && (!taskObj.get(JSON_OBJECT_DELETEDIDS).isJsonNull())) {
+                deletedIds = g.fromJson(taskObj.get(JSON_OBJECT_DELETEDIDS), stringListType);
             } else {
-                deletedIDs = new ArrayList<String>();
+                deletedIds = new ArrayList<String>();
             }
 
-            return new TasksWrapper(tasks, deletedIDs);
+            return new TasksWrapper(tasks, deletedIds);
         }
     }
     
@@ -76,8 +99,6 @@ public class QLStorage {
         @Override
         public List<String> deserialize(JsonElement json, Type typeOfT,
                 JsonDeserializationContext context) throws JsonParseException {
-            
-            System.out.println("string list deserialize");
             
             List<String> list = new ArrayList<String>();
             Gson g = new Gson();
@@ -94,9 +115,7 @@ public class QLStorage {
     private class TaskListDeserializer implements JsonDeserializer<List<Task>> {
         @Override
         public List<Task> deserialize(JsonElement json, Type typeOfT,
-                JsonDeserializationContext context) throws JsonParseException {
-            
-            System.out.println("task list deserialize");
+                JsonDeserializationContext context) throws JsonParseException {           
             
             List<Task> list = new ArrayList<Task>();
             Gson g = new GsonBuilder()
@@ -113,17 +132,15 @@ public class QLStorage {
     }
 	
 	private class TaskDeserializer implements JsonDeserializer<Task> {
-	    @Override
+        @Override
 		public Task deserialize(JsonElement json, Type typeOfT,
 				JsonDeserializationContext context) throws JsonParseException {
-	        
-	        System.out.println("task deserialize");
 	        
 			Gson g = new Gson();
 			Task t = g.fromJson(json, Task.class);
 			JsonObject taskObj = json.getAsJsonObject();
-			if (!taskObj.has("_name") || taskObj.get("_name").isJsonNull()) {
-				t.setName("(No Title)");
+			if (!taskObj.has(JSON_OBJECT_TASKNAME) || taskObj.get(JSON_OBJECT_TASKNAME).isJsonNull()) {
+				t.setName(DEFAULT_TASK_NAME);
 			}
 			if (t.getLastUpdated() == null) {
 			    t.setLastUpdated(Calendar.getInstance());
@@ -132,19 +149,6 @@ public class QLStorage {
 		}
 	}
 
-	private static final String ERROR_WRITE_FILE = "Error writing file %s";
-	private static final String ERROR_READ_FILE = "Error reading file %s";
-	private static final String ERROR_UNABLE_READ_FILE = "Unable to read file %s";
-	private static final String ERROR_UNABLE_WRITE_FILE = "Unable to write file %s";
-	private static final String ERROR_DIRECTORY = "%s is a directory";
-	private static final String ERROR_UNABLE_MAKE_DIRECTORY = "unable to make directory %s";
-	private static final String ERROR_DIRECTORY_FILE = "%s is a file";
-	
-	private static final String REGEX_INVALID_CHAR = "^.*[" + Pattern.quote(":*?/\"<>|") + "].*$";
-	private static final String REGEX_DRIVE = "^[A-Z]:$";
-
-	private final static Logger LOGGER = Logger.getLogger(QLStorage.class
-			.getName());
 
 	private static QLStorage _instance;
 
@@ -175,61 +179,61 @@ public class QLStorage {
 		return false;
 	}
 
-	public void loadFile(List<Task> taskList, List<String> deletedIDs, String filePath) {
+	public void loadFile(List<Task> taskList, List<String> deletedIds, String filePath) {
 		assert taskList != null;
 		assert taskList.isEmpty();
 		assert taskList != null;
-        assert deletedIDs.isEmpty();
+        assert deletedIds.isEmpty();
 		assert filePath != null;
 		
 		if (!isValidFilepath(filePath)) {
-            LOGGER.warning(String.format("%s is invalid", filePath));
-            throw new Error(ERROR_INVALID_FILEPATH);
+            LOGGER.warning(String.format(LOG_INVALID_FILEPATH, filePath));
+            throw new Error(MessageConstants.ERROR_INVALID_FILEPATH);
         }
 
 		if (!hasFile(filePath)) {
-			LOGGER.info(String.format("%s does not exist", filePath));
+			LOGGER.info(String.format(LOG_NO_SUCH_FILE, filePath));
 			return;
 		}
 
 		if (isDirectory(filePath)) {
-			LOGGER.warning(String.format("%s points to a directory", filePath));
-			throw new Error(ERROR_DIRECTORY);
+			LOGGER.warning(String.format(LOG_DIRECTORY_FILEPATH, filePath));
+			throw new Error(MessageConstants.ERROR_DIRECTORY);
 		}
 
 		if (!isReadable(filePath)) {
-			LOGGER.warning(String.format("%s cannot be read", filePath));
-			throw new Error(ERROR_UNABLE_READ_FILE);
+			LOGGER.warning(String.format(LOG_UNABLE_READ_FILE, filePath));
+			throw new Error(MessageConstants.ERROR_UNABLE_READ_FILE);
 		}
 
-		LOGGER.info(String.format("Reading %s", filePath));
-		readListFromFile(taskList, deletedIDs, filePath);
+		LOGGER.info(String.format(LOG_READING_FROM_FILE, filePath));
+		readListFromFile(taskList, deletedIds, filePath);
 
 	}
 
-	public void saveFile(List<Task> taskList, List<String> deletedIDs, String filePath) {
+	public void saveFile(List<Task> taskList, List<String> deletedIds, String filePath) {
 		assert taskList != null;
-		assert deletedIDs != null;
+		assert deletedIds != null;
 		assert filePath != null;
 		
 		if (!isValidFilepath(filePath)) {
-		    LOGGER.warning(String.format("%s is invalid", filePath));
-		    throw new Error(ERROR_INVALID_FILEPATH);
+		    LOGGER.warning(String.format(LOG_INVALID_FILEPATH, filePath));
+		    throw new Error(MessageConstants.ERROR_INVALID_FILEPATH);
 		}
 
 		if ((hasFile(filePath)) && (!isWritable(filePath))) {
-			LOGGER.warning(String.format("%s cannot be writen", filePath));
-			throw new Error(ERROR_UNABLE_WRITE_FILE);
+			LOGGER.warning(String.format(LOG_UNABLE_WRITE_FILE, filePath));
+			throw new Error(MessageConstants.ERROR_UNABLE_WRITE_FILE);
 		}
 
 		createNecessaryDirectories(filePath);
 
-		LOGGER.info(String.format("Writing %s", filePath));
+		LOGGER.info(String.format(LOG_WRITING_TO_FILE, filePath));
 
-		writeListToFile(taskList, deletedIDs, filePath);
+		writeListToFile(taskList, deletedIds, filePath);
 	}
 
-	private void readListFromFile(List<Task> taskList, List<String> deletedIDs,
+	private void readListFromFile(List<Task> taskList, List<String> deletedIds,
 			String filePath) {
 		try (FileReader f = new FileReader(filePath)) {
 		    
@@ -237,69 +241,69 @@ public class QLStorage {
 			                .registerTypeAdapter(TasksWrapper.class, new TaskWrapperDeserializer())
 			                .create();
 
-			LOGGER.info(String.format("Decoding taskList from file", filePath));
+			LOGGER.info(String.format(LOG_DECODING_FILE, filePath));
 			TasksWrapper wrapper = gson.fromJson(f, TasksWrapper.class);
 
-			LOGGER.info("Adding loaded tasks into taskList");
+			LOGGER.info(LOG_ADDING_TASKS);
 			if (wrapper != null) {
 			    if (wrapper.tasks != null) {
 			        taskList.addAll(wrapper.tasks);
 			    }
-			    if (wrapper.deletedIDs != null) {
-			        deletedIDs.addAll(wrapper.deletedIDs);
+			    if (wrapper.deletedIds != null) {
+			        deletedIds.addAll(wrapper.deletedIds);
 			    }
 			}
 
 		} catch (FileNotFoundException e) {
-			LOGGER.severe("FileNotFoundException was thrown");
-			throw new Error(String.format(ERROR_READ_FILE, filePath));
+			LOGGER.severe(String.format(LOG_EXCEPTION, e.getClass().getName()));
+			throw new Error(String.format(MessageConstants.ERROR_READ_FILE, filePath));
 		} catch (IOException e) {
-			LOGGER.severe("IOException was thrown");
-			throw new Error(String.format(ERROR_READ_FILE, filePath));
+		    LOGGER.severe(String.format(LOG_EXCEPTION, e.getClass().getName()));
+			throw new Error(String.format(MessageConstants.ERROR_READ_FILE, filePath));
 		} catch (JsonSyntaxException | JsonIOException e) {
-		    LOGGER.severe("JsonException was thrown");
-            throw new Error(String.format(ERROR_READ_FILE, filePath));
+		    LOGGER.severe(String.format(LOG_EXCEPTION, e.getClass().getName()));
+            throw new Error(String.format(MessageConstants.ERROR_READ_FILE, filePath));
 		}
 	}
 
-	private void writeListToFile(List<Task> taskList, List<String> deletedIDs, String filePath) {
+	private void writeListToFile(List<Task> taskList, List<String> deletedIds, String filePath) {
 		try (FileWriter f = new FileWriter(filePath)) {
-			TasksWrapper wrapper = new TasksWrapper(taskList, deletedIDs);
+			TasksWrapper wrapper = new TasksWrapper(taskList, deletedIds);
 
 			Gson gson = new GsonBuilder()
 			                .serializeNulls()
 			                .setPrettyPrinting()
 			                .create();
 			
-			LOGGER.info("Encoding taskList into file");
+			LOGGER.info(LOG_ENCODING_TASKLIST);
 			gson.toJson(wrapper, f);
 		} catch (IOException e) {
-			LOGGER.severe("IOException was thrown");
-			throw new Error(String.format(ERROR_WRITE_FILE, filePath));
+		    LOGGER.severe(String.format(LOG_EXCEPTION, e.getClass().getName()));
+			throw new Error(String.format(MessageConstants.ERROR_WRITE_FILE, filePath));
 		}
 	}
 
 	private void createNecessaryDirectories(String filePath) {
-		int pathSeperatorIndex = 0;
-		while (filePath.indexOf(File.separator, pathSeperatorIndex) != -1) {
+		int pathSeperatorIndex = INDEX_PATH_START;
+		while (filePath.indexOf(File.separator, pathSeperatorIndex) != INDEX_NOT_FOUND) {
 			pathSeperatorIndex = filePath.indexOf(File.separator,
-					pathSeperatorIndex) + 1;
-			File directory = new File(filePath.substring(0, pathSeperatorIndex));
+					pathSeperatorIndex) + INDEX_OFFSET_FOUND;
+			File directory = new File(filePath.substring(INDEX_PATH_START, pathSeperatorIndex));
 
 			if (directory.exists()) {
 				if (!directory.isDirectory()) {
-					LOGGER.warning(String.format("%s is a file",
+					LOGGER.warning(String.format(LOG_INVALID_DIRECTORY,
 							directory.getPath()));
-					throw new Error(String.format(ERROR_DIRECTORY_FILE,
+					throw new Error(String.format(MessageConstants.ERROR_DIRECTORY_FILE,
 							directory.getPath()));
 				}
 			} else {
-				LOGGER.info(String.format("creating %s", directory.getPath()));
+				LOGGER.info(String.format(LOG_CREATE_DIRECTORY, directory.getPath()));
 				if (!directory.mkdir()) {
-					throw new Error(String.format(ERROR_UNABLE_MAKE_DIRECTORY,
+					throw new Error(String.format(MessageConstants.ERROR_UNABLE_MAKE_DIRECTORY,
 							directory.getPath()));
 				}
-				LOGGER.info(String.format("directory %s created",
+				LOGGER.info(String.format(LOG_CREATED_DIRECTORY,
 						directory.getPath()));
 			}
 		}
@@ -326,23 +330,15 @@ public class QLStorage {
 	}
 	
 	private boolean isValidFilepath(String filePath) {
-	    //windows specific
-	    if (filePath.isEmpty()) {
+	    if (filePath.endsWith(File.separator)) {
 	        return false;
 	    }
-	    if (filePath.length() > 2) {
-	        if (filePath.substring(2).matches(REGEX_INVALID_CHAR)) {
-	            return false;
-	        } else if (filePath.substring(0, 2).matches(REGEX_DRIVE)) {
-	            return true;
-	        } else if (filePath.substring(0, 2).matches(REGEX_INVALID_CHAR)) {
-	            return false;
-	        } else {
-	            return true;
-	        }
-	    } else if (filePath.matches(REGEX_INVALID_CHAR)) {
-	        return false;
+	    try {
+	       File f = new File(filePath);
+	       f.getCanonicalPath();
+	       return true;
+	    } catch (IOException e) {
+	       return false;
 	    }
-	    return true;
 	}
 }

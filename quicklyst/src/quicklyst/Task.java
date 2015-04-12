@@ -20,7 +20,7 @@ public class Task {
 	private String _name;
 	private String _description;
 	private String _priority;
-	private String _googleID;
+	private String _googleId;
 	private Calendar _startDate;
 	private Calendar _dueDate;
 	private Calendar _lastUpdated;
@@ -52,8 +52,8 @@ public class Task {
 		_priority = priority;
 	}
 
-	public void setGoogleID(String ID) {
-		_googleID = ID;
+	public void setGoogleId(String id) {
+		_googleId = id;
 	}
 
 	public void setStartDate(Calendar startDate) {
@@ -128,8 +128,8 @@ public class Task {
 		}
 	}
 
-	public String getGoogleID() {
-		return _googleID;
+	public String getGoogleId() {
+		return _googleId;
 	}
 
 	public int getPriorityInt() {
@@ -252,7 +252,7 @@ public class Task {
 		}
 		
 		clonedTask.setLastUpdated(_lastUpdated);
-		clonedTask.setGoogleID(_googleID);
+		clonedTask.setGoogleId(_googleId);
 		clonedTask.setDescription(_description);
 		clonedTask.setIsCompleted(_isCompleted);
 		clonedTask.setPriority(_priority);

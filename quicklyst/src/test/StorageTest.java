@@ -64,7 +64,7 @@ public class StorageTest {
             Task newTask = instantiateTask(prev.getName() + i,
                                            prev.getDescription() + i,
                                            nextPriority(prev.getPriority()),
-                                           prev.getGoogleID() + i,
+                                           prev.getGoogleId() + i,
                                            oneMinuteAfter(prev.getStartDate()),
                                            oneMinuteAfter(prev.getDueDate()), 
                                            oneMinuteAfter(prev.getLastUpdated()), 
@@ -384,7 +384,7 @@ public class StorageTest {
         Task task = new Task(name);
         task.setDescription(description);
         task.setPriority(priority);
-        task.setGoogleID(googleID);
+        task.setGoogleId(googleID);
         task.setStartDate(start);
         task.setDueDate(due);
         task.setLastUpdated(lastUpdated);
@@ -399,7 +399,7 @@ public class StorageTest {
         assertEquals(expected.getName(), actual.getName());
         assertEquals(expected.getDescription(), actual.getDescription());
         assertEquals(expected.getPriority(), actual.getPriority());
-        assertEquals(expected.getGoogleID(), actual.getGoogleID());
+        assertEquals(expected.getGoogleId(), actual.getGoogleId());
         assertCalendarEquals(expected.getStartDate(), actual.getStartDate());
         assertCalendarEquals(expected.getDueDate(), actual.getDueDate());
         assertCalendarEquals(expected.getLastUpdated(), actual.getLastUpdated());
