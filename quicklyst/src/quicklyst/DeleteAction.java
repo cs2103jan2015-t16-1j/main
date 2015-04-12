@@ -6,9 +6,9 @@ import java.util.LinkedList;
 public class DeleteAction extends Action {
 
 	private static final String STRING_DELETED = "deleted";
-	
+
 	private int _taskIndex;
-	
+
 	private String _deletedTaskID;
 
 	public DeleteAction(int taskNumber) {
@@ -28,12 +28,12 @@ public class DeleteAction extends Action {
 		if (isTaskIndexInRange(workingList)) {
 
 			Task taskToDel = workingList.get(_taskIndex);
-			
+
 			workingList.remove(taskToDel);
 			workingListMaster.remove(taskToDel);
-			
+
 			_deletedTaskID = taskToDel.getGoogleID();
-			
+
 			this._isSuccess = true;
 			this._feedback.append(String.format(MessageConstants.TASK_NO_IS,
 					_taskIndex + 1, STRING_DELETED));

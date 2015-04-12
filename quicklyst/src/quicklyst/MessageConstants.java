@@ -1,9 +1,10 @@
 package quicklyst;
 
 public class MessageConstants {
-	
-	/** SF Part **/
+
 	public static final String ADD_SUCCESS = "Task: \"%s\" added. ";
+	public static final String DEFAULT_TASK_FILE_CORRUPTED = "Default task file corrupted. ";
+	public static final String DIR_CHANGED = "Directory changed. You are editing tasks in file: \"%s\". ";
 	public static final String DUE_DATE_CLEARED = "Due date cleared. ";
 	public static final String DUE_DATE_SET = "Due date set to %s. ";
 	public static final String DUE_SMALLER_THAN_START = "Due date/time entered is smaller than start date/time of task. ";
@@ -17,8 +18,10 @@ public class MessageConstants {
 	public static final String INVALID_FIELD_CRITERIA = "Invalid field criteria \"%s\". ";
 	public static final String INVALID_FIELD_FORMAT_IN = "Invalid field format in \"%s\". ";
 	public static final String INVALID_FIELD_TYPE = "Invalid field type. ";
+	public static final String INVALID_FILEPATH = "Preferred task file does not exist. Directory is not changed. ";
 	public static final String INVALID_PRIORITY_LEVEL = "Invalid priority level \"%s\". ";
 	public static final String INVALID_TIME = "Invalid time \"%s\" entered. ";
+	public static final String LOADED_FROM = "Loaded from: \"%s\". ";
 	public static final String LOGGED_OUT = "Logged out from Google. ";
 	public static final String MATCHES_FOUND = "%d matches found. ";
 	public static final String NAME_NO_CLOSE = "Please denote end of task name with the \"\\\" character. Unexpected error may occur. ";
@@ -26,6 +29,7 @@ public class MessageConstants {
 	public static final String NO_COMPLETE_CRITERIA = "Completed criteria not entered. ";
 	public static final String NO_DATE_CRITERIA = "Date criteria not entered. ";
 	public static final String NO_FIELD = "No field entered. ";
+	public static final String NO_FILEPATH = "No file path entered. ";
 	public static final String NO_KEYWORDS = "No task name keywords entered. ";
 	public static final String NO_MATCHES_FOUND = "No matches found. ";
 	public static final String NO_OVERDUE_CRITERIA = "Overdue criteria not entered. ";
@@ -35,8 +39,10 @@ public class MessageConstants {
 	public static final String NOTHING_ADDED = "Nothing is added. ";
 	public static final String NOTHING_TO_REDO = "Nothing to redo. ";
 	public static final String NOTHING_TO_UNDO = "Nothing to undo. ";
+	public static final String PREFFERED_TASK_FILE_CORRUPTED = "Preferred task file corrupted. Default task file is used. ";
 	public static final String PRIORITY_CLEARED = "Priority cleared. ";
 	public static final String PRIORITY_SET = "Priority set to \"%s\". ";
+	public static final String SAVED_TO = "Saved to: \"%s\". ";
 	public static final String SORTING_DISPLAY_LIST = "Sorting display list. ";
 	public static final String START_BIGGER_THAN_DUE = "Start date/time entered is bigger than due date/time of task. ";
 	public static final String START_DATE_CLEARED = "Start date cleared. ";

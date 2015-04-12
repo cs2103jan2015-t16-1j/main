@@ -7,6 +7,7 @@ import quicklyst.ActionType;
 import quicklyst.QLGoogleIntegration;
 import quicklyst.Task;
 
+//@author A0102015H
 public class SyncAction extends Action {
 
 	private SortAction _defaultSort;

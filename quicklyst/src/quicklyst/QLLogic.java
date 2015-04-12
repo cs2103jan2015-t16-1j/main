@@ -7,6 +7,17 @@ import java.util.LinkedList;
 //@author A0102015H
 public class QLLogic {
 
+	private static final String SPACE = " ";
+	private static final String COMMAND_LOAD_ABBREV = "l";
+	private static final String COMMAND_CHANGE_DIR = "cd";
+	private static final String COMMAND_LOAD = "load";
+	private static final String COMMAND_SAVE_ABBREV = "s";
+	private static final String COMMAND_SAVE = "save";
+	private static final String COMMAND_REDO_ABBREV = "r";
+	private static final String COMMAND_REDO = "redo";
+	private static final String COMMAND_UNO_ABBREV = "u";
+	private static final String COMMAND_UNDO = "undo";
+
 	private LinkedList<Task> _displayList;
 	private LinkedList<Task> _masterList;
 	private LinkedList<String> _deletedList;
@@ -39,25 +50,35 @@ public class QLLogic {
 		try {
 
 			_filePath = _qLSettings.getPrefFilePath();
+
 			_masterList = new LinkedList<Task>();
+
 			_deletedList = new LinkedList<String>();
+
 			_qLStorage.loadFile(_masterList, _deletedList, _filePath);
 
 		} catch (Error e) {
 
-			feedback.append("Preferred task file corrupted. "
-					+ "Default task file is used. ");
+			feedback.append(MessageConstants.PREFFERED_TASK_FILE_CORRUPTED);
+
 			_filePath = _qLSettings.getDefaultFilePath();
+
 			_masterList = new LinkedList<Task>();
+
 			_deletedList = new LinkedList<String>();
+
 			try {
-			    _qLStorage.loadFile(_masterList, _deletedList, _filePath);
+
+				_qLStorage.loadFile(_masterList, _deletedList, _filePath);
+
 			} catch (Error err) {
-			    feedback.append("Default task file corrupted. ");
+
+				feedback.append(MessageConstants.DEFAULT_TASK_FILE_CORRUPTED);
 			}
 		}
 
 		_displayList = new LinkedList<Task>();
+
 		copyList(_masterList, _displayList);
 
 		_historyMgnr = new HistoryManager(_displayList, _masterList,
@@ -134,32 +155,33 @@ public class QLLogic {
 
 	public void executeCommand(String command, StringBuilder feedback) {
 
-		if (command.trim().equalsIgnoreCase("undo")
-				|| command.trim().equalsIgnoreCase("u")) {
+		if (command.trim().equalsIgnoreCase(COMMAND_UNDO)
+				|| command.trim().equalsIgnoreCase(COMMAND_UNO_ABBREV)) {
 			executeUndo(feedback);
 			return;
 		}
 
-		if (command.trim().equalsIgnoreCase("redo")
-				|| command.trim().equalsIgnoreCase("r")) {
+		if (command.trim().equalsIgnoreCase(COMMAND_REDO)
+				|| command.trim().equalsIgnoreCase(COMMAND_REDO_ABBREV)) {
 			executeRedo(feedback);
 			return;
 		}
 
-		if (command.split(" ", 2)[0].equalsIgnoreCase("save")
-				|| command.split(" ", 2)[0].equalsIgnoreCase("s")) {
+		if (command.split(SPACE, 2)[0].equalsIgnoreCase(COMMAND_SAVE)
+				|| command.split(SPACE, 2)[0]
+						.equalsIgnoreCase(COMMAND_SAVE_ABBREV)) {
 			executeSave(command, feedback);
 			return;
 		}
 
-		if (command.split(" ", 2)[0].equalsIgnoreCase("load")
-				|| command.split(" ", 2)[0].equalsIgnoreCase("l")) {
+		if (command.split(SPACE, 2)[0].equalsIgnoreCase(COMMAND_LOAD)
+				|| command.split(SPACE, 2)[0]
+						.equalsIgnoreCase(COMMAND_LOAD_ABBREV)) {
 			executeLoad(command, feedback);
 			return;
 		}
 
-		if (command.split(" ", 2)[0].equalsIgnoreCase("cd")
-				|| command.split(" ", 2)[0].equalsIgnoreCase("s")) {
+		if (command.split(SPACE, 2)[0].equalsIgnoreCase(COMMAND_CHANGE_DIR)) {
 			executeChangeDir(command, feedback);
 			return;
 		}
@@ -173,11 +195,11 @@ public class QLLogic {
 
 	private void executeChangeDir(String command, StringBuilder feedback) {
 
-		String commandAndPath[] = command.split(" ", 2);
+		String commandAndPath[] = command.split(SPACE, 2);
 
 		if (commandAndPath.length == 1 || commandAndPath[1].trim().isEmpty()) {
 
-			feedback.append("No file path entered. ");
+			feedback.append(MessageConstants.NO_FILEPATH);
 
 		} else {
 
@@ -199,13 +221,12 @@ public class QLLogic {
 				_historyMgnr = new HistoryManager(_displayList, _masterList,
 						_deletedList, _shouldShowAllCompleted);
 
-				feedback.append("Directory changed. You are editing tasks in file: \""
-						+ filepath + "\".");
+				feedback.append(String.format(MessageConstants.DIR_CHANGED,
+						filepath));
 
 			} else {
 
-				feedback.append("Preferred task file does not exist. "
-						+ "Directory is not changed. ");
+				feedback.append(MessageConstants.INVALID_FILEPATH);
 			}
 		}
 	}
@@ -254,11 +275,11 @@ public class QLLogic {
 
 	private void executeLoad(String command, StringBuilder feedback) {
 
-		String commandAndPath[] = command.split(" ", 2);
+		String commandAndPath[] = command.split(SPACE, 2);
 
 		if (commandAndPath.length == 1 || commandAndPath[1].trim().isEmpty()) {
 
-			feedback.append("No file path entered. ");
+			feedback.append(MessageConstants.NO_FILEPATH);
 
 		} else {
 
@@ -280,7 +301,8 @@ public class QLLogic {
 				_historyMgnr.updateUndoStack(_displayList, _masterList,
 						_deletedList, _shouldShowAllCompleted);
 
-				feedback.append("Loaded from: \"" + filepath + "\". ");
+				feedback.append(String.format(MessageConstants.LOADED_FROM,
+						filepath));
 
 			} catch (Error e) {
 				feedback.append(e.getMessage());
@@ -290,11 +312,11 @@ public class QLLogic {
 
 	private void executeSave(String command, StringBuilder feedback) {
 
-		String commandAndPath[] = command.split(" ", 2);
+		String commandAndPath[] = command.split(SPACE, 2);
 
 		if (commandAndPath.length == 1 || commandAndPath[1].trim().isEmpty()) {
 
-			feedback.append("No file path entered. ");
+			feedback.append(MessageConstants.NO_FILEPATH);
 
 		} else {
 
@@ -303,7 +325,8 @@ public class QLLogic {
 			try {
 
 				_qLStorage.saveFile(_masterList, _deletedList, filepath);
-				feedback.append("Saved to: \"" + filepath + "\". ");
+				feedback.append(String.format(MessageConstants.SAVED_TO,
+						filepath));
 
 			} catch (Error e) {
 				feedback.append(e.getMessage());
