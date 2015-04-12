@@ -27,6 +27,7 @@ import com.google.api.services.calendar.model.Events;
 import com.google.api.services.tasks.model.TaskList;
 import com.google.api.services.tasks.model.Tasks;
 
+//@author A01112707N
 public class QLGoogleIntegration {
 
     private static final String PRIMARY_CALENDAR_ID = "primary";

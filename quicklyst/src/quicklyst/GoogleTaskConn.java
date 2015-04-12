@@ -11,6 +11,7 @@ import com.google.api.services.tasks.model.TaskList;
 import com.google.api.services.tasks.model.TaskLists;
 import com.google.api.services.tasks.model.Tasks;
 
+//@author A01112707N
 public class GoogleTaskConn {
 
     private static final String APPLICATION_NAME = "Quicklyst";

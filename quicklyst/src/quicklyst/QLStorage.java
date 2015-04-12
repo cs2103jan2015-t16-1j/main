@@ -24,6 +24,7 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
+//@author A01112707N
 public class QLStorage {
 	
 	private static final String ERROR_INVALID_FILEPATH = "Invalid filepath";
@@ -121,7 +122,7 @@ public class QLStorage {
 			Gson g = new Gson();
 			Task t = g.fromJson(json, Task.class);
 			JsonObject taskObj = json.getAsJsonObject();
-			if (taskObj.get("_name").isJsonNull()) {
+			if (!taskObj.has("_name") || taskObj.get("_name").isJsonNull()) {
 				t.setName("(No Title)");
 			}
 			if (t.getLastUpdated() == null) {
@@ -156,7 +157,11 @@ public class QLStorage {
 
 	public boolean isValidFile(String filePath) {
 	    assert filePath != null;
-		
+	    
+	    if (!isValidFilepath(filePath)) {
+	        return false;
+	    }
+	    
 	    if (!hasFile(filePath)) {
 			return true;
 		}
@@ -174,7 +179,7 @@ public class QLStorage {
         assert deletedIDs.isEmpty();
 		assert filePath != null;
 		
-		if (!isValidFilename(filePath)) {
+		if (!isValidFilepath(filePath)) {
             LOGGER.warning(String.format("%s is invalid", filePath));
             throw new Error(ERROR_INVALID_FILEPATH);
         }
@@ -204,7 +209,7 @@ public class QLStorage {
 		assert deletedIDs != null;
 		assert filePath != null;
 		
-		if (!isValidFilename(filePath)) {
+		if (!isValidFilepath(filePath)) {
 		    LOGGER.warning(String.format("%s is invalid", filePath));
 		    throw new Error(ERROR_INVALID_FILEPATH);
 		}
@@ -233,11 +238,13 @@ public class QLStorage {
 			TasksWrapper wrapper = gson.fromJson(f, TasksWrapper.class);
 
 			LOGGER.info("Adding loaded tasks into taskList");
-			if (wrapper.tasks != null) {
-			    taskList.addAll(wrapper.tasks);
-			}
-			if (wrapper.deletedIDs != null) {
-			    deletedIDs.addAll(wrapper.deletedIDs);
+			if (wrapper != null) {
+			    if (wrapper.tasks != null) {
+			        taskList.addAll(wrapper.tasks);
+			    }
+			    if (wrapper.deletedIDs != null) {
+			        deletedIDs.addAll(wrapper.deletedIDs);
+			    }
 			}
 
 		} catch (FileNotFoundException e) {
@@ -315,8 +322,8 @@ public class QLStorage {
 		return file.canWrite();
 	}
 	
-	private boolean isValidFilename(String filePath) {
+	private boolean isValidFilepath(String filePath) {
+	    //windows specific
 	    return !filePath.matches(".*[" + Pattern.quote(":*?\"<>|") + "].*");
-	    
 	}
 }

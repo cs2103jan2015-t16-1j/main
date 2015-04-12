@@ -6,7 +6,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonIOException;
+import com.google.gson.JsonSyntaxException;
 
+//@author A01112707N
 public class QLSettings {
 	
 	private static final String FILEPATH_SETTINGS = "settings.json";
@@ -15,6 +18,7 @@ public class QLSettings {
     public static QLSettings _instance;
     
     private String _prefFilePath;
+    private boolean isLoaded;
     
     public static QLSettings getInstance() {
         if (_instance == null) {
@@ -24,21 +28,14 @@ public class QLSettings {
     }
     
     private QLSettings() {
-    	try (FileReader f = new FileReader(FILEPATH_SETTINGS)) {
-    		Gson gson = new Gson();
-    		_prefFilePath = gson.fromJson(f, String.class);
-    	} catch (FileNotFoundException e) {
-    		_prefFilePath = null;
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-    	if (_prefFilePath == null) {
-    		_prefFilePath = FILEPATH_DEFAULT_SAVE;
-    	}
+        _prefFilePath = null;
+        isLoaded = false;
     }
     
     public String getPrefFilePath() {
+        if (!isLoaded) {
+            load();
+        }
     	return _prefFilePath;
     }
     
@@ -48,15 +45,27 @@ public class QLSettings {
     
     public void updatePrefFilePath(String filePath) {
     	_prefFilePath = filePath;
-    	saveSettingsToFile();
+    	save();
     }
     
-    private void saveSettingsToFile() {
+    private void load() {
+        try (FileReader f = new FileReader(FILEPATH_SETTINGS)) {
+            Gson gson = new Gson();
+            _prefFilePath = gson.fromJson(f, String.class);
+        } catch (FileNotFoundException e) {
+            _prefFilePath = null;
+        } catch (IOException e) {
+            throw new Error("Error reading settings.");
+        } catch (JsonSyntaxException | JsonIOException e) {
+            throw new Error("Error reading settings.");
+        }
+    }
+    
+    private void save() {
     	try (FileWriter f = new FileWriter(FILEPATH_SETTINGS)) {
     		Gson gson = new Gson();
     		gson.toJson(_prefFilePath, f);
-    	} catch (IOException e) {
-			// TODO Auto-generated catch block
+    	} catch (IOException | JsonIOException e) {
 			e.printStackTrace();
 		}
     }

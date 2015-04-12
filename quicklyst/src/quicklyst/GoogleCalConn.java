@@ -11,6 +11,7 @@ import com.google.api.services.calendar.model.CalendarList;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.Events;
 
+//@author A01112707N
 public class GoogleCalConn {
 
     private static final String APPLICATION_NAME = "Quicklyst";
