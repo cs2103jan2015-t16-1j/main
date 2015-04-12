@@ -100,7 +100,7 @@ public class QLLogic {
 		}
 	}
 
-	public LinkedList<Task> getFullList() {
+	public LinkedList<Task> getMasterList() {
 		return _masterList;
 	}
 

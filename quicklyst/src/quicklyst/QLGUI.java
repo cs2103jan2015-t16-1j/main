@@ -517,7 +517,7 @@ public class QLGUI extends JFrame {
 		Calendar twoDaysAfter = getCalendarOneDayAfter(tomorrow);
 
 		int dueToday = 0, dueTomorrow = 0, overdue = 0, completed = 0;
-		List<Task> allTasks = _QLLogic.getFullList();
+		List<Task> allTasks = _QLLogic.getMasterList();
 		for (int j = 0; j < allTasks.size(); ++j) {
 			if (allTasks.get(j).getIsCompleted()) {
 				completed++;

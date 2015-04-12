@@ -59,41 +59,41 @@ public class QLLogicTest {
 				new StringBuilder());
 		logicTest.executeCommand(DEFAULT_TASK_ADD_COMMAND_3,
 				new StringBuilder());
-		assertEquals(4, logicTest.getFullList().size());
+		assertEquals(4, logicTest.getMasterList().size());
 		for (int i = 0; i < 4; i++) {
-			assertEquals(TASK_NAMES[i], logicTest.getFullList().get(i)
+			assertEquals(TASK_NAMES[i], logicTest.getMasterList().get(i)
 					.getName());
 		}
 
 		/* Complete overdue task */
 		logicTest.executeCommand(COMPELTE_COMMAND_1, new StringBuilder());
-		assertEquals(4, logicTest.getFullList().size());
+		assertEquals(4, logicTest.getMasterList().size());
 		for (int i = 0; i < 4; i++) {
-			assertEquals(TASK_NAMES[i], logicTest.getFullList().get(i)
+			assertEquals(TASK_NAMES[i], logicTest.getMasterList().get(i)
 					.getName());
 		}
 
 		/* Complete not overdue task */
 		logicTest.executeCommand(COMPELTE_COMMAND_4, new StringBuilder());
-		assertEquals(4, logicTest.getFullList().size());
+		assertEquals(4, logicTest.getMasterList().size());
 		for (int i = 0; i < 4; i++) {
-			assertEquals(TASK_NAMES[i], logicTest.getFullList().get(i)
+			assertEquals(TASK_NAMES[i], logicTest.getMasterList().get(i)
 					.getName());
 		}
 
 		/* Complete not overdue task */
 		logicTest.executeCommand(COMPELTE_COMMAND_4, new StringBuilder());
-		assertEquals(4, logicTest.getFullList().size());
+		assertEquals(4, logicTest.getMasterList().size());
 		for (int i = 0; i < 4; i++) {
-			assertEquals(TASK_NAMES[i], logicTest.getFullList().get(i)
+			assertEquals(TASK_NAMES[i], logicTest.getMasterList().get(i)
 					.getName());
 		}
 
 		/* Delete task */
 		logicTest.executeCommand(DELETE_COMMAND_1, new StringBuilder());
-		assertEquals(4, logicTest.getFullList().size());
+		assertEquals(4, logicTest.getMasterList().size());
 		for (int i = 0; i < 4; i++) {
-			assertEquals(TASK_NAMES[i], logicTest.getFullList().get(i)
+			assertEquals(TASK_NAMES[i], logicTest.getMasterList().get(i)
 					.getName());
 		}
 	}
@@ -146,7 +146,7 @@ public class QLLogicTest {
 			assertEquals(TASK_NAMES[i], logicTest.getDisplayList().get(i - 2)
 					.getName());
 		}
-		assertEquals(4, logicTest.getFullList().size());
+		assertEquals(4, logicTest.getMasterList().size());
 	}
 
 	@Test
