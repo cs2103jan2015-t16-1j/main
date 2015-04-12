@@ -11,6 +11,7 @@ import javax.swing.JComponent;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 
+//@author A0112971J
 public class CommandActionListener implements ActionListener {
     private static final String STRING_EMPTY = "";
     private final static Logger LOGGER = Logger

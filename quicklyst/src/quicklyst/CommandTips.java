@@ -2,22 +2,22 @@ package quicklyst;
 
 import java.util.ArrayList;
 
+//@author A0112971J
 public class CommandTips {
-    
     private static final String NEXTLINE = System.lineSeparator();
     private static final int COMMANDTYPE_INDEX_TIP = 2;
     private static final int COMMANDTYPE_INDEX_SHORTCOMMAND = 1;
     private static final int COMMANDTYPE_INDEX_FULLCOMMAND = 0;
     private static final String[][] commandTypes = {
-            {"add", "a", "help add"},
-            {"delete", "d", "help delete"},
-            {"edit", "e", "help edit"},
-            {"find", "f", "help find"},
-            {"load", "l", "help load"},
-            {"save", "s", "help save"},
-            {"cd", null, "help cd"},
-            {"push", null, "help push"},
-            {"pull", null, "help pull"},
+            {"add", "a", "Add a task:NEXTLINEadd\r\n<task name>\\\r\n[start <date time>]\r\n[due <date time>]\r\n[priority <low/medium/high>]\r\n"},            
+            {"delete", "d", "Delete a task:\r\ndelete\r\n<task number>\r\n"},
+            {"edit", "e", "Edit a task:\r\nedit\r\n<task number>\r\n[name <new name> \\]\r\n[start <date time>\\\r\n[due <date time>\r\n[priority <low/medium/high>\r\n"},
+            {"find", "f", "Search for tasks:\r\nfind\r\n[name <task name>\\]\r\n[start [on/after/before/between] <date time>]\r\n[due [on/after/before/between] <date time>\r\n[priority <low/medium/high>\r\n[overdue <yes/no>]\r\n[completed <yes/no>\r\n"},
+            {"load", "l", "Load tasks from a file:\r\nload\r\n<file name>\r\n"},
+            {"save", "s", "Save tasks to a file:\r\nsave\r\n<file name>\r\n"},
+            {"cd", null, "Change directory:\r\ncd\r\n<file name>\r\n"},
+            {"push", null, "push"},
+            {"pull", null, "pull"},
         };
     
     private static CommandTips _instance;

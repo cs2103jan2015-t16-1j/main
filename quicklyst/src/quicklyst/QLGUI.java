@@ -33,6 +33,7 @@ import javax.swing.border.LineBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+//@author A0112971J
 public class QLGUI extends JFrame {
 	private static final String MESSAGE_HEADER_OTHERS = "Others";
 	private static final String MESSAGE_HEADER_TOMORROW = "Tomorrow";
@@ -68,7 +69,6 @@ public class QLGUI extends JFrame {
 	private static final int STARTING_TASK_POSITION = 1;
 	private static final int STARTING_TASK_INDEX = 1;
 
-	private static final int PADDING_OVERVIEWPANE = 1;
 	private static final int PADDING_OVERVIEW = 3;
 
 	private static final int OFFSET_COMMAND_WEST = 10;
@@ -397,7 +397,7 @@ public class QLGUI extends JFrame {
 				OFFSET_TIPSCROLL_SOUTH, SpringLayout.SOUTH, taskListScroll);
 		layout.putConstraint(SpringLayout.EAST, tipScroll,
 				OFFSET_TIPSCROLL_EAST, SpringLayout.EAST, contentPane);
-		layout.getConstraints(tipScroll).setHeight(Spring.constant(100));
+		layout.getConstraints(tipScroll).setHeight(Spring.constant(180));
 	}
 
 	private void updateUI() {

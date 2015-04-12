@@ -8,6 +8,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 
+//@author A0112971J
 public class TaskMouseListener implements MouseListener {
     private Task _task;
     private JTextArea _taskDetails;
@@ -132,7 +133,6 @@ public class TaskMouseListener implements MouseListener {
         // TODO Auto-generated method stub
         
     }
-
 
     @Override
     public void mousePressed(MouseEvent arg0) {
