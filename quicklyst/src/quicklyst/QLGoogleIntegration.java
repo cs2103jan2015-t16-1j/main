@@ -68,7 +68,7 @@ public class QLGoogleIntegration {
     private final static Logger LOGGER = Logger.getLogger(QLGoogleIntegration.class
             .getName());
 
-    private static QLGoogleIntegration instance;
+    private static QLGoogleIntegration _instance;
 
     private String _userId;
     private boolean _shouldRememberLogin;
@@ -90,10 +90,10 @@ public class QLGoogleIntegration {
     }
 
     public static QLGoogleIntegration getInstance() {
-        if (instance == null) {
-            instance = new QLGoogleIntegration();
+        if (_instance == null) {
+            _instance = new QLGoogleIntegration();
         }
-        return instance;
+        return _instance;
     }
 
     private void init() throws GeneralSecurityException, IOException {

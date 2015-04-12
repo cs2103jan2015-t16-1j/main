@@ -22,10 +22,10 @@ import quicklyst.Task;
 //@author A01112707N
 public class StorageTest {
     
-    QLStorage _storage;
-    List<Task> _tasks;
-    List<String> _deletedIDs;
-    String _filename;
+    private QLStorage _storage;
+    private List<Task> _tasks;
+    private List<String> _deletedIDs;
+    private String _filename;
 
     @Before
     public void setUp() throws Exception {
@@ -378,13 +378,13 @@ public class StorageTest {
     }
     
     private Task instantiateTask(String name, String description, String priority, 
-            String googleID, Calendar start, Calendar due, Calendar lastUpdated, 
+            String googleId, Calendar start, Calendar due, Calendar lastUpdated, 
             boolean isCompleted, boolean shouldSync, boolean hasStartTime, 
             boolean hasDueTime) {
         Task task = new Task(name);
         task.setDescription(description);
         task.setPriority(priority);
-        task.setGoogleId(googleID);
+        task.setGoogleId(googleId);
         task.setStartDate(start);
         task.setDueDate(due);
         task.setLastUpdated(lastUpdated);

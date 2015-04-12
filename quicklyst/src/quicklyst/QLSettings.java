@@ -17,8 +17,19 @@ public class QLSettings {
 	
     public static QLSettings _instance;
     
+    private String _settingsPath;
     private String _prefFilePath;
     private boolean isLoaded;
+    
+    public static void testCleanUp() {
+        _instance = null;
+    }
+    
+    public static QLSettings getTestInstance(String filePath) {
+        QLSettings instance = new QLSettings();
+        instance._settingsPath = filePath;
+        return instance;
+    }
     
     public static QLSettings getInstance() {
         if (_instance == null) {
@@ -28,6 +39,7 @@ public class QLSettings {
     }
     
     private QLSettings() {
+        _settingsPath = FILEPATH_SETTINGS;
         _prefFilePath = null;
         isLoaded = false;
     }
@@ -49,24 +61,24 @@ public class QLSettings {
     }
     
     private void load() {
-        try (FileReader f = new FileReader(FILEPATH_SETTINGS)) {
+        try (FileReader f = new FileReader(_settingsPath)) {
             Gson gson = new Gson();
             _prefFilePath = gson.fromJson(f, String.class);
         } catch (FileNotFoundException e) {
             _prefFilePath = null;
         } catch (IOException e) {
-            throw new Error(ERROR_READ_SETTINGS);
+            throw new Error(MessageConstants.ERROR_READ_SETTINGS);
         } catch (JsonSyntaxException | JsonIOException e) {
-            throw new Error(ERROR_READ_SETTINGS);
+            throw new Error(MessageConstants.ERROR_READ_SETTINGS);
         }
     }
     
     private void save() {
-    	try (FileWriter f = new FileWriter(FILEPATH_SETTINGS)) {
+    	try (FileWriter f = new FileWriter(_settingsPath)) {
     		Gson gson = new Gson();
     		gson.toJson(_prefFilePath, f);
     	} catch (IOException | JsonIOException e) {
-			throw new Error(ERROR_WRITE_SETTINGS)
+			throw new Error(MessageConstants.ERROR_WRITE_SETTINGS);
 		}
     }
 }
