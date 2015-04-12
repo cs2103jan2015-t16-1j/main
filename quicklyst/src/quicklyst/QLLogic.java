@@ -46,36 +46,38 @@ public class QLLogic {
 
 		_qLStorage = QLStorage.getInstance();
 		_qLSettings = QLSettings.getInstance();
-
+		_masterList = new LinkedList<Task>();
+        _deletedList = new LinkedList<String>();
 		try {
-
-			_filePath = _qLSettings.getPrefFilePath();
-
-			_masterList = new LinkedList<Task>();
-
-			_deletedList = new LinkedList<String>();
-
-			_qLStorage.loadFile(_masterList, _deletedList, _filePath);
-
-		} catch (Error e) {
-
-			feedback.append(MessageConstants.PREFFERED_TASK_FILE_CORRUPTED);
-
-			_filePath = _qLSettings.getDefaultFilePath();
-
-			_masterList = new LinkedList<Task>();
-
-			_deletedList = new LinkedList<String>();
-
-			try {
-
-				_qLStorage.loadFile(_masterList, _deletedList, _filePath);
-
-			} catch (Error err) {
-
-				feedback.append(MessageConstants.DEFAULT_TASK_FILE_CORRUPTED);
-			}
-		}
+            _filePath = _qLSettings.getPrefFilePath();
+        } catch (Error e) {
+            feedback.append(MessageConstants.SETTINGS_FILE_CORRUPTED);
+        }
+        if (_filePath != null) {
+            try {
+                _qLStorage.loadFile(_masterList, _deletedList, _filePath);
+    
+            } catch (Error e) {
+    
+                feedback.append(MessageConstants.PREFFERED_TASK_FILE_CORRUPTED);
+                _filePath = _qLSettings.getDefaultFilePath();
+                _masterList = new LinkedList<Task>();
+                _deletedList = new LinkedList<String>();
+                try {
+                    _qLStorage.loadFile(_masterList, _deletedList, _filePath);
+                    feedback.append(MessageConstants.DEFAULT_TASK_FILE_USED);
+                } catch (Error err) {
+                    feedback.append(MessageConstants.DEFAULT_TASK_FILE_CORRUPTED);
+                }
+            }
+        } else {
+            _filePath = _qLSettings.getDefaultFilePath();
+            try {
+                _qLStorage.loadFile(_masterList, _deletedList, _filePath);
+            } catch (Error err) {
+                feedback.append(MessageConstants.DEFAULT_TASK_FILE_CORRUPTED);
+            }
+        }
 
 		_displayList = new LinkedList<Task>();
 
