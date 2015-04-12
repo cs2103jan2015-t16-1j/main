@@ -110,7 +110,7 @@ public class QLLogic {
 
 		_displayList = _historyMgnr.getDisplayList();
 		_masterList = _historyMgnr.getMasterList();
-		_shouldShowAllCompleted = _historyMgnr.getShouldShowAll();
+		_shouldShowAllCompleted = _historyMgnr.getShouldShowAllCompleted();
 		_deletedList = _historyMgnr.getDeletedList();
 
 		_qLStorage.saveFile(_masterList, _deletedList, _filePath);
@@ -122,7 +122,7 @@ public class QLLogic {
 
 		_displayList = _historyMgnr.getDisplayList();
 		_masterList = _historyMgnr.getMasterList();
-		_shouldShowAllCompleted = _historyMgnr.getShouldShowAll();
+		_shouldShowAllCompleted = _historyMgnr.getShouldShowAllCompleted();
 		_deletedList = _historyMgnr.getDeletedList();
 
 		_qLStorage.saveFile(_masterList, _deletedList, _filePath);

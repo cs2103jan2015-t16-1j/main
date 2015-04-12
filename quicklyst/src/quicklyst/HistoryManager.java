@@ -11,7 +11,7 @@ public class HistoryManager {
 
 	private LinkedList<String> _deletedList;
 
-	private boolean _shouldShowAll;
+	private boolean _shouldShowAllCompleted;
 
 	private Stack<LinkedList<Task>> _undoMainStack;
 	private Stack<LinkedList<Task>> _redoMainStack;
@@ -24,7 +24,7 @@ public class HistoryManager {
 
 	public HistoryManager(LinkedList<Task> displayList,
 			LinkedList<Task> masterList, LinkedList<String> deletedList,
-			boolean shouldShowAll) {
+			boolean shouldShowAllCompleted) {
 
 		_undoMainStack = new Stack<LinkedList<Task>>();
 		_redoMainStack = new Stack<LinkedList<Task>>();
@@ -41,12 +41,12 @@ public class HistoryManager {
 		_displayList = displayListInit;
 		_masterList = masterListInit;
 
-		_shouldShowAll = shouldShowAll;
+		_shouldShowAllCompleted = shouldShowAllCompleted;
 
 		_undoShowAllStack = new Stack<Boolean>();
 		_redoShowAllStack = new Stack<Boolean>();
 
-		_undoShowAllStack.push(_shouldShowAll);
+		_undoShowAllStack.push(_shouldShowAllCompleted);
 
 		_deletedList = new LinkedList<String>(deletedList);
 
@@ -64,8 +64,8 @@ public class HistoryManager {
 		return _masterList;
 	}
 
-	public boolean getShouldShowAll() {
-		return _shouldShowAll;
+	public boolean getShouldShowAllCompleted() {
+		return _shouldShowAllCompleted;
 	}
 
 	public LinkedList<String> getDeletedList() {
@@ -74,7 +74,7 @@ public class HistoryManager {
 
 	public void updateUndoStack(LinkedList<Task> displayList,
 			LinkedList<Task> masterList, LinkedList<String> deletedList,
-			boolean shouldShowAll) {
+			boolean shouldShowAllCompleted) {
 
 		LinkedList<Task> workingListMaster = new LinkedList<Task>();
 		LinkedList<Task> workingList = new LinkedList<Task>();
@@ -86,7 +86,7 @@ public class HistoryManager {
 		_undoMainStack.push(workingList);
 		_redoMainStack.clear();
 
-		_undoShowAllStack.push(shouldShowAll);
+		_undoShowAllStack.push(shouldShowAllCompleted);
 		_redoShowAllStack.clear();
 
 		_undoDeletedListStack.push(new LinkedList<String>(deletedList));
@@ -118,8 +118,8 @@ public class HistoryManager {
 		_masterList = updatedWLM;
 
 		_redoShowAllStack.push(_undoShowAllStack.pop());
-		_shouldShowAll = _undoShowAllStack.pop();
-		_undoShowAllStack.push(_shouldShowAll);
+		_shouldShowAllCompleted = _undoShowAllStack.pop();
+		_undoShowAllStack.push(_shouldShowAllCompleted);
 
 		_redoDeletedListStack.push(_undoDeletedListStack.pop());
 		LinkedList<String> deletedList = _undoDeletedListStack.pop();
@@ -149,8 +149,8 @@ public class HistoryManager {
 		_displayList = updatedWL;
 		_masterList = updatedWLM;
 
-		_shouldShowAll = _redoShowAllStack.pop();
-		_undoShowAllStack.push(_shouldShowAll);
+		_shouldShowAllCompleted = _redoShowAllStack.pop();
+		_undoShowAllStack.push(_shouldShowAllCompleted);
 
 		LinkedList<String> deletedList = _redoDeletedListStack.pop();
 		LinkedList<String> updatedDL = new LinkedList<String>(deletedList);

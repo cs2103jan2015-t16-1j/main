@@ -12,8 +12,6 @@ public abstract class Action {
 	protected ActionType _type;
 	protected StringBuilder _feedback;
 	protected boolean _isSuccess;
-	//protected String _deletedTaskID;
-	//protected LinkedList<String> _deletedList;
 
 	public abstract void execute(LinkedList<Task> displayList,
 			LinkedList<Task> masterList);
