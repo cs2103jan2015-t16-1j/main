@@ -129,10 +129,15 @@ public class QLGoogleIntegration {
 
     public boolean logout() {
         try {
+            GoogleLogin temp = _googleLogin;
             _cred = null;
             _googleCalendar = null;
             _googleTasks = null;
-            return _googleLogin.logout();
+            _googleLogin = null;
+            if (temp != null) {
+                return temp.logout();
+            }
+            return true;
         } catch (IOException e) {
             return false;
         }
@@ -242,7 +247,7 @@ public class QLGoogleIntegration {
     private void addTasksToGoogleServices(List<Task> taskList,
             GoogleTaskConn googleTasks, String taskListId) throws IOException {
         for (Task t : taskList) {
-            if (t.getGoogleId() == null || t.getGoogleId().isEmpty()) {
+            if ((t != null) && ((t.getGoogleId() == null) || (t.getGoogleId().isEmpty()))) {
                 if (!isCalendarEvent(t)) {
                     createNewTaskToGoogleTasks(t, googleTasks, taskListId);
                 }
@@ -267,8 +272,8 @@ public class QLGoogleIntegration {
     private void deleteTasksFromGoogleServices(List<String> deletedIds,
             GoogleTaskConn googleTasks, String taskListId) throws IOException {
         for (String id: deletedIds) {
-            if (id.startsWith(PREFIX_GOOGLEID_TASKS)) {
-                googleTasks.deleteTask(taskListId, id);
+            if ((id != null) && (id.startsWith(PREFIX_GOOGLEID_TASKS))) {
+                googleTasks.deleteTask(taskListId, id.substring(OFFSET_GOOGLEID_PREFIX));
             }
         }
     }
@@ -281,7 +286,7 @@ public class QLGoogleIntegration {
     private void generateGoogleTasksMap(List<Task> taskList,
             Map<String, Task> tasksTask) {
         for (Task t : taskList) {
-            if ((t.getGoogleId() != null) && (!t.getGoogleId().isEmpty())) {
+            if ((t != null) && (t.getGoogleId() != null) && (!t.getGoogleId().isEmpty())) {
                 if (t.getGoogleId().startsWith(PREFIX_GOOGLEID_TASKS)) {
                     tasksTask.put(t.getGoogleId(), t);
                 }
@@ -333,7 +338,7 @@ public class QLGoogleIntegration {
     private void addEventsToGoogleServices(List<Task> taskList,
             GoogleCalConn googleCalendar, String calId) throws IOException {
         for (Task t : taskList) {
-            if (t.getGoogleId() == null || t.getGoogleId().isEmpty()) {
+            if ((t != null) && ((t.getGoogleId() == null) || (t.getGoogleId().isEmpty()))) {
                 if (isCalendarEvent(t)) {
                     createNewEventToGoogleCalendar(t, googleCalendar, calId);
                 }
@@ -377,8 +382,8 @@ public class QLGoogleIntegration {
     private void deleteEventsFromGoogleServices(List<String> deletedIds,
             GoogleCalConn googleCalendar, String calId) throws IOException {
         for (String id: deletedIds) {
-            if (id.startsWith(PREFIX_GOOGLEID_CALENDAR)) {
-                googleCalendar.deleteEvent(calId, id);
+            if ((id != null) && (id.startsWith(PREFIX_GOOGLEID_CALENDAR))) {
+                googleCalendar.deleteEvent(calId, id.substring(OFFSET_GOOGLEID_PREFIX));
             }
         }
     }
@@ -386,7 +391,7 @@ public class QLGoogleIntegration {
     private void generateGoogleEventsMap(List<Task> taskList,
             Map<String, Task> calendarTask) {
         for (Task t : taskList) {
-            if ((t.getGoogleId() != null) && (!t.getGoogleId().isEmpty())) {
+            if ((t != null) && (t.getGoogleId() != null) && (!t.getGoogleId().isEmpty())) {
                 if (t.getGoogleId().startsWith(PREFIX_GOOGLEID_CALENDAR)) {
                     calendarTask.put(t.getGoogleId(), t);
                 }

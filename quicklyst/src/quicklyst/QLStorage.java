@@ -25,7 +25,7 @@ import com.google.gson.reflect.TypeToken;
 //@author A01112707N
 public class QLStorage {
 	
-	private static final int INDEX_OFFSET_FOUND = 1;
+    private static final int INDEX_OFFSET_FOUND = 1;
     private static final int INDEX_NOT_FOUND = -1;
     private static final int INDEX_PATH_START = 0;
     
@@ -49,6 +49,8 @@ public class QLStorage {
     private static final String JSON_OBJECT_TASKNAME = "_name";
     
     private static final String DEFAULT_TASK_NAME = "(No Title)";
+    
+    private static final String REGEX_WINDOWS_INVALID_CHAR = ".*[<>\"].*";
     
     private final static Logger LOGGER = Logger.getLogger(QLStorage.class
             .getName());
@@ -336,6 +338,9 @@ public class QLStorage {
 	    try {
 	       File f = new File(filePath);
 	       f.getCanonicalPath();
+	       if (filePath.matches(REGEX_WINDOWS_INVALID_CHAR)) {
+	            return false;
+	        }
 	       return true;
 	    } catch (IOException e) {
 	       return false;
