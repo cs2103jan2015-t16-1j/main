@@ -82,4 +82,20 @@ public class MessageConstants {
 	public static final String MESSAGE_POSSIBLE_COMMANDS = "Possible commands:";
 	public static final String MESSAGE_AVAILABLE_COMMANDS = "Available commands:";
 	public static final String MESSAGE_INVALID_COMMAND = "Invalid command";
+	
+    //GUI
+	public static final String MESSAGE_HOVER_TASK_TITLE = "<html><u>Task Details</u></html>";
+	public static final String MESSAGE_HOVER_DISPLAY = "Mouse over task to show more...";
+	public static final String MESSAGE_TITLE = "Quicklyst";
+	public static final String MESSAGE_APPLICATION_START = "Welcome...";
+	public static final String MESSAGE_STATUS_PROCESSING = "Processing... Please wait...";
+    
+	public static final String MESSAGE_HEADER_OTHERS = "Others";
+	public static final String MESSAGE_HEADER_TOMORROW = "Tomorrow";
+	public static final String MESSAGE_HEADER_TODAY = "Today";
+	public static final String MESSAGE_HEADER_OVERDUE = "Overdue";
+	public static final String MESSAGE_HEADER_NO_DUE_DATE = "No due date";
+    public static final String MESSAGE_OVERVIEW = "<html><u>Overview</u><br>" +
+                                                  "%d due today<br>" + "%d due tomorrow<br>" + 
+                                                  "%d overdue<br>" + "%d completed</html>";
 }
