@@ -10,6 +10,27 @@ import javax.swing.JTextArea;
 
 //@author A0112971J
 public class TaskMouseListener implements MouseListener {
+    
+    private static final String MESSAGE_TO = " - ";
+    private static final String MESSAGE_START = "starts ";
+    private static final String MESSAGE_DUE = "due ";
+
+    private static final String PRIORITY_NONE = "";
+    private static final String PRIORITY_LOW = "LOW";
+    private static final String PRIORITY_MEDIUM = "MEDIUM";
+    private static final String PRIORITY_HIGH = "HIGH";
+    private static final String PRIORITY_LOW_ABBREVIATION = "L";
+    private static final String PRIORITY_MEDIUM_ABBREVIATION = "M";
+    private static final String PRIORITY_HIGH_ABBREVIATION = "H";
+    
+    private static final String MESSAGE_DESCRIPTION = "Description:\r\n%s\r\n";
+    private static final String MESSAGE_PRIORITY = "Priority:\r\n%s\r\n";
+    private static final String MESSAGE_TIME = "Time:\r\n%s\r\n";
+    private static final String MESSAGE_TITLE = "Title:\r\n%s\r\n";
+    
+    private static final String FORMAT_DATE = "dd/MM/yyyy";
+    private static final String FORMAT_DATE_TIME = "dd/MM/yyyy HH:mm";
+    
     private Task _task;
     private JTextArea _taskDetails;
     
@@ -28,18 +49,18 @@ public class TaskMouseListener implements MouseListener {
         String description = getDescription();
         
         StringBuilder details = new StringBuilder();
-        details.append(String.format("Title:\r\n%s\r\n", title));
+        details.append(String.format(MESSAGE_TITLE, title));
         
         if (!displayTime.isEmpty()) {
-            details.append(String.format("Time:\r\n%s\r\n", displayTime));
+            details.append(String.format(MESSAGE_TIME, displayTime));
         }
         
         if (!priority.isEmpty()) {
-            details.append(String.format("Priority:\r\n%s\r\n", priority));
+            details.append(String.format(MESSAGE_PRIORITY, priority));
         }
         
         if (!description.isEmpty()) {
-            details.append(String.format("Description:\r\n%s\r\n", description));
+            details.append(String.format(MESSAGE_DESCRIPTION, description));
         }
         
         _taskDetails.setText(details.toString());
@@ -49,21 +70,21 @@ public class TaskMouseListener implements MouseListener {
         String priority;
         if (_task.getPriority() != null) {
             switch (_task.getPriority()) {
-            case "H":
-                priority = "HIGH";
+            case PRIORITY_HIGH_ABBREVIATION:
+                priority = PRIORITY_HIGH;
                 break;
-            case "M":
-                priority = "MEDIUM";
+            case PRIORITY_MEDIUM_ABBREVIATION:
+                priority = PRIORITY_MEDIUM;
                 break;
-            case "L":
-                priority = "LOW";
+            case PRIORITY_LOW_ABBREVIATION:
+                priority = PRIORITY_LOW;
                 break;
             default:
-                priority = "";
+                priority = PRIORITY_NONE;
             }
              
         } else {
-            priority = "";
+            priority = PRIORITY_NONE;
         }
         return priority;
     }
@@ -76,23 +97,23 @@ public class TaskMouseListener implements MouseListener {
     }
 
     private String compoundStartAndDueTime(String start, String due) {
-        String displayTime = "";
+        String displayTime = PRIORITY_NONE;
         if (!start.isEmpty() && !due.isEmpty()) {
-            displayTime = (start + " - " + due);
+            displayTime = (start + MESSAGE_TO + due);
         } else if (!start.isEmpty()) {
-            displayTime = "starts " + start;
+            displayTime = MESSAGE_START + start;
         } else if (!due.isEmpty()) {
-            displayTime = "due " + due;                
+            displayTime = MESSAGE_DUE + due;                
         } else {
-            displayTime = "";
+            displayTime = PRIORITY_NONE;
         }
         return displayTime;
     }
 
     private String getDueTimeString() {
-        SimpleDateFormat date = new SimpleDateFormat("dd/MM/yyyy");
-        SimpleDateFormat dateAndTime = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-        String due = "";
+        SimpleDateFormat date = new SimpleDateFormat(FORMAT_DATE);
+        SimpleDateFormat dateAndTime = new SimpleDateFormat(FORMAT_DATE_TIME);
+        String due = PRIORITY_NONE;
         if (_task.getDueDate() != null && _task.getHasDueTime()) {
             due = dateAndTime.format(_task.getDueDate().getTime());
         } else if (_task.getDueDate() != null) {
@@ -102,9 +123,9 @@ public class TaskMouseListener implements MouseListener {
     }
 
     private String getStartTimeString() {
-        SimpleDateFormat date = new SimpleDateFormat("dd/MM/yyyy");
-        SimpleDateFormat dateAndTime = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-        String start = "";
+        SimpleDateFormat date = new SimpleDateFormat(FORMAT_DATE);
+        SimpleDateFormat dateAndTime = new SimpleDateFormat(FORMAT_DATE_TIME);
+        String start = PRIORITY_NONE;
         if (_task.getStartDate() != null && _task.getHasStartTime()) {
             start = dateAndTime.format(_task.getStartDate().getTime());
         } else if (_task.getStartDate() != null) {
@@ -118,31 +139,24 @@ public class TaskMouseListener implements MouseListener {
         if (_task.getDescription() != null) {
             description = _task.getDescription();
         } else {
-            description = "";
+            description = PRIORITY_NONE;
         }
         return description;
     }
     
     @Override
-    public void mouseExited(MouseEvent arg0) {
-        //_taskDetails.setText("");
+    public void mouseExited(MouseEvent e) {
     }
 
     @Override
-    public void mouseClicked(MouseEvent arg0) {
-        // TODO Auto-generated method stub
-        
+    public void mouseClicked(MouseEvent e) {
     }
 
     @Override
-    public void mousePressed(MouseEvent arg0) {
-        // TODO Auto-generated method stub
-        
+    public void mousePressed(MouseEvent e) {
     }
 
     @Override
-    public void mouseReleased(MouseEvent arg0) {
-        // TODO Auto-generated method stub
-        
+    public void mouseReleased(MouseEvent e) { 
     }  
 }

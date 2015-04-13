@@ -27,8 +27,8 @@ public class TaskPanel extends JPanel {
     
     private static final String PREFIX_INDEX = "#";
 
-    private static final String FORMAT_DATE = "dd/MM/yyy";
-    private static final String FORMAT_DATE_TIME = "dd/MM/yyy HH:mm";
+    private static final String FORMAT_DATE = "dd/MM/yyyy";
+    private static final String FORMAT_DATE_TIME = "dd/MM/yyyy HH:mm";
     
     private JPanel priorityColorPane;
     private JLabel name;

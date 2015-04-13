@@ -7,6 +7,7 @@ import org.junit.Test;
 import quicklyst.CommandTips;
 import quicklyst.MessageConstants;
 
+//@author A0112971J
 public class CommandTipsTest {
     
     private static final String STRING_EMPTY = " ";
