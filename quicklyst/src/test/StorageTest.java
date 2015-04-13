@@ -189,7 +189,7 @@ public class StorageTest {
             caught = e;
         }
         if (caught != null) {
-            assertNotEquals(String.format(MessageConstants.ERROR_WRITE_FILE, _filename), caught.getMessage());
+            assertNotEquals(MessageConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
         }
     }
     

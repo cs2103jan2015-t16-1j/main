@@ -238,9 +238,6 @@ public class GoogleIntegrationTest {
         LinkedList<Task> tasks = new LinkedList<Task>();
         LinkedList<String> deleted = new LinkedList<String>();
         Task t = new Task("Google Testing");
-        _now.set(Calendar.HOUR_OF_DAY, 23);
-        _now.set(Calendar.MINUTE, 59);
-        _now.set(Calendar.SECOND, 59);
         t.setDueDate(_now);
         tasks.add(t);
         _googleIntegration.sync(tasks, deleted);
@@ -252,8 +249,7 @@ public class GoogleIntegrationTest {
         assertNotNull(match);
         assertDateEquals(t.getDueDate(), match.getDueDate());
         
-        _now.add(Calendar.DATE, 1);
-        t.setDueDate((Calendar) _now.clone());
+        t.setDueDate(_later);
         t.setLastUpdated(_later);
         _googleIntegration.sync(tasks, deleted);
         
@@ -325,7 +321,7 @@ public class GoogleIntegrationTest {
     private void assertDateEquals(Calendar expected, Calendar actual) {
         assertEquals(expected == null, actual == null);
         if (expected != null) {
-            SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd");
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
             assertEquals(sdf.format(expected.getTime()), sdf.format(actual.getTime()));
         }
     }
