@@ -4,14 +4,14 @@ import java.util.LinkedList;
 
 public class LogOutAction extends Action {
 	
-	QLGoogleIntegration _googleInt; 
+	GoogleIntegration _googleInt; 
 	
 	public LogOutAction() {
 		
 		setSuccess(false);
 		_feedback = new StringBuilder();
 		_type = ActionType.LOG_OUT;
-		_googleInt = QLGoogleIntegration.getInstance(); 
+		_googleInt = GoogleIntegration.getInstance(); 
 	}
 
 	@Override

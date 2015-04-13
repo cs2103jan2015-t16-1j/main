@@ -7,7 +7,7 @@ import org.junit.runners.Suite.SuiteClasses;
 @RunWith(Suite.class)
 @SuiteClasses({ AddActionTest.class, CommandParserTest.class,
 		DateParserTest.class, EditActionTest.class, FieldParserTest.class,
-		FindActionTest.class, QLLogicTest.class, SortActionTest.class })
+		FindActionTest.class, LogicTest.class, SortActionTest.class })
 public class LogicComponentTests {
 
 }

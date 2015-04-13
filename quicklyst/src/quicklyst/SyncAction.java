@@ -4,7 +4,7 @@ import java.util.LinkedList;
 
 import quicklyst.Action;
 import quicklyst.ActionType;
-import quicklyst.QLGoogleIntegration;
+import quicklyst.GoogleIntegration;
 import quicklyst.Task;
 
 //@author A0102015H
@@ -29,7 +29,7 @@ public class SyncAction extends Action {
 
 			assert _deletedList != null;
 			
-			QLGoogleIntegration.getInstance()
+			GoogleIntegration.getInstance()
 					.sync(masterList, _deletedList);
 
 			copyList(masterList, displayList);

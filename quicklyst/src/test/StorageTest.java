@@ -17,20 +17,20 @@ import org.junit.Before;
 import org.junit.Test;
 
 import quicklyst.MessageConstants;
-import quicklyst.QLStorage;
+import quicklyst.Storage;
 import quicklyst.Task;
 
 //@author A01112707N
 public class StorageTest {
     
-    private QLStorage _storage;
+    private Storage _storage;
     private List<Task> _tasks;
     private List<String> _deletedIDs;
     private String _filename;
 
     @Before
     public void setUp() throws Exception {
-        _storage = QLStorage.getInstance();
+        _storage = Storage.getInstance();
         _tasks = new LinkedList<Task>();
         _deletedIDs = new LinkedList<String>(); 
     }

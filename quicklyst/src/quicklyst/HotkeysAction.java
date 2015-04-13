@@ -13,9 +13,9 @@ public class HotkeysAction extends AbstractAction {
     private static final String REDO = "Redo";
     
     private String keyPressed;
-    private QLGUI guiInstance;
+    private GUI guiInstance;
    
-    public HotkeysAction (String keyPressed, QLGUI gui) {
+    public HotkeysAction (String keyPressed, GUI gui) {
         this.keyPressed = keyPressed;
         guiInstance = gui;
     }

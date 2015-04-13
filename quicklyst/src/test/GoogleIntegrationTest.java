@@ -13,30 +13,30 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import quicklyst.QLGoogleIntegration;
+import quicklyst.GoogleIntegration;
 import quicklyst.Task;
 
 //@author A01112707N
 public class GoogleIntegrationTest {
     
-    private QLGoogleIntegration _googleIntegration;
+    private GoogleIntegration _googleIntegration;
     private String _googleId;
     private Calendar _now;
     private Calendar _later;
     @BeforeClass
     public static void setUpBeforeClass() {
-        QLGoogleIntegration.getInstance().logout();
-        QLGoogleIntegration.getInstance().sync(new LinkedList<Task>(), new LinkedList<String>());
+        GoogleIntegration.getInstance().logout();
+        GoogleIntegration.getInstance().sync(new LinkedList<Task>(), new LinkedList<String>());
     }
     
     @AfterClass
     public static void tearDownAfterClass() {
-        QLGoogleIntegration.getInstance().logout();
+        GoogleIntegration.getInstance().logout();
     }
     
     @Before
     public void setUp() throws Exception {
-        _googleIntegration = QLGoogleIntegration.getInstance();
+        _googleIntegration = GoogleIntegration.getInstance();
         _googleId = null;
         _now = Calendar.getInstance();
         _later = (Calendar) _now.clone();

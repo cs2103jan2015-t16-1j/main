@@ -34,7 +34,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
 //@author A0112971J
-public class QLGUI extends JFrame {
+public class GUI extends JFrame {
 	private static final String MESSAGE_HEADER_OTHERS = "Others";
 	private static final String MESSAGE_HEADER_TOMORROW = "Tomorrow";
 	private static final String MESSAGE_HEADER_TODAY = "Today";
@@ -95,7 +95,7 @@ public class QLGUI extends JFrame {
 	private static final int OFFSET_SINGLETASK = 5;
 
 	private static final Logger LOGGER = Logger
-			.getLogger(QLGUI.class.getName());
+			.getLogger(GUI.class.getName());
 	
     private class UpdateUITask extends TimerTask {
 
@@ -136,9 +136,9 @@ public class QLGUI extends JFrame {
 	private Timer _timer;
 	private Thread _executionThread;
 	
-	private QLLogic _QLLogic;
+	private Logic _QLLogic;
 	
-	public QLGUI() {
+	public GUI() {
 		super(MESSAGE_TITLE);
 
 		LOGGER.info(MESSAGE_CREATING_GUI);
@@ -201,7 +201,7 @@ public class QLGUI extends JFrame {
 		_timer = new Timer(true);
 
 		LOGGER.info(MESSAGE_GET_TASK_LIST_FROM_QL_LOGIC);
-		_QLLogic = QLLogic.getInstance();
+		_QLLogic = Logic.getInstance();
 		StringBuilder status = new StringBuilder();
 		_QLLogic.setup(status);
 		if (!status.toString().isEmpty()) {
@@ -608,7 +608,7 @@ public class QLGUI extends JFrame {
     }
 
 	public static void main(String[] args) {
-		QLGUI g = new QLGUI();
+		GUI g = new GUI();
 	}
 
 }

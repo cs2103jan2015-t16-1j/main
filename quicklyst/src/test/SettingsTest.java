@@ -11,18 +11,18 @@ import org.junit.Before;
 import org.junit.Test;
 
 import quicklyst.MessageConstants;
-import quicklyst.QLSettings;
+import quicklyst.Settings;
 
 //@author A01112707N
 public class SettingsTest {
     
-    private QLSettings _settings;
+    private Settings _settings;
     private String _filePath;
 
     @Before
     public void setUp() throws Exception {
         _filePath = "testingSettings.json";
-        _settings = QLSettings.getTestInstance(_filePath);
+        _settings = Settings.getTestInstance(_filePath);
     }
 
     @After

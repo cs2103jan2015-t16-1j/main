@@ -23,7 +23,7 @@ import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
 //@author A01112707N
-public class QLStorage {
+public class Storage {
 	
     private static final int INDEX_OFFSET_FOUND = 1;
     private static final int INDEX_NOT_FOUND = -1;
@@ -52,7 +52,7 @@ public class QLStorage {
     
     private static final String REGEX_WINDOWS_INVALID_CHAR = ".*[<>\"].*";
     
-    private final static Logger LOGGER = Logger.getLogger(QLStorage.class
+    private final static Logger LOGGER = Logger.getLogger(Storage.class
             .getName());
 
     private class TasksWrapper {
@@ -152,14 +152,14 @@ public class QLStorage {
 	}
 
 
-	private static QLStorage _instance;
+	private static Storage _instance;
 
-	private QLStorage() {
+	private Storage() {
 	}
 
-	public static QLStorage getInstance() {
+	public static Storage getInstance() {
 		if (_instance == null) {
-			_instance = new QLStorage();
+			_instance = new Storage();
 		}
 		return _instance;
 	}

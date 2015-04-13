@@ -18,9 +18,9 @@ public class CommandActionListener implements ActionListener {
             .getLogger(CommandActionListener.class.getName());
     
     private JTextField _command;
-    private QLGUI _guiInstance;
+    private GUI _guiInstance;
 
-    public CommandActionListener(JTextField command, QLGUI gui) {
+    public CommandActionListener(JTextField command, GUI gui) {
         _command = command;
         _guiInstance = gui;
     }

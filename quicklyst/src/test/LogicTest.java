@@ -6,7 +6,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import quicklyst.QLLogic;
+import quicklyst.Logic;
 
 /**
  * Testing of Storage, Settings and GoogleIntegration Classes are omitted in
@@ -14,7 +14,7 @@ import quicklyst.QLLogic;
  * done in this test.
  * 
  */
-public class QLLogicTest {
+public class LogicTest {
 
 	private static final String DEFAULT_TASK_ADD_COMMAND_1 = "add task one\\ start 11/12/2012 7:30 due 12/12/2012 7:30 priority L";
 	private static final String DEFAULT_TASK_ADD_COMMAND_2 = "add task two\\ start 10/12/2012 7:30 due 13/12/2012 7:30 priority M";
@@ -32,12 +32,12 @@ public class QLLogicTest {
 	private static final String[] TASK_NAMES = { "task one", "task two",
 			"task three", "task four" };
 
-	private QLLogic logicTest;
+	private Logic logicTest;
 	private StringBuilder feedback;
 
 	@Before
 	public void setUp() throws Exception {
-		logicTest = QLLogic.getInstance();
+		logicTest = Logic.getInstance();
 		logicTest.setupStub();
 		feedback = new StringBuilder();
 	}

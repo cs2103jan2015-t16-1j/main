@@ -10,12 +10,12 @@ import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
 
 //@author A01112707N
-public class QLSettings {
+public class Settings {
 	
     private static final String FILEPATH_SETTINGS = "settings.json";
 	private static final String FILEPATH_DEFAULT_SAVE = "save.json";
 	
-    public static QLSettings _instance;
+    public static Settings _instance;
     
     private String _settingsPath;
     private String _prefFilePath;
@@ -25,20 +25,20 @@ public class QLSettings {
         _instance = null;
     }
     
-    public static QLSettings getTestInstance(String filePath) {
-        QLSettings instance = new QLSettings();
+    public static Settings getTestInstance(String filePath) {
+        Settings instance = new Settings();
         instance._settingsPath = filePath;
         return instance;
     }
     
-    public static QLSettings getInstance() {
+    public static Settings getInstance() {
         if (_instance == null) {
-            _instance = new QLSettings();
+            _instance = new Settings();
         }
         return _instance;
     }
     
-    private QLSettings() {
+    private Settings() {
         _settingsPath = FILEPATH_SETTINGS;
         _prefFilePath = null;
         isLoaded = false;

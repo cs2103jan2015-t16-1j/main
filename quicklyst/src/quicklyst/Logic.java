@@ -5,7 +5,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 //@author A0102015H
-public class QLLogic {
+public class Logic {
 
 	private static final String SPACE = " ";
 	private static final String COMMAND_LOAD_ABBREV = "l";
@@ -28,15 +28,15 @@ public class QLLogic {
 
 	private HistoryManager _historyMgnr;
 
-	private QLStorage _qLStorage;
+	private Storage _qLStorage;
 
-	private QLSettings _qLSettings;
+	private Settings _qLSettings;
 
-	private static QLLogic _instance;
+	private static Logic _instance;
 
-	public static QLLogic getInstance() {
+	public static Logic getInstance() {
 		if (_instance == null) {
-			_instance = new QLLogic();
+			_instance = new Logic();
 		}
 		return _instance;
 	}
@@ -44,8 +44,8 @@ public class QLLogic {
 	/** General methods **/
 	public void setup(StringBuilder feedback) {
 
-		_qLStorage = QLStorage.getInstance();
-		_qLSettings = QLSettings.getInstance();
+		_qLStorage = Storage.getInstance();
+		_qLSettings = Settings.getInstance();
 		_masterList = new LinkedList<Task>();
         _deletedList = new LinkedList<String>();
 		try {
@@ -92,8 +92,8 @@ public class QLLogic {
 
 		_filePath = "test.json";
 		_shouldShowAllCompleted = false;
-		_qLStorage = QLStorage.getInstance();
-		_qLSettings = QLSettings.getInstance();
+		_qLStorage = Storage.getInstance();
+		_qLSettings = Settings.getInstance();
 		_displayList = new LinkedList<Task>();
 		_masterList = new LinkedList<Task>();
 		_deletedList = new LinkedList<String>();

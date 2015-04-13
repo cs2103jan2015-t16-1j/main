@@ -21,7 +21,7 @@ import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventDateTime;
 
 //@author A01112707N
-public class QLGoogleIntegration {
+public class GoogleIntegration {
     
     private static final String LOG_SYNC_EVENT = "syncing event %s with local task";
     private static final String LOG_RETRIEVING_EVENTS = "Retrieving events from Google service";
@@ -65,10 +65,10 @@ public class QLGoogleIntegration {
     private static final int OFFSET_DUEDATE = 1;
     private static final int OFFSET_GOOGLEID_PREFIX = 1;
     
-    private final static Logger LOGGER = Logger.getLogger(QLGoogleIntegration.class
+    private final static Logger LOGGER = Logger.getLogger(GoogleIntegration.class
             .getName());
 
-    private static QLGoogleIntegration _instance;
+    private static GoogleIntegration _instance;
 
     private String _userId;
     private boolean _shouldRememberLogin;
@@ -80,18 +80,18 @@ public class QLGoogleIntegration {
 
     private HttpTransport _httpTransport;
 
-    private QLGoogleIntegration() {
+    private GoogleIntegration() {
         this(USER_ID, true);
     }
 
-    private QLGoogleIntegration(String userId, boolean shouldRememberLogin) {
+    private GoogleIntegration(String userId, boolean shouldRememberLogin) {
         _userId = userId;
         _shouldRememberLogin = shouldRememberLogin;
     }
 
-    public static QLGoogleIntegration getInstance() {
+    public static GoogleIntegration getInstance() {
         if (_instance == null) {
-            _instance = new QLGoogleIntegration();
+            _instance = new GoogleIntegration();
         }
         return _instance;
     }
