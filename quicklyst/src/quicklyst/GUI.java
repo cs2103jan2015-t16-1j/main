@@ -1,21 +1,12 @@
 package quicklyst;
 
-import java.text.SimpleDateFormat;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.util.Calendar;
-import java.util.List;
-import java.util.Observable;
-import java.util.Observer;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.logging.Logger;
 
 import javax.swing.Action;
 import javax.swing.BorderFactory;
@@ -29,74 +20,154 @@ import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.Spring;
 import javax.swing.SpringLayout;
-import javax.swing.border.LineBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.logging.Logger;
+
 //@author A0112971J
 public class GUI extends JFrame {
-	private static final String MESSAGE_HEADER_OTHERS = "Others";
-	private static final String MESSAGE_HEADER_TOMORROW = "Tomorrow";
-	private static final String MESSAGE_HEADER_TODAY = "Today";
-	private static final String MESSAGE_HEADER_OVERDUE = "Overdue";
-	private static final String MESSAGE_TITLE = "Quicklyst";
-	private static final String MESSAGE_HEADER_NO_DUE_DATE = "No due date";
-	private static final String MESSAGE_CREATING_GUI = "creating GUI";
-	private static final String MESSAGE_CREATING_TASKLIST = "creating tasklist";
-	private static final String MESSAGE_CREATING_OVERVIEW = "creating overview panel";
-	private static final String MESSAGE_CREATING_TIP = "creating tip";
-	private static final String MESSAGE_CREATING_COMMAND_TEXT_FIELD = "creating command text field";
-	private static final String MESSAGE_ADDING_COMPONENTS = "adding components to main panel";
-	private static final String MESSAGE_SET_CONSTRAINTS = "set constraints for components";
-	private static final String MESSAGE_FINALIZING_GUI = "finalizing GUI";
-	private static final String MESSAGE_GET_TASK_LIST_FROM_QL_LOGIC = "get taskList from QLLogic";
+    
+    private static final int CARET_DEFAULT_POSITION = 0;
+    
+    private static final int CALENDAR_FIRST_HOUR = 0;
+    private static final int CALENDAR_FIRST_MIN = 0;
+    private static final int CALENDAR_FIRST_SECOND = 0;
+    private static final int CALENDAR_FIRST_MILLISECOND = 0;
+    
+    private static final int CALENDAR_NEXT_MIN = 1;
+    
+    private static final int CONSTANT_COUNT_NO_TASK = 0;
+    private static final int CONSTANT_CALENDAR_COMPARE = 0;
+    
+    private static final int COORDINATE_OVERVIEW_LABEL_X = 0;
+    private static final int COORDINATE_OVERVIEW_LABEL_Y = 0;
+    private static final int COORDINATE_TASK_DETAILS_X = 0;
+    private static final int COORDINATE_TASK_DETAILS_Y = 2;
+    private static final int COORDINATE_SINGLETASK_PANE_X = 0;
+    private static final int COORDINATE_TASK_DETAILS_HEADER_Y = 1;
+    private static final int COORDINATE_TASK_DETAILS_HEADER_X = 0;
+    
+    private static final int DATE_INCREMENT = 1;
+    
+    private static final int DEFAULT_WINDOW_WIDTH = 800;
+    private static final int DEFAULT_WINDOW_HEIGHT = 600;
+    
+    private static final int FONT_SIZE = 15;
+ 
+    private static final int HEADER_COUNT_INIT = 0;
+    
+    private static final int MAX_DATE_HEADER_COUNT = 2;
+    
+    private static final int MIN_WINDOW_WIDTH = 600;
+    private static final int MIN_WINDOW_HEIGHT = 450;
 
-	private static final String EMPTY_STRING = "";
+    private static final int MARGIN_OVERVIEW = 3;
+    
+    private static final int MARGIN_TIP_UP = 0;
+    private static final int MARGIN_TIP_DOWN = 3;
+    private static final int MARGIN_TIP_LEFT = 0;
+    private static final int MARGIN_TIP_RIGHT = 0;
+    
+    private static final int MARGIN_TASKDETAILS_UP = 0;
+    private static final int MARGIN_TASKDETAILS_DOWN = 3;
+    private static final int MARGIN_TASKDETAILS_LEFT = 3;
+    private static final int MARGIN_TASKDETAILS_RIGHT = 3;
+    
+    private static final int MARGIN_TASKDETAILS_HEADER_UP = 3;
+    private static final int MARGIN_TASKDETAILS_HEADER_DOWN = 3;
+    private static final int MARGIN_TASKDETAILS_HEADER_LEFT = 0;
+    private static final int MARGIN_TASKDETAILS_HEADER_RIGHT = 3;
 
-	private static final String ACTION_UNDO = "Undo";
-	private static final String ACTION_REDO = "Redo";
+    private static final int OFFSET_COMMAND_WEST = 10;
+    private static final int OFFSET_COMMAND_EAST = -10;
+    private static final int OFFSET_COMMAND_SOUTH = -10;
+    
+    private static final int OFFSET_OVERVIEWPANE_NORTH = 10;
+    private static final int OFFSET_OVERVIEWPANE_EAST = -10;
+    private static final int OFFSET_OVERVIEWPANE_SOUTH = -10;
 
-	private static final String HOTKEY_UNDO = "control Z";
-	private static final String HOTKEY_REDO = "control Y";
+    private static final int OFFSET_SINGLETASK = 5;
+    
+    private static final int OFFSET_STATUS_WEST = 10;
+    private static final int OFFSET_STATUS_EAST = -10;
+    private static final int OFFSET_STATUS_SOUTH = -10;
 
-	private static final String FORMAT_OVERVIEW = "<html><u>Overview</u><br>"
-			+ "%d due today<br>" + "%d due tomorrow<br>" + "%d overdue<br>"
-			+ "%d completed</html>";
 
-	private static final int WINDOW_WIDTH = 800;
-	private static final int WINDOW_HEIGHT = 600;
+    private static final int OFFSET_TASK_POSITION = 1;
+    
+    private static final int OFFSET_TASKLISTSCROLL_WEST = 10;
+    private static final int OFFSET_TASKLISTSCROLL_NORTH = 10;
+    private static final int OFFSET_TASKLISTSCROLL_SOUTH = -10;
+    private static final int OFFSET_TASKLISTSCROLL_EAST = -10;
+    
+    private static final int OFFSET_TIPSCROLL_WEST = 10;
+    private static final int OFFSET_TIPSCROLL_SOUTH = 0;
+    private static final int OFFSET_TIPSCROLL_EAST = -10;
+    
+    private static final int STARTING_TASK_POSITION = 1;
+    private static final int STARTING_TASK_INDEX = 1;
+    
+    private static final int TASK_LIST_FIRST_TASK = 0;
+    
+    private static final int TASK_DETAILS_LABEL_HEIGHT = 17;
+    private static final int TASK_DETAILS_LABEL_WIDTH = 0;
+    
+    private static final int WEIGHT_SINGLETASK_PANE_X = 1;
 
-	private static final int STARTING_TASK_POSITION = 1;
-	private static final int STARTING_TASK_INDEX = 1;
+    private static final int WEIGHT_TASK_DETAILS_X = 1;
+    private static final int WEIGHT_TASK_DETAILS_Y = 1;
 
-	private static final int PADDING_OVERVIEW = 3;
+    private static final int WEIGHT_OVERVIEW_LABEL_X = 1;
+    
+    private static final String ACTION_UNDO = "Undo";
+    private static final String ACTION_REDO = "Redo";
 
-	private static final int OFFSET_COMMAND_WEST = 10;
-	private static final int OFFSET_COMMAND_EAST = -10;
-	private static final int OFFSET_COMMAND_SOUTH = -10;
+    private static final String FONT_STYLE = "Dialog";
+    
+    private static final String FORMAT_DATE = "dd/MM/yyyy";
+    
+    static final String FORMAT_OVERVIEW = "<html><u>Overview</u><br>" +
+                                                  "%d due today<br>" + "%d due tomorrow<br>" + 
+                                                  "%d overdue<br>" + "%d completed</html>";
+    
+    private static final String HOTKEY_UNDO = "control Z";
+    private static final String HOTKEY_REDO = "control Y";
 
-	private static final int OFFSET_STATUS_WEST = 10;
-	private static final int OFFSET_STATUS_EAST = -10;
-	private static final int OFFSET_STATUS_SOUTH = -10;
+    private static final String MESSAGE_HOVER_TASK_TITLE = "<html><u>Task Details</u></html>";
+    private static final String MESSAGE_HOVER_DISPLAY = "Mouse over task to show more...";
+    private static final String MESSAGE_TITLE = "Quicklyst";
+    private static final String MESSAGE_APPLICATION_START = "Welcome...";
+    private static final String MESSAGE_STATUS_PROCESSING = "Processing... Please wait...";
+    
+    private static final String MESSAGE_HEADER_OTHERS = "Others";
+    private static final String MESSAGE_HEADER_TOMORROW = "Tomorrow";
+    private static final String MESSAGE_HEADER_TODAY = "Today";
+    private static final String MESSAGE_HEADER_OVERDUE = "Overdue";
+    private static final String MESSAGE_HEADER_NO_DUE_DATE = "No due date";
+    
+    private static final String LOG_MESSAGE_CREATING_GUI = "creating GUI";
+    private static final String LOG_MESSAGE_CREATING_TASKLIST = "creating tasklist";
+    private static final String LOG_MESSAGE_CREATING_OVERVIEW = "creating overview panel";
+    private static final String LOG_MESSAGE_CREATING_TIP = "creating tip";
+    private static final String LOG_MESSAGE_CREATING_COMMAND_TEXT_FIELD = "creating command text field";
+    private static final String LOG_MESSAGE_ADDING_ACTION_LISTENER = "adding actionListener to command text field";
+    private static final String LOG_MESSAGE_ADDING_COMPONENTS = "adding components to main panel";
+    private static final String LOG_MESSAGE_SET_CONSTRAINTS = "set constraints for components";
+    private static final String LOG_MESSAGE_FINALIZING_GUI = "finalizing GUI";
+    private static final String LOG_MESSAGE_GET_TASK_LIST_FROM_QL_LOGIC = "get taskList from QLLogic";
 
-	private static final int OFFSET_TASKLISTSCROLL_WEST = 10;
-	private static final int OFFSET_TASKLISTSCROLL_NORTH = 10;
-	private static final int OFFSET_TASKLISTSCROLL_SOUTH = -10;
-	private static final int OFFSET_TASKLISTSCROLL_EAST = -10;
-
-	private static final int OFFSET_OVERVIEWPANE_NORTH = 10;
-	private static final int OFFSET_OVERVIEWPANE_EAST = -10;
-	private static final int OFFSET_OVERVIEWPANE_SOUTH = -10;
-
-	private static final int OFFSET_TIPSCROLL_WEST = 10;
-	private static final int OFFSET_TIPSCROLL_SOUTH = 0;
-	private static final int OFFSET_TIPSCROLL_EAST = -10;
-
-	private static final int OFFSET_SINGLETASK = 5;
-
-	private static final Logger LOGGER = Logger
-			.getLogger(GUI.class.getName());
-	
+    private static final String STRING_EMPTY = "";
+    private static final String STATUS_NONE = " ";
+    
+    private static final Logger LOGGER = Logger.getLogger(GUI.class.getName());
+    
+    
     private class UpdateUITask extends TimerTask {
 
         @Override
@@ -121,494 +192,523 @@ public class GUI extends JFrame {
         }
         
     }
-
-	private JPanel _taskList;
-	private JPanel _overviewPane;
-	private JLabel _overview;
-	private JLabel _status;
-	private JTextArea _taskDetails;
-	private JTextArea _tip;
-	private JTextField _command;
-
-	private CommandTips _commandTips;
-	private CommandHistory _commandHistory;
-	private UpdateUITask _updateUITask;
-	private Timer _timer;
-	private Thread _executionThread;
-	
-	private Logic _QLLogic;
-	
-	public GUI() {
-		super(MESSAGE_TITLE);
-
-		LOGGER.info(MESSAGE_CREATING_GUI);
-
-		Container contentPane = this.getContentPane();
-		SpringLayout layout = new SpringLayout();
-
-		contentPane.setLayout(layout);
-
-		LOGGER.info(MESSAGE_CREATING_TASKLIST);
-		JComponent taskListScroll = setupTaskListPanel();
-
-		LOGGER.info(MESSAGE_CREATING_OVERVIEW);
-		JComponent overview = setupOverviewPanel();
-
-		LOGGER.info(MESSAGE_CREATING_TIP);
-		JComponent tipScroll = setupTip();
-
-		LOGGER.info(MESSAGE_CREATING_COMMAND_TEXT_FIELD);
-		setupCommand();
-
-		setupHotkeys();
-		_commandTips = new CommandTips();
-		_command.getDocument().addDocumentListener(new DocumentListener() {
-			public void changedUpdate(DocumentEvent e) {
-				showTips();
-			}
-
-			public void removeUpdate(DocumentEvent e) {
-				showTips();
-			}
-
-			public void insertUpdate(DocumentEvent e) {
-				showTips();
-			}
-
-		});
-
-		showTips();
-
-		_commandHistory = new CommandHistory();
-		_command.addKeyListener(new CommandKeyListener(_commandHistory,
-				_command));
-
-		_status = new JLabel("Welcome...");
-
-		LOGGER.info(MESSAGE_ADDING_COMPONENTS);
-		addComponents(taskListScroll, tipScroll, _command, overview, _status);
-
-		LOGGER.info(MESSAGE_SET_CONSTRAINTS);
-		setConstraintsForMainFrame(layout, contentPane, taskListScroll,
-				overview, tipScroll, _command, _status);
-
-		LOGGER.info(MESSAGE_FINALIZING_GUI);
-		setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		this.setMinimumSize(new Dimension(600, 450));
-		setVisible(true);
-		
-		_timer = new Timer(true);
-
-		LOGGER.info(MESSAGE_GET_TASK_LIST_FROM_QL_LOGIC);
-		_QLLogic = Logic.getInstance();
-		StringBuilder status = new StringBuilder();
-		_QLLogic.setup(status);
-		if (!status.toString().isEmpty()) {
-		    setStatus(status.toString());
-		}
-		updateUI();
-
-	}
-
-	private JComponent setupTaskListPanel() {
-		_taskList = new JPanel(new GridBagLayout());
-		JPanel taskListBorderPane = new JPanel(new BorderLayout());
-		taskListBorderPane.add(_taskList, BorderLayout.NORTH);
-		JScrollPane taskListScroll = new JScrollPane(taskListBorderPane);
-		return taskListScroll;
-	}
-
-	private JComponent setupOverviewPanel() {
-		_overviewPane = new JPanel(new GridBagLayout());
-		// _overviewPane.setBorder(new LineBorder(Color.BLACK));
-		GridBagConstraints c = new GridBagConstraints();
-
-		_overview = new JLabel();
-		_overview.setBorder(BorderFactory.createEmptyBorder(PADDING_OVERVIEW,
-				PADDING_OVERVIEW, PADDING_OVERVIEW, PADDING_OVERVIEW));
-		c.anchor = GridBagConstraints.NORTHWEST;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridx = 0;
-		c.gridy = 0;
-		c.weightx = 1;
-		_overviewPane.add(_overview, c);
-
-		JLabel taskDetailsHeader = new JLabel(
-				"<html><u>Task Details</u></html>");
-		taskDetailsHeader.setBorder(BorderFactory.createEmptyBorder(
-				PADDING_OVERVIEW, PADDING_OVERVIEW, 0, PADDING_OVERVIEW));
-		GridBagConstraints c2 = new GridBagConstraints();
-		c2.anchor = GridBagConstraints.NORTHWEST;
-		c2.gridx = 0;
-		c2.gridy = 1;
-		_overviewPane.add(taskDetailsHeader, c2);
-
-		GridBagConstraints c3 = new GridBagConstraints();
-		_taskDetails = new JTextArea(0, 17);
-		_taskDetails.setBorder(BorderFactory.createEmptyBorder(0,
-				PADDING_OVERVIEW, PADDING_OVERVIEW, PADDING_OVERVIEW));
-		_taskDetails.setBackground(_overviewPane.getBackground());
-		_taskDetails.setWrapStyleWord(true);
-		_taskDetails.setLineWrap(true);
-		_taskDetails.setEditable(false);
-		_taskDetails.setEnabled(false);
-		_taskDetails.setFont(_overview.getFont());
-		_taskDetails.setDisabledTextColor(_overview.getForeground());
-		c3.anchor = GridBagConstraints.NORTHWEST;
-		c3.gridx = 0;
-		c3.gridy = 2;
-		c3.weighty = 1;
-		c3.weightx = 1;
-		// overviewScroll.setBorder(new LineBorder(Color.BLACK));
-		_overviewPane.add(_taskDetails, c3);
-
-		// _overviewPane.add(detailsScroll, c2);
-		JScrollPane overviewScroll = new JScrollPane(_overviewPane);
-
-		return overviewScroll;
-	}
-
-	private JComponent setupTip() {
-		_tip = new JTextArea();
-		_tip.setBorder(BorderFactory.createEmptyBorder(0, 3, 0, 0));
-		_tip.setEditable(false);
-		_tip.setLineWrap(true);
-		_tip.setWrapStyleWord(true);
-		JScrollPane tipScroll = new JScrollPane(_tip);
-		return tipScroll;
-	}
-
-	private void setupCommand() {
-		_command = new JTextField();
-		Font f = new Font("Dialog", Font.PLAIN, 15);
-
-		_command.setFont(f);
-		LOGGER.info("adding actionListener to command text field");
-		CommandActionListener c = new CommandActionListener(_command, this);
-		_command.addActionListener(c);
-	}
-
-	private void setupHotkeys() {
-		setupActionMap();
-		setupInputMap();
-	}
-
-	private void setupActionMap() {
-		Action undoAction = new HotkeysAction(ACTION_UNDO, this);
-		Action redoAction = new HotkeysAction(ACTION_REDO, this);
-		_command.getActionMap().put(ACTION_UNDO, undoAction);
-		_command.getActionMap().put(ACTION_REDO, redoAction);
-	}
-
-	private void setupInputMap() {
-		_command.getInputMap(JComponent.WHEN_FOCUSED).put(
-				KeyStroke.getKeyStroke(HOTKEY_UNDO), ACTION_UNDO);
-		_command.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
-				.put(KeyStroke.getKeyStroke(HOTKEY_UNDO), ACTION_UNDO);
-		_command.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
-				KeyStroke.getKeyStroke(HOTKEY_UNDO), ACTION_UNDO);
-
-		_command.getInputMap(JComponent.WHEN_FOCUSED).put(
-				KeyStroke.getKeyStroke(HOTKEY_REDO), ACTION_REDO);
-		_command.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
-				.put(KeyStroke.getKeyStroke(HOTKEY_REDO), ACTION_REDO);
-		_command.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
-				KeyStroke.getKeyStroke(HOTKEY_REDO), ACTION_REDO);
-	}
-
-	private void addComponents(JComponent taskListScroll, JComponent tipScroll,
-			JComponent command, JComponent overview, JComponent status) {
-		add(command);
-		add(taskListScroll);
-		add(tipScroll);
-		add(overview);
-		add(status);
-	}
-
-	private void setConstraintsForMainFrame(SpringLayout layout,
-			Container contentPane, JComponent taskListScroll,
-			JComponent overviewScroll, JComponent tipScroll,
-			JComponent commandTextField, JComponent status) {
-
-		setConstraintsForCommandTextField(layout, contentPane,
-				commandTextField, status);
-		setConstraintsForTaskListScroll(layout, contentPane, taskListScroll,
-				commandTextField, overviewScroll);
-		setConstraintsForOverviewPane(layout, contentPane, taskListScroll,
-				overviewScroll, tipScroll);
-		setConstraintsForTipScroll(layout, contentPane, taskListScroll,
-				overviewScroll, tipScroll);
-		setConstraintsForStatus(layout, contentPane, status);
-	}
-
-	private void setConstraintsForCommandTextField(SpringLayout layout,
-			Container contentPane, JComponent commandTextField,
-			JComponent status) {
-		layout.putConstraint(SpringLayout.WEST, commandTextField,
-				OFFSET_COMMAND_WEST, SpringLayout.WEST, contentPane);
-		layout.putConstraint(SpringLayout.EAST, commandTextField,
-				OFFSET_COMMAND_EAST, SpringLayout.EAST, contentPane);
-		layout.putConstraint(SpringLayout.SOUTH, commandTextField,
-				OFFSET_COMMAND_SOUTH, SpringLayout.NORTH, status);
-	}
-
-	private void setConstraintsForStatus(SpringLayout layout,
-			Container contentPane, JComponent status) {
-		layout.putConstraint(SpringLayout.WEST, status, OFFSET_STATUS_WEST,
-				SpringLayout.WEST, contentPane);
-		layout.putConstraint(SpringLayout.EAST, status, OFFSET_STATUS_EAST,
-				SpringLayout.EAST, contentPane);
-		layout.putConstraint(SpringLayout.SOUTH, status, OFFSET_STATUS_SOUTH,
-				SpringLayout.SOUTH, contentPane);
-	}
-
-	private void setConstraintsForTaskListScroll(SpringLayout layout,
-			Container contentPane, JComponent taskListScroll,
-			JComponent commandTextField, JComponent overviewScroll) {
-		layout.putConstraint(SpringLayout.WEST, taskListScroll,
-				OFFSET_TASKLISTSCROLL_WEST, SpringLayout.WEST, contentPane);
-		layout.putConstraint(SpringLayout.NORTH, taskListScroll,
-				OFFSET_TASKLISTSCROLL_NORTH, SpringLayout.NORTH, contentPane);
-		layout.putConstraint(SpringLayout.SOUTH, taskListScroll,
-				OFFSET_TASKLISTSCROLL_SOUTH, SpringLayout.NORTH,
-				commandTextField);
-		layout.putConstraint(SpringLayout.EAST, taskListScroll,
-				OFFSET_TASKLISTSCROLL_EAST, SpringLayout.WEST, overviewScroll);
-		layout.getConstraints(taskListScroll).setWidth(
-				Spring.max(Spring.constant(220),
-						layout.getConstraints(taskListScroll).getWidth()));
-	}
-
-	private void setConstraintsForOverviewPane(SpringLayout layout,
-			Container contentPane, JComponent taskListScroll,
-			JComponent overviewScroll, JComponent tipScroll) {
-		layout.putConstraint(SpringLayout.NORTH, overviewScroll,
-				OFFSET_OVERVIEWPANE_NORTH, SpringLayout.NORTH, contentPane);
-		layout.putConstraint(SpringLayout.EAST, overviewScroll,
-				OFFSET_OVERVIEWPANE_EAST, SpringLayout.EAST, contentPane);
-		layout.putConstraint(SpringLayout.SOUTH, overviewScroll,
-				OFFSET_OVERVIEWPANE_SOUTH, SpringLayout.NORTH, tipScroll);
-		layout.getConstraints(overviewScroll).setWidth(Spring.constant(220));
-	}
-
-	private void setConstraintsForTipScroll(SpringLayout layout,
-			Container contentPane, JComponent taskListScroll,
-			JComponent overviewPane, JComponent tipScroll) {
-		layout.putConstraint(SpringLayout.WEST, tipScroll,
-				OFFSET_TIPSCROLL_WEST, SpringLayout.EAST, taskListScroll);
-		layout.putConstraint(SpringLayout.SOUTH, tipScroll,
-				OFFSET_TIPSCROLL_SOUTH, SpringLayout.SOUTH, taskListScroll);
-		layout.putConstraint(SpringLayout.EAST, tipScroll,
-				OFFSET_TIPSCROLL_EAST, SpringLayout.EAST, contentPane);
-		layout.getConstraints(tipScroll).setHeight(Spring.constant(180));
-	}
-
-	private void updateUI() {
-	    List<Task> displayList = _QLLogic.getDisplayList();
-		updateTaskList(displayList);
-		updateOverview();
-		clearTaskDetails();
-		scheduleNextUpdate(displayList);
-	}
-
-	private void scheduleNextUpdate(List<Task> displayList) {
-        Calendar now = Calendar.getInstance();
-        Calendar nextUpdate = null;
-	    for (Task task : displayList) {
-            if (task.getDueDate() != null && task.getDueDate().compareTo(now) > 0) {
-                nextUpdate = (Calendar)task.getDueDate().clone();
-                nextUpdate.add(Calendar.MINUTE, 1);
-                nextUpdate.set(Calendar.SECOND, 0);
-                nextUpdate.set(Calendar.MILLISECOND, 0);
-                break;
-            }
+    
+    private class commandDocumentListener implements DocumentListener {
+        public void changedUpdate(DocumentEvent e) {
+            showTips();
         }
-	    
-	    if (_updateUITask != null) {
-	        _updateUITask.cancel();
-	        _updateUITask = null;
-	    }
-	    
-	    _timer.purge();
+
+        public void removeUpdate(DocumentEvent e) {
+            showTips();
+        }
+
+        public void insertUpdate(DocumentEvent e) {
+            showTips();
+        }
+    }
+
+    private JPanel _taskList;
+    private JPanel _overviewPane;
+    private JLabel _overview;
+    private JLabel _status;
+    private JTextArea _taskDetails;
+    private JTextArea _tip;
+    private JTextField _command;
+
+    private CommandTips _commandTips;
+    private CommandHistory _commandHistory;
+    private UpdateUITask _updateUITask;
+    private Timer _timer;
+    private Thread _executionThread;
+    
+    private Logic _QLLogic;
+    
+    public GUI() {
+        super(MESSAGE_TITLE);
+
+        LOGGER.info(LOG_MESSAGE_CREATING_GUI);
+
+        Container contentPane = this.getContentPane();
+        SpringLayout layout = new SpringLayout();
+
+        contentPane.setLayout(layout);
+
+        LOGGER.info(LOG_MESSAGE_CREATING_TASKLIST);
+        JComponent taskListScroll = setupTaskListPanel();
+
+        LOGGER.info(LOG_MESSAGE_CREATING_OVERVIEW);
+        JComponent overview = setupOverviewPanel();
+
+        LOGGER.info(LOG_MESSAGE_CREATING_TIP);
+        JComponent tipScroll = setupTip();
+
+        LOGGER.info(LOG_MESSAGE_CREATING_COMMAND_TEXT_FIELD);
+        setupCommand();
+
+        setupHotkeys();
+        
+        setupCommandTips();
+        
+        attachDocumentListenerToCommand();
+
+        _commandHistory = new CommandHistory();
+        _command.addKeyListener(new CommandKeyListener(_commandHistory,
+                _command));
+
+        _status = new JLabel(MESSAGE_APPLICATION_START);
+
+        LOGGER.info(LOG_MESSAGE_ADDING_COMPONENTS);
+        addComponents(taskListScroll, tipScroll, _command, overview, _status);
+
+        LOGGER.info(LOG_MESSAGE_SET_CONSTRAINTS);
+        setConstraintsForMainFrame(layout, contentPane, taskListScroll,
+                overview, tipScroll, _command, _status);
+
+        LOGGER.info(LOG_MESSAGE_FINALIZING_GUI);
+        setSize(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.setMinimumSize(new Dimension(MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT));
+        setVisible(true);
+        
+        _timer = new Timer(true);
+
+        LOGGER.info(LOG_MESSAGE_GET_TASK_LIST_FROM_QL_LOGIC);
+        _QLLogic = Logic.getInstance();
+        StringBuilder status = new StringBuilder();
+        _QLLogic.setup(status);
+        if (!status.toString().isEmpty()) {
+            setStatus(status.toString());
+        }
+        updateUI();
+        showTips();
+    }
+
+    private void attachDocumentListenerToCommand() {
+        _command.getDocument().addDocumentListener(new commandDocumentListener());
+        
+    }
+
+    private void setupCommandTips() {
+        _commandTips = new CommandTips();
+    }
+
+    private JComponent setupTaskListPanel() {
+        _taskList = new JPanel(new GridBagLayout());
+        JPanel taskListBorderPane = new JPanel(new BorderLayout());
+        taskListBorderPane.add(_taskList, BorderLayout.NORTH);
+        JScrollPane taskListScroll = new JScrollPane(taskListBorderPane);
+        return taskListScroll;
+    }
+
+    private JComponent setupOverviewPanel() {
+        _overviewPane = new JPanel(new GridBagLayout());
+
+        GridBagConstraints c = new GridBagConstraints();
+
+        setupOverviewLabel(c);
+        _overviewPane.add(_overview, c);
+
+        JLabel taskDetailsHeader = new JLabel(MESSAGE_HOVER_TASK_TITLE);
+        taskDetailsHeader.setBorder(BorderFactory
+                                    .createEmptyBorder(MARGIN_TASKDETAILS_HEADER_UP,
+                                                       MARGIN_TASKDETAILS_HEADER_DOWN,
+                                                       MARGIN_TASKDETAILS_HEADER_LEFT,
+                                                       MARGIN_TASKDETAILS_HEADER_RIGHT));
+        GridBagConstraints c2 = new GridBagConstraints();
+        c2.anchor = GridBagConstraints.NORTHWEST;
+        c2.gridx = COORDINATE_TASK_DETAILS_HEADER_X;
+        c2.gridy = COORDINATE_TASK_DETAILS_HEADER_Y;
+        _overviewPane.add(taskDetailsHeader, c2);
+
+        GridBagConstraints c3 = new GridBagConstraints();
+        _taskDetails = new JTextArea(TASK_DETAILS_LABEL_WIDTH, TASK_DETAILS_LABEL_HEIGHT);
+        _taskDetails.setBorder(BorderFactory
+                               .createEmptyBorder(MARGIN_TASKDETAILS_UP, MARGIN_TASKDETAILS_DOWN,
+                                                  MARGIN_TASKDETAILS_LEFT, MARGIN_TASKDETAILS_RIGHT));
+        _taskDetails.setBackground(_overviewPane.getBackground());
+        _taskDetails.setWrapStyleWord(true);
+        _taskDetails.setLineWrap(true);
+        _taskDetails.setEditable(false);
+        _taskDetails.setEnabled(false);
+        _taskDetails.setFont(_overview.getFont());
+        _taskDetails.setDisabledTextColor(_overview.getForeground());
+        c3.anchor = GridBagConstraints.NORTHWEST;
+        c3.gridx = COORDINATE_TASK_DETAILS_X;
+        c3.gridy = COORDINATE_TASK_DETAILS_Y;
+        c3.weightx = WEIGHT_TASK_DETAILS_X;
+        c3.weighty = WEIGHT_TASK_DETAILS_Y;
+        
+        _overviewPane.add(_taskDetails, c3);
+
+        JScrollPane overviewScroll = new JScrollPane(_overviewPane);
+
+        return overviewScroll;
+    }
+
+    private void setupOverviewLabel(GridBagConstraints con) {
+        _overview = new JLabel();
+        _overview.setBorder(BorderFactory.createEmptyBorder(MARGIN_OVERVIEW,
+                MARGIN_OVERVIEW, MARGIN_OVERVIEW, MARGIN_OVERVIEW));
+        con.anchor = GridBagConstraints.NORTHWEST;
+        con.fill = GridBagConstraints.HORIZONTAL;
+        con.gridx = COORDINATE_OVERVIEW_LABEL_X;
+        con.gridy = COORDINATE_OVERVIEW_LABEL_Y;
+        con.weightx = WEIGHT_OVERVIEW_LABEL_X;
+    }
+
+    private JComponent setupTip() {
+        _tip = new JTextArea();
+        _tip.setBorder(BorderFactory.createEmptyBorder(MARGIN_TIP_UP, MARGIN_TIP_DOWN,
+                                                       MARGIN_TIP_LEFT, MARGIN_TIP_RIGHT));
+        _tip.setEditable(false);
+        _tip.setLineWrap(true);
+        _tip.setWrapStyleWord(true);
+        JScrollPane tipScroll = new JScrollPane(_tip);
+        return tipScroll;
+    }
+
+    private void setupCommand() {
+        _command = new JTextField();
+        Font font = new Font(FONT_STYLE, Font.PLAIN, FONT_SIZE);
+
+        _command.setFont(font);
+        LOGGER.info(LOG_MESSAGE_ADDING_ACTION_LISTENER);
+        CommandActionListener c = new CommandActionListener(_command, this);
+        _command.addActionListener(c);
+    }
+
+    private void setupHotkeys() {
+        setupActionMap();
+        setupInputMap();
+    }
+
+    private void setupActionMap() {
+        Action undoAction = new HotkeysAction(ACTION_UNDO, this);
+        Action redoAction = new HotkeysAction(ACTION_REDO, this);
+        _command.getActionMap().put(ACTION_UNDO, undoAction);
+        _command.getActionMap().put(ACTION_REDO, redoAction);
+    }
+
+    private void setupInputMap() {
+        _command.getInputMap(JComponent.WHEN_FOCUSED).put(
+                KeyStroke.getKeyStroke(HOTKEY_UNDO), ACTION_UNDO);
+        _command.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
+                .put(KeyStroke.getKeyStroke(HOTKEY_UNDO), ACTION_UNDO);
+        _command.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+                KeyStroke.getKeyStroke(HOTKEY_UNDO), ACTION_UNDO);
+
+        _command.getInputMap(JComponent.WHEN_FOCUSED).put(
+                KeyStroke.getKeyStroke(HOTKEY_REDO), ACTION_REDO);
+        _command.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
+                .put(KeyStroke.getKeyStroke(HOTKEY_REDO), ACTION_REDO);
+        _command.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+                KeyStroke.getKeyStroke(HOTKEY_REDO), ACTION_REDO);
+    }
+
+    private void addComponents(JComponent taskListScroll, JComponent tipScroll,
+            JComponent command, JComponent overview, JComponent status) {
+        add(command);
+        add(taskListScroll);
+        add(tipScroll);
+        add(overview);
+        add(status);
+    }
+
+    private void setConstraintsForMainFrame(SpringLayout layout,
+            Container contentPane, JComponent taskListScroll,
+            JComponent overviewScroll, JComponent tipScroll,
+            JComponent commandTextField, JComponent status) {
+
+        setConstraintsForCommandTextField(layout, contentPane,
+                commandTextField, status);
+        setConstraintsForTaskListScroll(layout, contentPane, taskListScroll,
+                commandTextField, overviewScroll);
+        setConstraintsForOverviewPane(layout, contentPane, taskListScroll,
+                overviewScroll, tipScroll);
+        setConstraintsForTipScroll(layout, contentPane, taskListScroll,
+                overviewScroll, tipScroll);
+        setConstraintsForStatus(layout, contentPane, status);
+    }
+
+    private void setConstraintsForCommandTextField(SpringLayout layout,
+            Container contentPane, JComponent commandTextField,
+            JComponent status) {
+        layout.putConstraint(SpringLayout.WEST, commandTextField,
+                OFFSET_COMMAND_WEST, SpringLayout.WEST, contentPane);
+        layout.putConstraint(SpringLayout.EAST, commandTextField,
+                OFFSET_COMMAND_EAST, SpringLayout.EAST, contentPane);
+        layout.putConstraint(SpringLayout.SOUTH, commandTextField,
+                OFFSET_COMMAND_SOUTH, SpringLayout.NORTH, status);
+    }
+
+    private void setConstraintsForStatus(SpringLayout layout,
+            Container contentPane, JComponent status) {
+        layout.putConstraint(SpringLayout.WEST, status, OFFSET_STATUS_WEST,
+                SpringLayout.WEST, contentPane);
+        layout.putConstraint(SpringLayout.EAST, status, OFFSET_STATUS_EAST,
+                SpringLayout.EAST, contentPane);
+        layout.putConstraint(SpringLayout.SOUTH, status, OFFSET_STATUS_SOUTH,
+                SpringLayout.SOUTH, contentPane);
+    }
+
+    private void setConstraintsForTaskListScroll(SpringLayout layout,
+            Container contentPane, JComponent taskListScroll,
+            JComponent commandTextField, JComponent overviewScroll) {
+        layout.putConstraint(SpringLayout.WEST, taskListScroll,
+                OFFSET_TASKLISTSCROLL_WEST, SpringLayout.WEST, contentPane);
+        layout.putConstraint(SpringLayout.NORTH, taskListScroll,
+                OFFSET_TASKLISTSCROLL_NORTH, SpringLayout.NORTH, contentPane);
+        layout.putConstraint(SpringLayout.SOUTH, taskListScroll,
+                OFFSET_TASKLISTSCROLL_SOUTH, SpringLayout.NORTH,
+                commandTextField);
+        layout.putConstraint(SpringLayout.EAST, taskListScroll,
+                OFFSET_TASKLISTSCROLL_EAST, SpringLayout.WEST, overviewScroll);
+        layout.getConstraints(taskListScroll).setWidth(
+                Spring.max(Spring.constant(220),
+                        layout.getConstraints(taskListScroll).getWidth()));
+    }
+
+    private void setConstraintsForOverviewPane(SpringLayout layout,
+            Container contentPane, JComponent taskListScroll,
+            JComponent overviewScroll, JComponent tipScroll) {
+        layout.putConstraint(SpringLayout.NORTH, overviewScroll,
+                OFFSET_OVERVIEWPANE_NORTH, SpringLayout.NORTH, contentPane);
+        layout.putConstraint(SpringLayout.EAST, overviewScroll,
+                OFFSET_OVERVIEWPANE_EAST, SpringLayout.EAST, contentPane);
+        layout.putConstraint(SpringLayout.SOUTH, overviewScroll,
+                OFFSET_OVERVIEWPANE_SOUTH, SpringLayout.NORTH, tipScroll);
+        layout.getConstraints(overviewScroll).setWidth(Spring.constant(220));
+    }
+
+    private void setConstraintsForTipScroll(SpringLayout layout,
+            Container contentPane, JComponent taskListScroll,
+            JComponent overviewPane, JComponent tipScroll) {
+        layout.putConstraint(SpringLayout.WEST, tipScroll,
+                OFFSET_TIPSCROLL_WEST, SpringLayout.EAST, taskListScroll);
+        layout.putConstraint(SpringLayout.SOUTH, tipScroll,
+                OFFSET_TIPSCROLL_SOUTH, SpringLayout.SOUTH, taskListScroll);
+        layout.putConstraint(SpringLayout.EAST, tipScroll,
+                OFFSET_TIPSCROLL_EAST, SpringLayout.EAST, contentPane);
+        layout.getConstraints(tipScroll).setHeight(Spring.constant(180));
+    }
+
+    private void updateUI() {
+        List<Task> displayList = _QLLogic.getDisplayList();
+        updateTaskList(displayList);
+        updateOverview();
+        clearTaskDetails();
+        scheduleNextUpdate(displayList);
+    }
+
+    private void scheduleNextUpdate(List<Task> displayList) {
+        Calendar nextUpdate = findNextDueDate(displayList);
+        
+        scheduleUpdateUI(nextUpdate);
+    }
+
+    private void scheduleUpdateUI(Calendar nextUpdate) {
+        if (_updateUITask != null) {
+            _updateUITask.cancel();
+            _updateUITask = null;
+        }
+        
+        _timer.purge();
         if (nextUpdate != null) {
             _updateUITask = new UpdateUITask();
             _timer.schedule(_updateUITask, nextUpdate.getTime());
         }
     }
 
+    private Calendar findNextDueDate(List<Task> displayList) {
+        Calendar now = Calendar.getInstance();
+        Calendar nextUpdate = null;
+        for (Task task : displayList) {
+            if (task.getDueDate() != null && task.getDueDate().compareTo(now) > CONSTANT_CALENDAR_COMPARE) {
+                nextUpdate = (Calendar)task.getDueDate().clone();
+                nextUpdate.add(Calendar.MINUTE, CALENDAR_NEXT_MIN);
+                nextUpdate.set(Calendar.SECOND, CALENDAR_FIRST_SECOND);
+                nextUpdate.set(Calendar.MILLISECOND, CALENDAR_FIRST_MILLISECOND);
+                break;
+            }
+        }
+        return nextUpdate;
+    }
+
     private void clearTaskDetails() {
-		// _taskDetails.setText("");
-		_taskDetails.setText("Mouse over task to show more...");
-	}
+        _taskDetails.setText(MESSAGE_HOVER_DISPLAY);
+    }
 
-	private void updateTaskList(List<Task> tasks) {
-		_taskList.removeAll();
-		int taskPosition = STARTING_TASK_POSITION, taskIndex = STARTING_TASK_INDEX;
-		int headerCount = 0;
-		String currentHeader = EMPTY_STRING;
-		String previousHeader = EMPTY_STRING;
-		Calendar now = Calendar.getInstance();
+    private void updateTaskList(List<Task> tasks) {
+        _taskList.removeAll();
+        int taskPosition = STARTING_TASK_POSITION, taskIndex = STARTING_TASK_INDEX;
+        int headerCount = HEADER_COUNT_INIT;
+        String currentHeader = STRING_EMPTY;
+        String previousHeader = STRING_EMPTY;
+        Calendar now = Calendar.getInstance();
 
-		for (Task task : tasks) {
-			TaskPanel singleTaskPane = new TaskPanel(task, taskIndex);
+        for (Task task : tasks) {
+            GridBagConstraints con = new GridBagConstraints();
+            con.insets = new Insets(OFFSET_SINGLETASK, OFFSET_SINGLETASK,
+                    OFFSET_SINGLETASK, OFFSET_SINGLETASK);
+            con.weightx = WEIGHT_SINGLETASK_PANE_X;
+            con.anchor = GridBagConstraints.NORTHEAST;
+            con.fill = GridBagConstraints.HORIZONTAL;
+            con.gridx = COORDINATE_SINGLETASK_PANE_X;
+            con.gridy = taskPosition - OFFSET_TASK_POSITION;
 
-			GridBagConstraints con = new GridBagConstraints();
-			con.insets = new Insets(OFFSET_SINGLETASK, OFFSET_SINGLETASK,
-					OFFSET_SINGLETASK, OFFSET_SINGLETASK);
-			con.weightx = 1;
-			con.anchor = GridBagConstraints.NORTHEAST;
-			con.fill = GridBagConstraints.HORIZONTAL;
-			con.gridx = 0;
-			con.gridy = taskPosition - 1;
+            if (task.getDueDate() != null) {
+                if (task.getDueDate().compareTo(now) < CONSTANT_CALENDAR_COMPARE) {
+                    currentHeader = MESSAGE_HEADER_OVERDUE;
+                } else {
+                    currentHeader = calendarToString(task.getDueDate());
+                }
+            } else {
+                currentHeader = MESSAGE_HEADER_NO_DUE_DATE;
+            }
+            
+            if ((!currentHeader.equals(MESSAGE_HEADER_OVERDUE)) && (!currentHeader.equals(previousHeader))) {
+                headerCount++;
+            }
+            
+            if ((headerCount > MAX_DATE_HEADER_COUNT) && (!currentHeader.equals(MESSAGE_HEADER_NO_DUE_DATE))) {
+                currentHeader = MESSAGE_HEADER_OTHERS;
+            }
 
-			if (task.getDueDate() != null) {
-				if (task.getDueDate().compareTo(now) < 0) {
-					currentHeader = MESSAGE_HEADER_OVERDUE;
-				} else {
-					if (headerCount < 3) {
-						currentHeader = calendarToString(task.getDueDate());
-						if (!currentHeader.equals(previousHeader)) {
-							headerCount++;
-						}
-					}
-					if (headerCount > 2) {
-						currentHeader = MESSAGE_HEADER_OTHERS;
-					}
-				}
-			} else {
-				currentHeader = MESSAGE_HEADER_NO_DUE_DATE;
-			}
+            if (!currentHeader.equals(previousHeader)) {
+                JLabel dateLabel = new JLabel(currentHeader);
+                _taskList.add(dateLabel, con);
+                taskPosition++;
+                con.gridy = taskPosition - OFFSET_TASK_POSITION;
+                previousHeader = currentHeader;
+            }
+            
+            TaskPanel singleTaskPane = new TaskPanel(task, taskIndex);
 
-			if (!currentHeader.equals(previousHeader)) {
-				JLabel dateLabel = new JLabel(currentHeader);
-				_taskList.add(dateLabel, con);
-				taskPosition++;
-				con.gridy = taskPosition - 1;
-				previousHeader = currentHeader;
-			}
+            _taskList.add(singleTaskPane, con);
+            singleTaskPane.addMouseListener(new TaskMouseListener(task,
+                    _taskDetails));
 
-			_taskList.add(singleTaskPane, con);
-			singleTaskPane.addMouseListener(new TaskMouseListener(task,
-					_taskDetails));
+            taskPosition++;
+            taskIndex++;
+        }
 
-			taskPosition++;
-			taskIndex++;
-		}
+        _taskList.revalidate();
+        _taskList.repaint();
+    }
 
-		_taskList.revalidate();
-		_taskList.repaint();
-	}
+    private String calendarToString(Calendar calendar) {
+        Calendar today = getCalendarToday();
+        Calendar tomorrow = getCalendarOneDayAfter(today);
+        Calendar twoDaysAfter = getCalendarOneDayAfter(tomorrow);
+        if ((calendar.compareTo(today) >= CONSTANT_CALENDAR_COMPARE) &&
+            (calendar.compareTo(tomorrow) < CONSTANT_CALENDAR_COMPARE)) {
+            return MESSAGE_HEADER_TODAY;
+        } else if (calendar.compareTo(twoDaysAfter) < CONSTANT_CALENDAR_COMPARE) {
+            return MESSAGE_HEADER_TOMORROW;
+        } else {
+            SimpleDateFormat sdf = new SimpleDateFormat(FORMAT_DATE);
+            return sdf.format(calendar.getTime());
+        }
+    }
 
-	private String calendarToString(Calendar c) {
-		Calendar today = getCalendarToday();
-		Calendar tomorrow = getCalendarOneDayAfter(today);
-		Calendar twoDaysAfter = getCalendarOneDayAfter(tomorrow);
-		if ((c.compareTo(today) >= 0) && (c.compareTo(tomorrow) < 0)) {
-			return MESSAGE_HEADER_TODAY;
-		} else if (c.compareTo(twoDaysAfter) < 0) {
-			return MESSAGE_HEADER_TOMORROW;
-		} else {
-			SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-			return sdf.format(c.getTime());
-		}
-	}
+    private void updateOverview() {
+        Calendar now = Calendar.getInstance();
+        Calendar today = getCalendarToday();
+        Calendar tomorrow = getCalendarOneDayAfter(today);
+        Calendar twoDaysAfter = getCalendarOneDayAfter(tomorrow);
 
-	private void updateOverview() {
-		Calendar now = Calendar.getInstance();
-		Calendar today = getCalendarToday();
-		Calendar tomorrow = getCalendarOneDayAfter(today);
-		Calendar twoDaysAfter = getCalendarOneDayAfter(tomorrow);
+        int dueToday = CONSTANT_COUNT_NO_TASK, dueTomorrow = CONSTANT_COUNT_NO_TASK,
+            overdue = CONSTANT_COUNT_NO_TASK, completed = CONSTANT_COUNT_NO_TASK;
+        
+        List<Task> allTasks = _QLLogic.getMasterList();
+        for (int j = TASK_LIST_FIRST_TASK; j < allTasks.size(); ++j) {
+            if (allTasks.get(j).getIsCompleted()) {
+                completed++;
+                continue;
+            }
 
-		int dueToday = 0, dueTomorrow = 0, overdue = 0, completed = 0;
-		List<Task> allTasks = _QLLogic.getMasterList();
-		for (int j = 0; j < allTasks.size(); ++j) {
-			if (allTasks.get(j).getIsCompleted()) {
-				completed++;
-				continue;
-			}
+            Calendar due = allTasks.get(j).getDueDate();
+            if (due == null) {
+                continue;
+            }
 
-			Calendar due = allTasks.get(j).getDueDate();
-			if (due == null) {
-				continue;
-			}
+            if ((due.compareTo(today) >= CONSTANT_CALENDAR_COMPARE) &&
+                (due.compareTo(tomorrow) < CONSTANT_CALENDAR_COMPARE)) {
+                dueToday++;
+            } else if ((due.compareTo(tomorrow) >= CONSTANT_CALENDAR_COMPARE) &&
+                       (due.compareTo(twoDaysAfter) < CONSTANT_CALENDAR_COMPARE)) {
+                dueTomorrow++;
+            }
 
-			if ((due.compareTo(today) >= 0) && (due.compareTo(tomorrow) < 0)) {
-				dueToday++;
-			} else if ((due.compareTo(tomorrow) >= 0)
-					&& (due.compareTo(twoDaysAfter) < 0)) {
-				dueTomorrow++;
-			}
+            if (due.compareTo(now) < CONSTANT_CALENDAR_COMPARE) {
+                overdue++;
+            }
+        }
 
-			if (due.compareTo(now) < 0) {
-				overdue++;
-			}
-		}
+        _overview.setText(String.format(FORMAT_OVERVIEW, 
+                                        dueToday, dueTomorrow,
+                                        overdue, completed));
+    }
 
-		_overview.setText(String.format(FORMAT_OVERVIEW, dueToday, dueTomorrow,
-				overdue, completed));
-	}
+    private Calendar getCalendarToday() {
+        Calendar today = Calendar.getInstance();
+        today.set(Calendar.HOUR_OF_DAY, CALENDAR_FIRST_HOUR);
+        today.set(Calendar.MINUTE, CALENDAR_FIRST_MIN);
+        today.set(Calendar.SECOND, CALENDAR_FIRST_SECOND);
+        today.set(Calendar.MILLISECOND, CALENDAR_FIRST_MILLISECOND);
+        return today;
+    }
 
-	private Calendar getCalendarToday() {
-		Calendar today = Calendar.getInstance();
-		today.set(Calendar.HOUR_OF_DAY, 0);
-		today.set(Calendar.MINUTE, 0);
-		today.set(Calendar.SECOND, 0);
-		today.set(Calendar.MILLISECOND, 0);
-		return today;
-	}
-
-	private Calendar getCalendarOneDayAfter(Calendar day) {
-		Calendar tomorrow = (Calendar) day.clone();
-		tomorrow.add(Calendar.DATE, 1);
-		return tomorrow;
-	}
-	
-	// Method for actionListener
-	public boolean executeCommand(String command) {
-	    if ((_executionThread == null) && (!command.trim().isEmpty())) {
-    	    CommandExecution exec = new CommandExecution(command);
-    	    _executionThread = new Thread(exec);
-    	    _executionThread.start();
-    	    setStatus("Processing... Please wait...");
-    	    return true;
-	    }
-	    return false;
-	}
-	
-	public void afterCommandExecution(String status) {
-	    if (!status.isEmpty()) {
+    private Calendar getCalendarOneDayAfter(Calendar day) {
+        Calendar tomorrow = (Calendar) day.clone();
+        tomorrow.add(Calendar.DATE, DATE_INCREMENT);
+        return tomorrow;
+    }
+    
+    // Method for actionListener
+    public boolean executeCommand(String command) {
+        if ((_executionThread == null) && (!command.trim().isEmpty())) {
+            CommandExecution exec = new CommandExecution(command);
+            _executionThread = new Thread(exec);
+            _executionThread.start();
+            setStatus(MESSAGE_STATUS_PROCESSING);
+            return true;
+        }
+        return false;
+    }
+    
+    public void afterCommandExecution(String status) {
+        if (!status.isEmpty()) {
             setStatus(status.toString());
         } else {
-            setStatus(" ");
+            setStatus(STATUS_NONE);
         }
         updateUI();
         _executionThread = null;
-	}
+    }
 
     private void setStatus(String status) {
         _status.setText(status);
     }
 
-	public void addCommandToCommandHistory(String command) {
-		// TODO Auto-generated method stub
-		_commandHistory.addCommand(command);
-	}
+    public void addCommandToCommandHistory(String command) {
+        _commandHistory.addCommand(command);
+    }
 
-	public void showTips() {
-		String tips = _commandTips.getTips(_command.getText());
-		setTips(tips);
-	}
+    public void showTips() {
+        String tips = _commandTips.getTips(_command.getText());
+        setTips(tips);
+    }
 
     private void setTips(String tips) {
         if (!_tip.getText().equals(tips)) {
-			_tip.setText(tips);
-			_tip.setCaretPosition(0);
-		}
+            _tip.setText(tips);
+            _tip.setCaretPosition(CARET_DEFAULT_POSITION);
+        }
     }
 
-	public static void main(String[] args) {
-		GUI g = new GUI();
-	}
+    public static void main(String[] args) {
+        GUI g = new GUI();
+    }
 
 }

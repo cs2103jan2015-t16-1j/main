@@ -11,6 +11,8 @@ import javax.swing.JTextArea;
 //@author A0112971J
 public class TaskMouseListener implements MouseListener {
     
+    private static final int CARET_DEFAULT_POSITION = 0;
+    
     private static final String MESSAGE_TO = " - ";
     private static final String MESSAGE_START = "starts ";
     private static final String MESSAGE_DUE = "due ";
@@ -64,6 +66,7 @@ public class TaskMouseListener implements MouseListener {
         }
         
         _taskDetails.setText(details.toString());
+        _taskDetails.setCaretPosition(CARET_DEFAULT_POSITION);
     }
 
     private String getPriority() {
