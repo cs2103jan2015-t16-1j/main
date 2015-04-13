@@ -10,7 +10,7 @@ import org.junit.Test;
 
 import quicklyst.Action;
 import quicklyst.CommandParser;
-import quicklyst.MessageConstants;
+import quicklyst.GlobalConstants;
 import quicklyst.Task;
 
 public class EditActionTest {
@@ -39,19 +39,19 @@ public class EditActionTest {
 		cp = new CommandParser("edit 2 priority L");
 		edit = cp.getAction();
 		edit.execute(displayList, masterList);
-		assertEquals(MessageConstants.TASK_NO_OUT_OF_RANGE, edit.getFeedback().toString());
+		assertEquals(GlobalConstants.TASK_NO_OUT_OF_RANGE, edit.getFeedback().toString());
 
 		/* Task # too small */
 		cp = new CommandParser("edit 0 priority L");
 		edit = cp.getAction();
 		edit.execute(displayList, masterList);
-		assertEquals(MessageConstants.TASK_NO_OUT_OF_RANGE, edit.getFeedback().toString());
+		assertEquals(GlobalConstants.TASK_NO_OUT_OF_RANGE, edit.getFeedback().toString());
 
 		/* Task # negative */
 		cp = new CommandParser("edit -1 priority L");
 		edit = cp.getAction();
 		edit.execute(displayList, masterList);
-		assertEquals(MessageConstants.TASK_NO_OUT_OF_RANGE, edit.getFeedback().toString());
+		assertEquals(GlobalConstants.TASK_NO_OUT_OF_RANGE, edit.getFeedback().toString());
 
 	}
 
@@ -63,7 +63,7 @@ public class EditActionTest {
 		edit.execute(displayList, masterList);
 		assertNull(displayList.getFirst().getDueDate());
 		assertNull(masterList.getFirst().getDueDate());
-		assertEquals(MessageConstants.DUE_DATE_CLEARED, edit
+		assertEquals(GlobalConstants.DUE_DATE_CLEARED, edit
 				.getFeedback().toString());
 
 		/* Clear due date valid */
@@ -72,7 +72,7 @@ public class EditActionTest {
 		edit.execute(displayList, masterList);
 		assertNull(displayList.getFirst().getStartDate());
 		assertNull(masterList.getFirst().getStartDate());
-		assertEquals(MessageConstants.START_DATE_CLEARED, edit
+		assertEquals(GlobalConstants.START_DATE_CLEARED, edit
 				.getFeedback().toString());
 
 		reset();
@@ -89,7 +89,7 @@ public class EditActionTest {
 				.getDueDateString());
 		assertEquals("12/12/2012 0830H", masterList.getFirst()
 				.getDueDateString());
-		assertEquals(String.format(MessageConstants.DUE_DATE_SET,
+		assertEquals(String.format(GlobalConstants.DUE_DATE_SET,
 				"12/12/2012 0830H"), edit.getFeedback().toString());
 
 		/* Change with both date and time too small */
@@ -98,7 +98,7 @@ public class EditActionTest {
 		edit.execute(displayList, masterList);
 		assertEquals("12/12/2012 0830H", displayList.getFirst()
 				.getDueDateString());
-		assertEquals(MessageConstants.DUE_SMALLER_THAN_START, edit
+		assertEquals(GlobalConstants.DUE_SMALLER_THAN_START, edit
 				.getFeedback().toString());
 
 		/* Change with both date and time same as start */
@@ -107,14 +107,14 @@ public class EditActionTest {
 		edit.execute(displayList, masterList);
 		assertEquals("11/12/2012 0730H", displayList.getFirst()
 				.getDueDateString());
-		assertEquals(String.format(MessageConstants.DUE_DATE_SET,
+		assertEquals(String.format(GlobalConstants.DUE_DATE_SET,
 				"11/12/2012 0730H"), edit.getFeedback().toString());
 
 		/* Change with only date valid */
 		cp = new CommandParser("edit 1 due 13/12/12");
 		edit = cp.getAction();
 		edit.execute(displayList, masterList);
-		assertEquals(String.format(MessageConstants.DUE_DATE_SET,
+		assertEquals(String.format(GlobalConstants.DUE_DATE_SET,
 				"13/12/2012"), edit.getFeedback().toString());
 
 		/* Change with only date too small valid */
@@ -122,7 +122,7 @@ public class EditActionTest {
 		edit = cp.getAction();
 		edit.execute(displayList, masterList);
 		assertEquals("13/12/2012", displayList.getFirst().getDueDateString());
-		assertEquals(MessageConstants.DUE_SMALLER_THAN_START, edit
+		assertEquals(GlobalConstants.DUE_SMALLER_THAN_START, edit
 				.getFeedback().toString());
 
 		/* Change with only date same as start date */
@@ -130,7 +130,7 @@ public class EditActionTest {
 		edit = cp.getAction();
 		edit.execute(displayList, masterList);
 		assertEquals("12/12/2012", displayList.getFirst().getDueDateString());
-		assertEquals(String.format(MessageConstants.DUE_DATE_SET,
+		assertEquals(String.format(GlobalConstants.DUE_DATE_SET,
 				"12/12/2012"), edit.getFeedback().toString());
 
 		reset();
@@ -147,7 +147,7 @@ public class EditActionTest {
 				.getStartDateString());
 		assertEquals("11/12/2012 0830H", masterList.getFirst()
 				.getStartDateString());
-		assertEquals(String.format(MessageConstants.START_DATE_SET,
+		assertEquals(String.format(GlobalConstants.START_DATE_SET,
 				"11/12/2012 0830H"), edit.getFeedback().toString());
 
 		/* Change with both date and time too big */
@@ -156,7 +156,7 @@ public class EditActionTest {
 		edit.execute(displayList, masterList);
 		assertEquals("11/12/2012 0830H", displayList.getFirst()
 				.getStartDateString());
-		assertEquals(MessageConstants.START_BIGGER_THAN_DUE, edit
+		assertEquals(GlobalConstants.START_BIGGER_THAN_DUE, edit
 				.getFeedback().toString());
 
 		/* Change with both date and time same as due */
@@ -165,14 +165,14 @@ public class EditActionTest {
 		edit.execute(displayList, masterList);
 		assertEquals("12/12/2012 0730H", displayList.getFirst()
 				.getStartDateString());
-		assertEquals(String.format(MessageConstants.START_DATE_SET,
+		assertEquals(String.format(GlobalConstants.START_DATE_SET,
 				"12/12/2012 0730H"), edit.getFeedback().toString());
 
 		/* Change with only date valid */
 		cp = new CommandParser("edit 1 start 10/12/12");
 		edit = cp.getAction();
 		edit.execute(displayList, masterList);
-		assertEquals(String.format(MessageConstants.START_DATE_SET,
+		assertEquals(String.format(GlobalConstants.START_DATE_SET,
 				"10/12/2012"), edit.getFeedback().toString());
 
 		/* Change with only date too big valid */
@@ -180,7 +180,7 @@ public class EditActionTest {
 		edit = cp.getAction();
 		edit.execute(displayList, masterList);
 		assertEquals("10/12/2012", displayList.getFirst().getStartDateString());
-		assertEquals(MessageConstants.START_BIGGER_THAN_DUE, edit
+		assertEquals(GlobalConstants.START_BIGGER_THAN_DUE, edit
 				.getFeedback().toString());
 
 		/* Change with only date same as start date */
@@ -188,7 +188,7 @@ public class EditActionTest {
 		edit = cp.getAction();
 		edit.execute(displayList, masterList);
 		assertEquals("12/12/2012", displayList.getFirst().getStartDateString());
-		assertEquals(String.format(MessageConstants.START_DATE_SET,
+		assertEquals(String.format(GlobalConstants.START_DATE_SET,
 				"12/12/2012"), edit.getFeedback().toString());
 
 		reset();
@@ -206,7 +206,7 @@ public class EditActionTest {
 				.getDueDateString());
 		assertEquals("12/12/2012 0830H", masterList.getFirst()
 				.getDueDateString());
-		assertEquals(String.format(MessageConstants.DUE_DATE_SET,
+		assertEquals(String.format(GlobalConstants.DUE_DATE_SET,
 				"12/12/2012 0830H"), edit.getFeedback().toString());
 
 		// due time smaller than start time
@@ -217,7 +217,7 @@ public class EditActionTest {
 				.getDueDateString());
 		assertEquals("12/12/2012 0630H", masterList.getFirst()
 				.getDueDateString());
-		assertEquals(String.format(MessageConstants.DUE_DATE_SET,
+		assertEquals(String.format(GlobalConstants.DUE_DATE_SET,
 				"12/12/2012 0630H"), edit.getFeedback().toString());
 
 		/* Change with due date not present valid */
@@ -229,7 +229,7 @@ public class EditActionTest {
 		edit.execute(displayList, masterList);
 		assertEquals("11/12/2012 0830H", displayList.getFirst()
 				.getDueDateString());
-		assertEquals(String.format(MessageConstants.DUE_DATE_SET,
+		assertEquals(String.format(GlobalConstants.DUE_DATE_SET,
 				"11/12/2012 0830H"), edit.getFeedback().toString());
 
 		// due time smaller than start time
@@ -240,7 +240,7 @@ public class EditActionTest {
 		edit.execute(displayList, masterList);
 		assertEquals("12/12/2012 0630H", displayList.getFirst()
 				.getDueDateString());
-		assertEquals(String.format(MessageConstants.DUE_DATE_SET,
+		assertEquals(String.format(GlobalConstants.DUE_DATE_SET,
 				"12/12/2012 0630H"), edit.getFeedback().toString());
 
 		reset();
@@ -258,7 +258,7 @@ public class EditActionTest {
 				.getStartDateString());
 		assertEquals("11/12/2012 0630H", masterList.getFirst()
 				.getStartDateString());
-		assertEquals(String.format(MessageConstants.START_DATE_SET,
+		assertEquals(String.format(GlobalConstants.START_DATE_SET,
 				"11/12/2012 0630H"), edit.getFeedback().toString());
 
 		// start time bigger than due time
@@ -269,7 +269,7 @@ public class EditActionTest {
 				.getStartDateString());
 		assertEquals("11/12/2012 0830H", masterList.getFirst()
 				.getStartDateString());
-		assertEquals(String.format(MessageConstants.START_DATE_SET,
+		assertEquals(String.format(GlobalConstants.START_DATE_SET,
 				"11/12/2012 0830H"), edit.getFeedback().toString());
 
 		/* Change with start date not present valid */
@@ -281,7 +281,7 @@ public class EditActionTest {
 		edit.execute(displayList, masterList);
 		assertEquals("12/12/2012 0630H", displayList.getFirst()
 				.getStartDateString());
-		assertEquals(String.format(MessageConstants.START_DATE_SET,
+		assertEquals(String.format(GlobalConstants.START_DATE_SET,
 				"12/12/2012 0630H"), edit.getFeedback().toString());
 
 		// start time bigger than due time
@@ -292,7 +292,7 @@ public class EditActionTest {
 		edit.execute(displayList, masterList);
 		assertEquals("11/12/2012 0830H", displayList.getFirst()
 				.getStartDateString());
-		assertEquals(String.format(MessageConstants.START_DATE_SET,
+		assertEquals(String.format(GlobalConstants.START_DATE_SET,
 				"11/12/2012 0830H"), edit.getFeedback().toString());
 
 		reset();
@@ -315,9 +315,9 @@ public class EditActionTest {
 		assertEquals("11/12/2012 0730H", displayList.getFirst()
 				.getDueDateString());
 		assertEquals(
-				String.format(MessageConstants.START_DATE_SET,
+				String.format(GlobalConstants.START_DATE_SET,
 						"11/12/2012 0630H")
-						+ String.format(MessageConstants.DUE_DATE_SET,
+						+ String.format(GlobalConstants.DUE_DATE_SET,
 								"11/12/2012 0730H"), edit.getFeedback()
 						.toString());
 
@@ -334,9 +334,9 @@ public class EditActionTest {
 		assertEquals("12/12/2012 0530H", displayList.getFirst()
 				.getDueDateString());
 		assertEquals(
-				String.format(MessageConstants.START_DATE_SET,
+				String.format(GlobalConstants.START_DATE_SET,
 						"11/12/2012 0630H")
-						+ String.format(MessageConstants.DUE_DATE_SET,
+						+ String.format(GlobalConstants.DUE_DATE_SET,
 								"12/12/2012 0530H"), edit.getFeedback()
 						.toString());
 
@@ -352,21 +352,21 @@ public class EditActionTest {
 		edit.execute(displayList, masterList);
 		assertEquals("H", displayList.getFirst().getPriority());
 		assertEquals("H", masterList.getFirst().getPriority());
-		assertEquals(String.format(MessageConstants.PRIORITY_SET, "H"),
+		assertEquals(String.format(GlobalConstants.PRIORITY_SET, "H"),
 				edit.getFeedback().toString());
 
 		cp = new CommandParser("edit 1 priority m");
 		edit = cp.getAction();
 		edit.execute(displayList, masterList);
 		assertEquals("M", displayList.getFirst().getPriority());
-		assertEquals(String.format(MessageConstants.PRIORITY_SET, "M"),
+		assertEquals(String.format(GlobalConstants.PRIORITY_SET, "M"),
 				edit.getFeedback().toString());
 
 		cp = new CommandParser("edit 1 priority Low");
 		edit = cp.getAction();
 		edit.execute(displayList, masterList);
 		assertEquals("L", displayList.getFirst().getPriority());
-		assertEquals(String.format(MessageConstants.PRIORITY_SET, "L"),
+		assertEquals(String.format(GlobalConstants.PRIORITY_SET, "L"),
 				edit.getFeedback().toString());
 
 		/* Change priority invalid */
@@ -389,7 +389,7 @@ public class EditActionTest {
 		edit = cp.getAction();
 		edit.execute(displayList, masterList);
 		assertNull(displayList.getFirst().getPriority());
-		assertEquals(MessageConstants.PRIORITY_CLEARED, edit
+		assertEquals(GlobalConstants.PRIORITY_CLEARED, edit
 				.getFeedback().toString());
 
 		reset();
@@ -405,7 +405,7 @@ public class EditActionTest {
 		assertEquals("tasky", displayList.getFirst().getName());
 		assertEquals("tasky", masterList.getFirst().getName());
 		assertEquals(
-				String.format(MessageConstants.TASK_NAME_SET, "tasky"),
+				String.format(GlobalConstants.TASK_NAME_SET, "tasky"),
 				edit.getFeedback().toString());
 
 		cp = new CommandParser("edit 1 name tasky one\\");
@@ -413,7 +413,7 @@ public class EditActionTest {
 		edit.execute(displayList, masterList);
 		assertEquals("tasky one", displayList.getFirst().getName());
 		assertEquals("tasky one", masterList.getFirst().getName());
-		assertEquals(String.format(MessageConstants.TASK_NAME_SET,
+		assertEquals(String.format(GlobalConstants.TASK_NAME_SET,
 				"tasky one"), edit.getFeedback().toString());
 
 		/* Change empty name invalid */

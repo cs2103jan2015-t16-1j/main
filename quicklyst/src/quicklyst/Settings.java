@@ -36,7 +36,7 @@ public class Settings {
     }
     
     private Settings() {
-        _settingsPath = MessageConstants.FILEPATH_SETTINGS;
+        _settingsPath = GlobalConstants.FILEPATH_SETTINGS;
         _prefFilePath = null;
         isLoaded = false;
     }
@@ -49,7 +49,7 @@ public class Settings {
     }
     
     public String getDefaultFilePath() {
-        return MessageConstants.FILEPATH_DEFAULT_SAVE;
+        return GlobalConstants.FILEPATH_DEFAULT_SAVE;
     }
     
     public void updatePrefFilePath(String filePath) {
@@ -65,9 +65,9 @@ public class Settings {
         } catch (FileNotFoundException e) {
             _prefFilePath = null;
         } catch (IOException e) {
-            throw new Error(MessageConstants.ERROR_READ_SETTINGS);
+            throw new Error(GlobalConstants.ERROR_READ_SETTINGS);
         } catch (JsonSyntaxException | JsonIOException e) {
-            throw new Error(MessageConstants.ERROR_READ_SETTINGS);
+            throw new Error(GlobalConstants.ERROR_READ_SETTINGS);
         }
     }
     
@@ -76,7 +76,7 @@ public class Settings {
     		Gson gson = new Gson();
     		gson.toJson(_prefFilePath, f);
     	} catch (IOException | JsonIOException e) {
-			throw new Error(MessageConstants.ERROR_WRITE_SETTINGS);
+			throw new Error(GlobalConstants.ERROR_WRITE_SETTINGS);
 		}
     }
 }

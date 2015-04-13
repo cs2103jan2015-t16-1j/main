@@ -74,7 +74,7 @@ public class CommandTips {
 
     private String getMatchedCommandTips(ArrayList<Integer> match) {
         if (match.isEmpty()) {
-            return MessageConstants.MESSAGE_INVALID_COMMAND;
+            return GlobalConstants.MESSAGE_INVALID_COMMAND;
         } else if (match.size() == MATCH_SIZE_ONE) {
             return commandTypes[match.get(MATCH_INDEX_FIRST)][COMMANDTYPE_INDEX_TIP];
         } else {
@@ -83,12 +83,12 @@ public class CommandTips {
     }
 
     private String getAllMatchedCommands(ArrayList<Integer> match) {
-        StringBuilder commandList = new StringBuilder(MessageConstants.MESSAGE_POSSIBLE_COMMANDS);
+        StringBuilder commandList = new StringBuilder(GlobalConstants.MESSAGE_POSSIBLE_COMMANDS);
         for (int i: match) {
             commandList.append(NEXTLINE);
             commandList.append(commandTypes[i][COMMANDTYPE_INDEX_FULLCOMMAND]);
             if (commandTypes[i][COMMANDTYPE_INDEX_SHORTCOMMAND] != null) {
-                commandList.append(String.format(MessageConstants.MESSAGE_COMMAND_BODY,
+                commandList.append(String.format(GlobalConstants.MESSAGE_COMMAND_BODY,
                                    commandTypes[i][COMMANDTYPE_INDEX_SHORTCOMMAND]));
             }
         }
@@ -136,12 +136,12 @@ public class CommandTips {
     }
 
     private String allCommands() {
-        StringBuilder commandList = new StringBuilder(MessageConstants.MESSAGE_AVAILABLE_COMMANDS);
+        StringBuilder commandList = new StringBuilder(GlobalConstants.MESSAGE_AVAILABLE_COMMANDS);
         for (String[] commands: commandTypes) {
             commandList.append(NEXTLINE);
             commandList.append(commands[COMMANDTYPE_INDEX_FULLCOMMAND]);
             if (commands[COMMANDTYPE_INDEX_SHORTCOMMAND] != null) {
-                commandList.append(String.format(MessageConstants.MESSAGE_COMMAND_BODY, commands[COMMANDTYPE_INDEX_SHORTCOMMAND]));
+                commandList.append(String.format(GlobalConstants.MESSAGE_COMMAND_BODY, commands[COMMANDTYPE_INDEX_SHORTCOMMAND]));
             }
         }
         return commandList.toString();

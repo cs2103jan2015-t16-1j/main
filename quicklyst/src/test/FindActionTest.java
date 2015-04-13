@@ -10,7 +10,7 @@ import org.junit.Test;
 
 import quicklyst.Action;
 import quicklyst.CommandParser;
-import quicklyst.MessageConstants;
+import quicklyst.GlobalConstants;
 import quicklyst.Task;
 
 public class FindActionTest {
@@ -44,7 +44,7 @@ public class FindActionTest {
 		findTest.execute(displayList, masterList);
 		assertEquals("one", displayList.getFirst().getName());
 		assertEquals(1, displayList.size());
-		assertEquals(String.format(MessageConstants.MATCHES_FOUND, 1),
+		assertEquals(String.format(GlobalConstants.MATCHES_FOUND, 1),
 				findTest.getFeedback().toString());
 
 		/* Partial word */
@@ -53,7 +53,7 @@ public class FindActionTest {
 		findTest.execute(displayList, masterList);
 		assertEquals("one", displayList.getFirst().getName());
 		assertEquals(1, displayList.size());
-		assertEquals(String.format(MessageConstants.MATCHES_FOUND, 1),
+		assertEquals(String.format(GlobalConstants.MATCHES_FOUND, 1),
 				findTest.getFeedback().toString());
 
 		cp = new CommandParser("find name ask\\");
@@ -62,7 +62,7 @@ public class FindActionTest {
 		assertEquals("task two", displayList.getFirst().getName());
 		assertEquals("task three", displayList.getLast().getName());
 		assertEquals(2, displayList.size());
-		assertEquals(String.format(MessageConstants.MATCHES_FOUND, 2),
+		assertEquals(String.format(GlobalConstants.MATCHES_FOUND, 2),
 				findTest.getFeedback().toString());
 
 		/* Multiple keywords */
@@ -72,7 +72,7 @@ public class FindActionTest {
 		assertEquals("one", displayList.getFirst().getName());
 		assertEquals("task two", displayList.getLast().getName());
 		assertEquals(2, displayList.size());
-		assertEquals(String.format(MessageConstants.MATCHES_FOUND, 2),
+		assertEquals(String.format(GlobalConstants.MATCHES_FOUND, 2),
 				findTest.getFeedback().toString());
 
 		cp = new CommandParser("find name ask t\\");
@@ -81,7 +81,7 @@ public class FindActionTest {
 		assertEquals("task two", displayList.getFirst().getName());
 		assertEquals("task three", displayList.getLast().getName());
 		assertEquals(2, displayList.size());
-		assertEquals(String.format(MessageConstants.MATCHES_FOUND, 2),
+		assertEquals(String.format(GlobalConstants.MATCHES_FOUND, 2),
 				findTest.getFeedback().toString());
 
 		/* No match */
@@ -89,7 +89,7 @@ public class FindActionTest {
 		findTest = cp.getAction();
 		findTest.execute(displayList, masterList);
 		assertEquals(2, displayList.size());
-		assertEquals(MessageConstants.NO_MATCHES_FOUND, findTest
+		assertEquals(GlobalConstants.NO_MATCHES_FOUND, findTest
 				.getFeedback().toString());
 
 		reset();
@@ -104,7 +104,7 @@ public class FindActionTest {
 		findTest.execute(displayList, masterList);
 		assertEquals("one", displayList.getFirst().getName());
 		assertEquals(1, displayList.size());
-		assertEquals(String.format(MessageConstants.MATCHES_FOUND, 1),
+		assertEquals(String.format(GlobalConstants.MATCHES_FOUND, 1),
 				findTest.getFeedback().toString());
 
 		cp = new CommandParser("find start on 11/12/2012");
@@ -112,14 +112,14 @@ public class FindActionTest {
 		findTest.execute(displayList, masterList);
 		assertEquals("one", displayList.getFirst().getName());
 		assertEquals(1, displayList.size());
-		assertEquals(String.format(MessageConstants.MATCHES_FOUND, 1),
+		assertEquals(String.format(GlobalConstants.MATCHES_FOUND, 1),
 				findTest.getFeedback().toString());
 
 		cp = new CommandParser("find start on 7/12/2012");
 		findTest = cp.getAction();
 		findTest.execute(displayList, masterList);
 		assertEquals(1, displayList.size());
-		assertEquals(MessageConstants.NO_MATCHES_FOUND, findTest
+		assertEquals(GlobalConstants.NO_MATCHES_FOUND, findTest
 				.getFeedback().toString());
 
 		/* After date */
@@ -129,7 +129,7 @@ public class FindActionTest {
 		assertEquals("one", displayList.getFirst().getName());
 		assertEquals("task two", displayList.getLast().getName());
 		assertEquals(2, displayList.size());
-		assertEquals(String.format(MessageConstants.MATCHES_FOUND, 2),
+		assertEquals(String.format(GlobalConstants.MATCHES_FOUND, 2),
 				findTest.getFeedback().toString());
 
 		cp = new CommandParser("find due after 13/12/2012");
@@ -138,14 +138,14 @@ public class FindActionTest {
 		assertEquals("task two", displayList.getFirst().getName());
 		assertEquals("task three", displayList.getLast().getName());
 		assertEquals(2, displayList.size());
-		assertEquals(String.format(MessageConstants.MATCHES_FOUND, 2),
+		assertEquals(String.format(GlobalConstants.MATCHES_FOUND, 2),
 				findTest.getFeedback().toString());
 
 		cp = new CommandParser("find start after 14/12/2012");
 		findTest = cp.getAction();
 		findTest.execute(displayList, masterList);
 		assertEquals(2, displayList.size());
-		assertEquals(MessageConstants.NO_MATCHES_FOUND, findTest
+		assertEquals(GlobalConstants.NO_MATCHES_FOUND, findTest
 				.getFeedback().toString());
 
 		/* Before date */
@@ -155,7 +155,7 @@ public class FindActionTest {
 		assertEquals("task two", displayList.getFirst().getName());
 		assertEquals("task three", displayList.getLast().getName());
 		assertEquals(2, displayList.size());
-		assertEquals(String.format(MessageConstants.MATCHES_FOUND, 2),
+		assertEquals(String.format(GlobalConstants.MATCHES_FOUND, 2),
 				findTest.getFeedback().toString());
 
 		cp = new CommandParser("find due before 13/12/2012");
@@ -164,14 +164,14 @@ public class FindActionTest {
 		assertEquals("one", displayList.getFirst().getName());
 		assertEquals("task two", displayList.getLast().getName());
 		assertEquals(2, displayList.size());
-		assertEquals(String.format(MessageConstants.MATCHES_FOUND, 2),
+		assertEquals(String.format(GlobalConstants.MATCHES_FOUND, 2),
 				findTest.getFeedback().toString());
 
 		cp = new CommandParser("find start before 7/12/2012");
 		findTest = cp.getAction();
 		findTest.execute(displayList, masterList);
 		assertEquals(2, displayList.size());
-		assertEquals(MessageConstants.NO_MATCHES_FOUND, findTest
+		assertEquals(GlobalConstants.NO_MATCHES_FOUND, findTest
 				.getFeedback().toString());
 
 		/* Between date */
@@ -181,7 +181,7 @@ public class FindActionTest {
 		assertEquals("task two", displayList.getFirst().getName());
 		assertEquals("task three", displayList.getLast().getName());
 		assertEquals(2, displayList.size());
-		assertEquals(String.format(MessageConstants.MATCHES_FOUND, 2),
+		assertEquals(String.format(GlobalConstants.MATCHES_FOUND, 2),
 				findTest.getFeedback().toString());
 
 		cp = new CommandParser("find due between 10/12/12 and 13/12/12");
@@ -190,14 +190,14 @@ public class FindActionTest {
 		assertEquals("one", displayList.getFirst().getName());
 		assertEquals("task two", displayList.getLast().getName());
 		assertEquals(2, displayList.size());
-		assertEquals(String.format(MessageConstants.MATCHES_FOUND, 2),
+		assertEquals(String.format(GlobalConstants.MATCHES_FOUND, 2),
 				findTest.getFeedback().toString());
 
 		cp = new CommandParser("find start between 1/12/12 and 7/12/12");
 		findTest = cp.getAction();
 		findTest.execute(displayList, masterList);
 		assertEquals(2, displayList.size());
-		assertEquals(MessageConstants.NO_MATCHES_FOUND, findTest
+		assertEquals(GlobalConstants.NO_MATCHES_FOUND, findTest
 				.getFeedback().toString());
 
 		reset();
@@ -211,7 +211,7 @@ public class FindActionTest {
 		findTest.execute(displayList, masterList);
 		assertEquals("task three", displayList.getFirst().getName());
 		assertEquals(1, displayList.size());
-		assertEquals(String.format(MessageConstants.MATCHES_FOUND, 1),
+		assertEquals(String.format(GlobalConstants.MATCHES_FOUND, 1),
 				findTest.getFeedback().toString());
 
 		cp = new CommandParser("find priority medium");
@@ -219,7 +219,7 @@ public class FindActionTest {
 		findTest.execute(displayList, masterList);
 		assertEquals("task two", displayList.getFirst().getName());
 		assertEquals(1, displayList.size());
-		assertEquals(String.format(MessageConstants.MATCHES_FOUND, 1),
+		assertEquals(String.format(GlobalConstants.MATCHES_FOUND, 1),
 				findTest.getFeedback().toString());
 
 		cp = new CommandParser("find priority low");
@@ -227,15 +227,15 @@ public class FindActionTest {
 		findTest.execute(displayList, masterList);
 		assertEquals("one", displayList.getFirst().getName());
 		assertEquals(1, displayList.size());
-		assertEquals(String.format(MessageConstants.MATCHES_FOUND, 1),
+		assertEquals(String.format(GlobalConstants.MATCHES_FOUND, 1),
 				findTest.getFeedback().toString());
 
 		cp = new CommandParser("find priority extreme");
 		findTest = cp.getAction();
 		findTest.execute(displayList, masterList);
 		assertEquals(1, displayList.size());
-		assertEquals(MessageConstants.NO_PRIORITY_LEVEL
-				+ MessageConstants.NO_MATCHES_FOUND, findTest
+		assertEquals(GlobalConstants.NO_PRIORITY_LEVEL
+				+ GlobalConstants.NO_MATCHES_FOUND, findTest
 				.getFeedback().toString());
 	}
 
@@ -248,7 +248,7 @@ public class FindActionTest {
 		findTest.execute(displayList, masterList);
 		assertEquals("one", displayList.getFirst().getName());
 		assertEquals(1, displayList.size());
-		assertEquals(String.format(MessageConstants.MATCHES_FOUND, 1),
+		assertEquals(String.format(GlobalConstants.MATCHES_FOUND, 1),
 				findTest.getFeedback().toString());
 
 		cp = new CommandParser("find completed no");
@@ -257,7 +257,7 @@ public class FindActionTest {
 		assertEquals("task two", displayList.getFirst().getName());
 		assertEquals("task three", displayList.getLast().getName());
 		assertEquals(2, displayList.size());
-		assertEquals(String.format(MessageConstants.MATCHES_FOUND, 2),
+		assertEquals(String.format(GlobalConstants.MATCHES_FOUND, 2),
 				findTest.getFeedback().toString());
 
 		cp = new CommandParser("find completed");
@@ -266,8 +266,8 @@ public class FindActionTest {
 		assertEquals("task two", displayList.getFirst().getName());
 		assertEquals("task three", displayList.getLast().getName());
 		assertEquals(2, displayList.size());
-		assertEquals(MessageConstants.NO_COMPLETE_CRITERIA
-				+ MessageConstants.NO_MATCHES_FOUND, findTest
+		assertEquals(GlobalConstants.NO_COMPLETE_CRITERIA
+				+ GlobalConstants.NO_MATCHES_FOUND, findTest
 				.getFeedback().toString());
 
 	}

@@ -13,8 +13,7 @@ import com.google.api.services.tasks.model.Tasks;
 
 //@author A01112707N
 public class GoogleTaskConn {
-
-    private static final String APPLICATION_NAME = "Quicklyst";
+    
     private static final JsonFactory JSON_FACTORY = GsonFactory
             .getDefaultInstance();
 
@@ -24,8 +23,8 @@ public class GoogleTaskConn {
     private com.google.api.services.tasks.Tasks getService() {
 
         return new com.google.api.services.tasks.Tasks.Builder(_httpTransport,
-                JSON_FACTORY, _credential).setApplicationName(APPLICATION_NAME)
-                .build();
+                JSON_FACTORY, _credential).setApplicationName(
+                GlobalConstants.GOOGLESERVICES_APPLICATION_NAME).build();
     }
 
     public GoogleTaskConn(Credential credential, HttpTransport httpTransport) {
@@ -36,7 +35,7 @@ public class GoogleTaskConn {
     public TaskLists getTaskLists() throws IOException {
         return getService().tasklists().list().execute();
     }
-    
+
     public Tasks getTasks(String taskListId) throws IOException {
         return getService().tasks().list(taskListId).execute();
     }

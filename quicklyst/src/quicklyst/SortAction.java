@@ -53,7 +53,7 @@ public class SortAction extends Action {
 					&& fieldType != FieldType.PRIORITY) {
 
 				this._isSuccess = false;
-				this._feedback.append(MessageConstants.INVALID_FIELD_TYPE);
+				this._feedback.append(GlobalConstants.INVALID_FIELD_TYPE);
 				return;
 			}
 

@@ -208,7 +208,7 @@ public class GUI extends JFrame {
     private Logic _QLLogic;
     
     public GUI() {
-        super(MessageConstants.MESSAGE_TITLE);
+        super(GlobalConstants.MESSAGE_TITLE);
 
         LOGGER.info(LOG_MESSAGE_CREATING_GUI);
 
@@ -239,7 +239,7 @@ public class GUI extends JFrame {
         _command.addKeyListener(new CommandKeyListener(_commandHistory,
                 _command));
 
-        _status = new JLabel(MessageConstants.MESSAGE_APPLICATION_START);
+        _status = new JLabel(GlobalConstants.MESSAGE_APPLICATION_START);
 
         LOGGER.info(LOG_MESSAGE_ADDING_COMPONENTS);
         addComponents(taskListScroll, tipScroll, _command, overview, _status);
@@ -292,7 +292,7 @@ public class GUI extends JFrame {
         setupOverviewLabel(c);
         _overviewPane.add(_overview, c);
 
-        JLabel taskDetailsHeader = new JLabel(MessageConstants.MESSAGE_HOVER_TASK_TITLE);
+        JLabel taskDetailsHeader = new JLabel(GlobalConstants.MESSAGE_HOVER_TASK_TITLE);
         taskDetailsHeader.setBorder(BorderFactory
                                     .createEmptyBorder(MARGIN_TASKDETAILS_HEADER_UP,
                                                        MARGIN_TASKDETAILS_HEADER_DOWN,
@@ -519,7 +519,7 @@ public class GUI extends JFrame {
     }
 
     private void clearTaskDetails() {
-        _taskDetails.setText(MessageConstants.MESSAGE_HOVER_DISPLAY);
+        _taskDetails.setText(GlobalConstants.MESSAGE_HOVER_DISPLAY);
     }
 
     private void updateTaskList(List<Task> tasks) {
@@ -542,22 +542,22 @@ public class GUI extends JFrame {
 
             if (task.getDueDate() != null) {
                 if (task.getDueDate().compareTo(now) < CONSTANT_CALENDAR_COMPARE) {
-                    currentHeader = MessageConstants.MESSAGE_HEADER_OVERDUE;
+                    currentHeader = GlobalConstants.MESSAGE_HEADER_OVERDUE;
                 } else {
                     currentHeader = calendarToString(task.getDueDate());
                 }
             } else {
-                currentHeader = MessageConstants.MESSAGE_HEADER_NO_DUE_DATE;
+                currentHeader = GlobalConstants.MESSAGE_HEADER_NO_DUE_DATE;
             }
             
-            if ((!currentHeader.equals(MessageConstants.MESSAGE_HEADER_OVERDUE)) &&
+            if ((!currentHeader.equals(GlobalConstants.MESSAGE_HEADER_OVERDUE)) &&
                 (!currentHeader.equals(previousHeader))) {
                 headerCount++;
             }
             
             if ((headerCount > MAX_DATE_HEADER_COUNT) &&
-                (!currentHeader.equals(MessageConstants.MESSAGE_HEADER_NO_DUE_DATE))) {
-                currentHeader = MessageConstants.MESSAGE_HEADER_OTHERS;
+                (!currentHeader.equals(GlobalConstants.MESSAGE_HEADER_NO_DUE_DATE))) {
+                currentHeader = GlobalConstants.MESSAGE_HEADER_OTHERS;
             }
 
             if (!currentHeader.equals(previousHeader)) {
@@ -588,9 +588,9 @@ public class GUI extends JFrame {
         Calendar twoDaysAfter = getCalendarOneDayAfter(tomorrow);
         if ((calendar.compareTo(today) >= CONSTANT_CALENDAR_COMPARE) &&
             (calendar.compareTo(tomorrow) < CONSTANT_CALENDAR_COMPARE)) {
-            return MessageConstants.MESSAGE_HEADER_TODAY;
+            return GlobalConstants.MESSAGE_HEADER_TODAY;
         } else if (calendar.compareTo(twoDaysAfter) < CONSTANT_CALENDAR_COMPARE) {
-            return MessageConstants.MESSAGE_HEADER_TOMORROW;
+            return GlobalConstants.MESSAGE_HEADER_TOMORROW;
         } else {
             SimpleDateFormat sdf = new SimpleDateFormat(FORMAT_DATE);
             return sdf.format(calendar.getTime());
@@ -631,7 +631,7 @@ public class GUI extends JFrame {
             }
         }
 
-        _overview.setText(String.format(MessageConstants.MESSAGE_OVERVIEW, 
+        _overview.setText(String.format(GlobalConstants.MESSAGE_OVERVIEW, 
                                         dueToday, dueTomorrow,
                                         overdue, completed));
     }
@@ -657,7 +657,7 @@ public class GUI extends JFrame {
             CommandExecution exec = new CommandExecution(command);
             _executionThread = new Thread(exec);
             _executionThread.start();
-            setStatus(MessageConstants.MESSAGE_STATUS_PROCESSING);
+            setStatus(GlobalConstants.MESSAGE_STATUS_PROCESSING);
             return true;
         }
         return false;

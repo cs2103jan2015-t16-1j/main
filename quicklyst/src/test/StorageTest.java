@@ -16,7 +16,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import quicklyst.MessageConstants;
+import quicklyst.GlobalConstants;
 import quicklyst.Storage;
 import quicklyst.Task;
 
@@ -189,7 +189,7 @@ public class StorageTest {
             caught = e;
         }
         if (caught != null) {
-            assertNotEquals(MessageConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
+            assertNotEquals(GlobalConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
         }
     }
     
@@ -203,7 +203,7 @@ public class StorageTest {
             caught = e;
         }
         assertNotNull(caught);
-        assertEquals(MessageConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
+        assertEquals(GlobalConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
     }
     
     @Test
@@ -216,7 +216,7 @@ public class StorageTest {
             caught = e;
         }
         assertNotNull(caught);
-        assertEquals(MessageConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
+        assertEquals(GlobalConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
     }
     
     @Test
@@ -229,7 +229,7 @@ public class StorageTest {
             caught = e;
         }
         assertNotNull(caught);
-        assertEquals(MessageConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
+        assertEquals(GlobalConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
     }
     
     @Test
@@ -242,7 +242,7 @@ public class StorageTest {
             caught = e;
         }
         assertNotNull(caught);
-        assertEquals(MessageConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
+        assertEquals(GlobalConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
     }
     
     @Test
@@ -255,7 +255,7 @@ public class StorageTest {
             caught = e;
         }
         assertNotNull(caught);
-        assertEquals(MessageConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
+        assertEquals(GlobalConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
     }
     
     @Test
@@ -268,7 +268,7 @@ public class StorageTest {
             caught = e;
         }
         assertNotNull(caught);
-        assertEquals(MessageConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
+        assertEquals(GlobalConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
     }
     
     @Test
@@ -281,7 +281,7 @@ public class StorageTest {
             caught = e;
         }
         assertNotNull(caught);
-        assertEquals(MessageConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
+        assertEquals(GlobalConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
     }
     
     @Test
@@ -306,7 +306,7 @@ public class StorageTest {
             caught = e;
         }
         assertNotNull(caught);
-        assertEquals(MessageConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
+        assertEquals(GlobalConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
     }
     
     @Test
@@ -319,7 +319,7 @@ public class StorageTest {
             caught = e;
         }
         assertNotNull(caught);
-        assertEquals(MessageConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
+        assertEquals(GlobalConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
     }
     
     @Test
@@ -332,7 +332,7 @@ public class StorageTest {
             caught = e;
         }
         assertNotNull(caught);
-        assertEquals(MessageConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
+        assertEquals(GlobalConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
     }
     
     @Test
@@ -345,7 +345,7 @@ public class StorageTest {
             caught = e;
         }
         assertNotNull(caught);
-        assertEquals(MessageConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
+        assertEquals(GlobalConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
     }
     
     @Test
@@ -358,7 +358,7 @@ public class StorageTest {
             caught = e;
         }
         assertNotNull(caught);
-        assertEquals(MessageConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
+        assertEquals(GlobalConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
     }
     
     @Test
@@ -371,7 +371,7 @@ public class StorageTest {
             caught = e;
         }
         assertNotNull(caught);
-        assertEquals(MessageConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
+        assertEquals(GlobalConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
     }
     
     @Test
@@ -384,7 +384,7 @@ public class StorageTest {
             caught = e;
         }
         assertNotNull(caught);
-        assertEquals(MessageConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
+        assertEquals(GlobalConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
     }
     
     private String nextPriority(String priority) {

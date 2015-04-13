@@ -10,7 +10,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import quicklyst.MessageConstants;
+import quicklyst.GlobalConstants;
 import quicklyst.Settings;
 
 //@author A01112707N
@@ -62,7 +62,7 @@ public class SettingsTest {
             caught = e;
         }
         assertNotNull(caught);
-        assertEquals(MessageConstants.ERROR_READ_SETTINGS, caught.getMessage());
+        assertEquals(GlobalConstants.ERROR_READ_SETTINGS, caught.getMessage());
     }
     
         

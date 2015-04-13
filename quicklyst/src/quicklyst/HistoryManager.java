@@ -96,7 +96,7 @@ public class HistoryManager {
 	public void undo(StringBuilder feedback) {
 
 		if (_undoMainStack.size() == 2) {
-			feedback.append(MessageConstants.NOTHING_TO_UNDO);
+			feedback.append(GlobalConstants.NOTHING_TO_UNDO);
 			return;
 		}
 
@@ -131,7 +131,7 @@ public class HistoryManager {
 	public void redo(StringBuilder feedback) {
 
 		if (_redoMainStack.isEmpty()) {
-			feedback.append(MessageConstants.NOTHING_TO_REDO);
+			feedback.append(GlobalConstants.NOTHING_TO_REDO);
 			return;
 		}
 

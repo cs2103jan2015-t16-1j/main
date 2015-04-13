@@ -62,7 +62,7 @@ public class FieldParser {
 		if (type.length() != 1) {
 
 			_feedback.append(String
-					.format(MessageConstants.INVALID_FIELD, type));
+					.format(GlobalConstants.INVALID_FIELD, type));
 			return;
 
 		} else {
@@ -176,7 +176,7 @@ public class FieldParser {
 
 		if (fromAndTo.length == 1) {
 
-			_feedback.append(MessageConstants.INVALID_DATE_RANGE);
+			_feedback.append(GlobalConstants.INVALID_DATE_RANGE);
 
 		} else {
 
@@ -246,7 +246,7 @@ public class FieldParser {
 		} else {
 
 			_feedback.append(String.format(
-					MessageConstants.INVALID_FIELD_CRITERIA, content));
+					GlobalConstants.INVALID_FIELD_CRITERIA, content));
 		}
 	}
 
@@ -262,7 +262,7 @@ public class FieldParser {
 			_fieldCriteria = FieldCriteria.CLEAR_PRIORITY;
 		} else {
 			_feedback.append(String.format(
-					MessageConstants.INVALID_PRIORITY_LEVEL, content));
+					GlobalConstants.INVALID_PRIORITY_LEVEL, content));
 		}
 	}
 

@@ -34,7 +34,7 @@ public class SyncAction extends Action {
 
 			copyList(masterList, displayList);
 
-			getFeedback().append(MessageConstants.SYNCED);
+			getFeedback().append(GlobalConstants.SYNCED);
 
 			_isSuccess = true;
 			_defaultSort.execute(displayList, masterList);

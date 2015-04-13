@@ -7,7 +7,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import quicklyst.Logic;
-import quicklyst.MessageConstants;
+import quicklyst.GlobalConstants;
 
 /**
  * Testing of Storage, Settings and GoogleIntegration Classes are omitted in
@@ -161,7 +161,7 @@ public class LogicTest {
 		assertEquals("", feedback.toString());
 
 		logicTest.executeCommand(UNDO_COMMAND, feedback);
-		assertEquals(MessageConstants.NOTHING_TO_UNDO, feedback.toString());
+		assertEquals(GlobalConstants.NOTHING_TO_UNDO, feedback.toString());
 
 		feedback = new StringBuilder();
 
@@ -173,7 +173,7 @@ public class LogicTest {
 		assertEquals("", feedback.toString());
 
 		logicTest.executeCommand(REDO_COMMAND, feedback);
-		assertEquals(MessageConstants.NOTHING_TO_REDO, feedback.toString());
+		assertEquals(GlobalConstants.NOTHING_TO_REDO, feedback.toString());
 
 		feedback = new StringBuilder();
 
@@ -184,7 +184,7 @@ public class LogicTest {
 		logicTest.executeCommand(DEFAULT_TASK_ADD_COMMAND_2,
 				new StringBuilder());
 		logicTest.executeCommand(REDO_COMMAND, feedback);
-		assertEquals(MessageConstants.NOTHING_TO_REDO, feedback.toString());
+		assertEquals(GlobalConstants.NOTHING_TO_REDO, feedback.toString());
 
 		feedback = new StringBuilder();
 	}

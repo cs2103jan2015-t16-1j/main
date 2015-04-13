@@ -35,13 +35,13 @@ public class DeleteAction extends Action {
 			_deletedTaskID = taskToDel.getGoogleId();
 
 			this._isSuccess = true;
-			this._feedback.append(String.format(MessageConstants.TASK_NO_IS,
+			this._feedback.append(String.format(GlobalConstants.TASK_NO_IS,
 					_taskIndex + 1, STRING_DELETED));
 
 		} else {
 
 			this._isSuccess = false;
-			this._feedback.append(MessageConstants.TASK_NO_OUT_OF_RANGE);
+			this._feedback.append(GlobalConstants.TASK_NO_OUT_OF_RANGE);
 			return;
 		}
 	}

@@ -54,11 +54,11 @@ public class EditAction extends Action {
 			_task = displayList.get(_taskIndex);
 			execute();
 		} else {
-			_feedback.append(MessageConstants.TASK_NO_OUT_OF_RANGE);
+			_feedback.append(GlobalConstants.TASK_NO_OUT_OF_RANGE);
 		}
 
 		if (_isSuccess) {
-			LOGGER.info(MessageConstants.SORTING_DISPLAY_LIST);
+			LOGGER.info(GlobalConstants.SORTING_DISPLAY_LIST);
 			_task.setLastUpdated(Calendar.getInstance());
 			_defaultSort.execute(displayList, masterList);
 		}
@@ -99,7 +99,7 @@ public class EditAction extends Action {
 
 			_task.setPriority((String) null);
 			_isSuccess = true;
-			_feedback.append(MessageConstants.PRIORITY_CLEARED);
+			_feedback.append(GlobalConstants.PRIORITY_CLEARED);
 
 		} else if (field.getPriority() == null) {
 
@@ -109,7 +109,7 @@ public class EditAction extends Action {
 
 			_task.setPriority(field.getPriority());
 			_isSuccess = true;
-			_feedback.append(String.format(MessageConstants.PRIORITY_SET,
+			_feedback.append(String.format(GlobalConstants.PRIORITY_SET,
 					field.getPriority()));
 		}
 	}
@@ -118,7 +118,7 @@ public class EditAction extends Action {
 		
 		assert !_taskName.isEmpty();
 		_task.setName(_taskName);
-		_feedback.append(String.format(MessageConstants.TASK_NAME_SET,
+		_feedback.append(String.format(GlobalConstants.TASK_NAME_SET,
 				_taskName));
 		_isSuccess = true;
 	}
@@ -129,7 +129,7 @@ public class EditAction extends Action {
 			_task.setDueDate((Calendar) null);
 			_task.setHasDueTime(false);
 			_isSuccess = true;
-			_feedback.append(MessageConstants.DUE_DATE_CLEARED);
+			_feedback.append(GlobalConstants.DUE_DATE_CLEARED);
 		} else if (field.getDate() == null) {
 			return;
 		} else {
@@ -144,13 +144,13 @@ public class EditAction extends Action {
 		
 		if (_task.getStartDate() != null
 				&& newDate.compareTo(_task.getStartDate()) < 0) {
-			_feedback.append(MessageConstants.DUE_SMALLER_THAN_START);
+			_feedback.append(GlobalConstants.DUE_SMALLER_THAN_START);
 		} else {
 
 			_task.setDueDate(newDate);
 			_task.setHasDueTime(hasDueTime);
 			_isSuccess = true;
-			_feedback.append(String.format(MessageConstants.DUE_DATE_SET,
+			_feedback.append(String.format(GlobalConstants.DUE_DATE_SET,
 					_task.getDueDateString()));
 		}
 	}
@@ -195,7 +195,7 @@ public class EditAction extends Action {
 			_task.setStartDate((Calendar) null);
 			_task.setHasStartTime(false);
 			_isSuccess = true;
-			_feedback.append(MessageConstants.START_DATE_CLEARED);
+			_feedback.append(GlobalConstants.START_DATE_CLEARED);
 			
 		} else if (field.getDate() == null) {
 			
@@ -214,7 +214,7 @@ public class EditAction extends Action {
 		if (_task.getDueDate() != null
 				&& newDate.compareTo(_task.getDueDate()) > 0) {
 			
-			_feedback.append(MessageConstants.START_BIGGER_THAN_DUE);
+			_feedback.append(GlobalConstants.START_BIGGER_THAN_DUE);
 			
 		} else {
 
@@ -222,7 +222,7 @@ public class EditAction extends Action {
 			_task.setHasStartTime(hasStartTime);
 			_isSuccess = true;
 			_feedback
-					.append(String.format(MessageConstants.START_DATE_SET,
+					.append(String.format(GlobalConstants.START_DATE_SET,
 							_task.getStartDateString()));
 		}
 	}

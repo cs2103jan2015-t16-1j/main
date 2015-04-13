@@ -22,7 +22,8 @@ public class GoogleLogin {
     
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
     
-    private static final String CLIENT_ID = "657661987639-mula0sgv7qbs35pe24eq7vg2jj1fqvl8.apps.googleusercontent.com";
+    private static final String CLIENT_ID = 
+            "657661987639-mula0sgv7qbs35pe24eq7vg2jj1fqvl8.apps.googleusercontent.com";
     private static final String CLIENT_SECRET = "Lk2nEQ38cw0of3vSLIjeY6VT";
     
     private String _user;

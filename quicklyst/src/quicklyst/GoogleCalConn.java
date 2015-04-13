@@ -14,7 +14,6 @@ import com.google.api.services.calendar.model.Events;
 //@author A01112707N
 public class GoogleCalConn {
 
-    private static final String APPLICATION_NAME = "Quicklyst";
     private static final JsonFactory JSON_FACTORY = GsonFactory
             .getDefaultInstance();
 
@@ -25,7 +24,7 @@ public class GoogleCalConn {
 
         return new com.google.api.services.calendar.Calendar.Builder(
                 _httpTransport, JSON_FACTORY, _credential).setApplicationName(
-                APPLICATION_NAME).build();
+                GlobalConstants.GOOGLESERVICES_APPLICATION_NAME).build();
     }
 
     public GoogleCalConn(Credential credential, HttpTransport httpTransport) {

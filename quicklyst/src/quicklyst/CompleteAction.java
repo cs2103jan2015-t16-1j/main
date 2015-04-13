@@ -40,7 +40,7 @@ public class CompleteAction extends Action {
 			}
 
 			this._isSuccess = true;
-			this._feedback.append(String.format(MessageConstants.TASK_NO_IS,
+			this._feedback.append(String.format(GlobalConstants.TASK_NO_IS,
 					_taskIndex + 1,
 					(taskToComplete.getIsCompleted() ? STRING_COMPLETED
 							: STRING_NOT_COMPLETED)));
@@ -50,7 +50,7 @@ public class CompleteAction extends Action {
 		} else {
 			
 			this._isSuccess = false;
-			this._feedback.append(MessageConstants.TASK_NO_OUT_OF_RANGE);
+			this._feedback.append(GlobalConstants.TASK_NO_OUT_OF_RANGE);
 			return;
 		}
 	}

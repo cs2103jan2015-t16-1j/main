@@ -51,7 +51,7 @@ public class Logic {
 		try {
             _filePath = _qLSettings.getPrefFilePath();
         } catch (Error e) {
-            feedback.append(MessageConstants.ERROR_READING_SETTINGS);
+            feedback.append(GlobalConstants.ERROR_READING_SETTINGS);
         }
         if (_filePath != null) {
             try {
@@ -59,15 +59,15 @@ public class Logic {
     
             } catch (Error e) {
     
-                feedback.append(MessageConstants.ERROR_READING_PREFFERED_TASK_FILE);
+                feedback.append(GlobalConstants.ERROR_READING_PREFFERED_TASK_FILE);
                 _filePath = _qLSettings.getDefaultFilePath();
                 _masterList = new LinkedList<Task>();
                 _deletedList = new LinkedList<String>();
                 try {
                     _qLStorage.loadFile(_masterList, _deletedList, _filePath);
-                    feedback.append(MessageConstants.DEFAULT_TASK_FILE_USED);
+                    feedback.append(GlobalConstants.DEFAULT_TASK_FILE_USED);
                 } catch (Error err) {
-                    feedback.append(MessageConstants.ERROR_READING_DEFAULT_TASK_FILE);
+                    feedback.append(GlobalConstants.ERROR_READING_DEFAULT_TASK_FILE);
                 }
             }
         } else {
@@ -75,7 +75,7 @@ public class Logic {
             try {
                 _qLStorage.loadFile(_masterList, _deletedList, _filePath);
             } catch (Error err) {
-                feedback.append(MessageConstants.ERROR_READING_DEFAULT_TASK_FILE);
+                feedback.append(GlobalConstants.ERROR_READING_DEFAULT_TASK_FILE);
             }
         }
 
@@ -209,7 +209,7 @@ public class Logic {
 
 		if (commandAndPath.length == 1 || commandAndPath[1].trim().isEmpty()) {
 
-			feedback.append(MessageConstants.NO_FILEPATH);
+			feedback.append(GlobalConstants.NO_FILEPATH);
 
 		} else {
 
@@ -236,14 +236,14 @@ public class Logic {
     				_historyMgnr = new HistoryManager(_displayList, _masterList,
     						_deletedList, _shouldShowAllCompleted);
     
-    				feedback.append(String.format(MessageConstants.FILE_CHANGED,
+    				feedback.append(String.format(GlobalConstants.FILE_CHANGED,
     						filepath));
 			    } catch (Error e) {
                     feedback.append(e.getMessage());
                 }
 			} else {
 
-				feedback.append(MessageConstants.INVALID_FILEPATH);
+				feedback.append(GlobalConstants.INVALID_FILEPATH);
 			}
 		}
 	}
@@ -299,7 +299,7 @@ public class Logic {
 
 		if (commandAndPath.length == 1 || commandAndPath[1].trim().isEmpty()) {
 
-			feedback.append(MessageConstants.NO_FILEPATH);
+			feedback.append(GlobalConstants.NO_FILEPATH);
 
 		} else {
 
@@ -325,7 +325,7 @@ public class Logic {
 				_historyMgnr.updateUndoStack(_displayList, _masterList,
 						_deletedList, _shouldShowAllCompleted);
 
-				feedback.append(String.format(MessageConstants.LOADED_FROM,
+				feedback.append(String.format(GlobalConstants.LOADED_FROM,
 						filepath));
 
 			} catch (Error e) {
@@ -340,7 +340,7 @@ public class Logic {
 
 		if (commandAndPath.length == 1 || commandAndPath[1].trim().isEmpty()) {
 
-			feedback.append(MessageConstants.NO_FILEPATH);
+			feedback.append(GlobalConstants.NO_FILEPATH);
 
 		} else {
 
@@ -349,7 +349,7 @@ public class Logic {
 			try {
 
 				_qLStorage.saveFile(_masterList, _deletedList, filepath);
-				feedback.append(String.format(MessageConstants.SAVED_TO,
+				feedback.append(String.format(GlobalConstants.SAVED_TO,
 						filepath));
 
 			} catch (Error e) {

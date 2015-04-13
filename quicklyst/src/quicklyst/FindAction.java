@@ -54,7 +54,7 @@ public class FindAction extends Action {
 			filterByName(_taskName, bufferList);
 
 			if (bufferList.isEmpty()) {
-				_feedback.append(MessageConstants.NO_MATCHES_FOUND);
+				_feedback.append(GlobalConstants.NO_MATCHES_FOUND);
 				return;
 			}
 		}
@@ -64,7 +64,7 @@ public class FindAction extends Action {
 			filterdisplayList(field, bufferList);
 
 			if (bufferList.isEmpty()) {
-				_feedback.append(MessageConstants.NO_MATCHES_FOUND);
+				_feedback.append(GlobalConstants.NO_MATCHES_FOUND);
 				return;
 			}
 		}
@@ -74,7 +74,7 @@ public class FindAction extends Action {
 
 		if (_failCount == totalUpdateSize) {
 
-			_feedback.append((MessageConstants.NO_MATCHES_FOUND));
+			_feedback.append((GlobalConstants.NO_MATCHES_FOUND));
 			return;
 
 		} else {
@@ -82,10 +82,10 @@ public class FindAction extends Action {
 			copyList(bufferList, displayList);
 
 			_isSuccess = true;
-			_feedback.append(String.format(MessageConstants.MATCHES_FOUND,
+			_feedback.append(String.format(GlobalConstants.MATCHES_FOUND,
 					displayList.size()));
 
-			LOGGER.info(MessageConstants.SORTING_DISPLAY_LIST);
+			LOGGER.info(GlobalConstants.SORTING_DISPLAY_LIST);
 			_defaultSort.execute(displayList, masterList);
 		}
 	}
@@ -121,7 +121,7 @@ public class FindAction extends Action {
 			filterByOverdueStatus(yesNoO, displayList);
 			break;
 		default:
-			_feedback.append(MessageConstants.INVALID_FIELD);
+			_feedback.append(GlobalConstants.INVALID_FIELD);
 			return;
 		}
 	}
@@ -130,7 +130,7 @@ public class FindAction extends Action {
 
 		if (taskName == null || taskName.trim().isEmpty()) {
 
-			_feedback.append(MessageConstants.NO_KEYWORDS);
+			_feedback.append(GlobalConstants.NO_KEYWORDS);
 			_failCount++;
 			return;
 		}
@@ -221,7 +221,7 @@ public class FindAction extends Action {
 			LinkedList<Task> displayList) {
 
 		if (criteria != FieldCriteria.YES && criteria != FieldCriteria.NO) {
-			_feedback.append(MessageConstants.NO_OVERDUE_CRITERIA);
+			_feedback.append(GlobalConstants.NO_OVERDUE_CRITERIA);
 			_failCount++;
 			return;
 		}
@@ -244,7 +244,7 @@ public class FindAction extends Action {
 			LinkedList<Task> displayList) {
 
 		if (criteria != FieldCriteria.YES && criteria != FieldCriteria.NO) {
-			_feedback.append(MessageConstants.NO_COMPLETE_CRITERIA);
+			_feedback.append(GlobalConstants.NO_COMPLETE_CRITERIA);
 			_failCount++;
 			return;
 		}
@@ -270,7 +270,7 @@ public class FindAction extends Action {
 	private void filterByPriority(String priority, LinkedList<Task> displayList) {
 
 		if (priority == null) {
-			_feedback.append(MessageConstants.NO_PRIORITY_LEVEL);
+			_feedback.append(GlobalConstants.NO_PRIORITY_LEVEL);
 			_failCount++;
 			return;
 		}
@@ -294,7 +294,7 @@ public class FindAction extends Action {
 		FieldCriteria criteria = field.getCriteria();
 
 		if (criteria == null) {
-			_feedback.append(MessageConstants.NO_DATE_CRITERIA);
+			_feedback.append(GlobalConstants.NO_DATE_CRITERIA);
 			_failCount++;
 			return;
 		}
@@ -335,7 +335,7 @@ public class FindAction extends Action {
 		toDate.set(Calendar.SECOND, 59);
 
 		if (fromDate.compareTo(toDate) > 0) {
-			_feedback.append(MessageConstants.INVALID_DATE_RANGE);
+			_feedback.append(GlobalConstants.INVALID_DATE_RANGE);
 			return;
 		}
 

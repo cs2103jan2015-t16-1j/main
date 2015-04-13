@@ -138,7 +138,7 @@ public class CommandParser {
 	private void processCmdString(String cmdString) {
 
 		if (cmdString.trim().equals(STRING_EMPTY)) {
-			_feedback.append(MessageConstants.NO_COMMAND);
+			_feedback.append(GlobalConstants.NO_COMMAND);
 			return;
 		}
 
@@ -154,7 +154,7 @@ public class CommandParser {
 				|| actionAndContents[1].trim().isEmpty()) {
 
 			if (_actionType == ActionType.ADD) {
-				_feedback.append(MessageConstants.NO_TASK_NAME);
+				_feedback.append(GlobalConstants.NO_TASK_NAME);
 
 			}
 			return;
@@ -198,13 +198,13 @@ public class CommandParser {
 
 		int stopIndex = fieldsString.indexOf(IDENTIFIER_CHAR_BACKSLASH);
 		if (stopIndex == -1) {
-			_feedback.append(MessageConstants.NAME_NO_CLOSE);
+			_feedback.append(GlobalConstants.NAME_NO_CLOSE);
 		} else if (stopIndex == 0) {
-			_feedback.append(MessageConstants.TASK_NAME_BLANK);
+			_feedback.append(GlobalConstants.TASK_NAME_BLANK);
 		} else {
 			String taskName = fieldsString.substring(0, stopIndex).trim();
 			if (taskName.isEmpty()) {
-				_feedback.append(MessageConstants.TASK_NAME_BLANK);
+				_feedback.append(GlobalConstants.TASK_NAME_BLANK);
 			} else {
 				_taskName = taskName;
 				fieldsString = fieldsString
@@ -251,7 +251,7 @@ public class CommandParser {
 		}
 
 		if (quoteStart != -1 && quoteEnd == -1) {
-			_feedback.append(MessageConstants.NAME_NO_CLOSE);
+			_feedback.append(GlobalConstants.NAME_NO_CLOSE);
 
 			return fieldsString.replaceFirst(IDENTIFIER_BACKSLASH, STRING_NAME);
 
@@ -260,7 +260,7 @@ public class CommandParser {
 			_taskName = fieldsString.substring(quoteStart + 1, quoteEnd).trim();
 
 			if (_taskName.isEmpty()) {
-				_feedback.append(MessageConstants.NO_TASK_NAME);
+				_feedback.append(GlobalConstants.NO_TASK_NAME);
 				_taskName = null;
 			}
 
@@ -314,7 +314,7 @@ public class CommandParser {
 			_actionType = ActionType.LOG_OUT;
 
 		} else {
-			_feedback.append(MessageConstants.INVALID_ACTION_TYPE);
+			_feedback.append(GlobalConstants.INVALID_ACTION_TYPE);
 			return;
 		}
 	}
@@ -360,7 +360,7 @@ public class CommandParser {
 			fieldsString = extractTaskName(fieldsString);
 
 			if (_taskName == null) {
-				_feedback.append(MessageConstants.NO_TASK_NAME);
+				_feedback.append(GlobalConstants.NO_TASK_NAME);
 				_noTaskName = true;
 			} else {
 				_noTaskName = false;
@@ -432,7 +432,7 @@ public class CommandParser {
 			}
 
 			_feedback.append(String.format(
-					MessageConstants.INVALID_FIELD_FORMAT_IN,
+					GlobalConstants.INVALID_FIELD_FORMAT_IN,
 					wrongFields.trim()));
 
 			fieldsString = fieldsString.replaceFirst(

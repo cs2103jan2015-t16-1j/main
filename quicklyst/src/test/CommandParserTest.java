@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import quicklyst.ActionType;
 import quicklyst.CommandParser;
-import quicklyst.MessageConstants;
+import quicklyst.GlobalConstants;
 
 public class CommandParserTest {
 
@@ -28,17 +28,17 @@ public class CommandParserTest {
 
 		testCommandParser = new CommandParser("xxx task 1\\");
 		assertNull(testCommandParser.getAction());
-		assertEquals(MessageConstants.INVALID_ACTION_TYPE, testCommandParser
+		assertEquals(GlobalConstants.INVALID_ACTION_TYPE, testCommandParser
 				.getFeedback().toString());
 
 		testCommandParser = new CommandParser("adds task 1\\");
 		assertNull(testCommandParser.getAction());
-		assertEquals(MessageConstants.INVALID_ACTION_TYPE, testCommandParser
+		assertEquals(GlobalConstants.INVALID_ACTION_TYPE, testCommandParser
 				.getFeedback().toString());
 
 		testCommandParser = new CommandParser("ad task 1\\");
 		assertNull(testCommandParser.getAction());
-		assertEquals(MessageConstants.INVALID_ACTION_TYPE, testCommandParser
+		assertEquals(GlobalConstants.INVALID_ACTION_TYPE, testCommandParser
 				.getFeedback().toString());
 	}
 
@@ -63,21 +63,21 @@ public class CommandParserTest {
 		testCommandParser = new CommandParser("add task 1");
 		assertEquals(ActionType.ADD, testCommandParser.getAction().getType());
 		assertNull(testCommandParser.getTaskName());
-		assertEquals(MessageConstants.NAME_NO_CLOSE
-				+ MessageConstants.NO_TASK_NAME, testCommandParser
+		assertEquals(GlobalConstants.NAME_NO_CLOSE
+				+ GlobalConstants.NO_TASK_NAME, testCommandParser
 				.getFeedback().toString());
 
 		testCommandParser = new CommandParser("add \\");
 		assertEquals(ActionType.ADD, testCommandParser.getAction().getType());
 		assertNull(testCommandParser.getTaskName());
-		assertEquals(MessageConstants.TASK_NAME_BLANK
-				+ MessageConstants.NO_TASK_NAME, testCommandParser
+		assertEquals(GlobalConstants.TASK_NAME_BLANK
+				+ GlobalConstants.NO_TASK_NAME, testCommandParser
 				.getFeedback().toString());
 
 		testCommandParser = new CommandParser("A ");
 		assertEquals(ActionType.ADD, testCommandParser.getAction().getType());
 		assertNull(testCommandParser.getTaskName());
-		assertEquals(MessageConstants.NO_TASK_NAME, testCommandParser
+		assertEquals(GlobalConstants.NO_TASK_NAME, testCommandParser
 				.getFeedback().toString());
 	}
 
@@ -103,7 +103,7 @@ public class CommandParserTest {
 		assertEquals(ActionType.EDIT, testCommandParser.getAction().getType());
 		assertEquals(0, testCommandParser.getTaskNumber());
 		assertEquals(
-				String.format(MessageConstants.INVALID_FIELD_FORMAT_IN, "a"),
+				String.format(GlobalConstants.INVALID_FIELD_FORMAT_IN, "a"),
 				testCommandParser.getFeedback().toString());
 
 		testCommandParser = new CommandParser("e ");
@@ -161,9 +161,9 @@ public class CommandParserTest {
 		assertEquals(ActionType.FIND, testCommandParser.getAction().getType());
 		assertEquals("-s tdy -d tmr", testCommandParser.getFieldStringPrim());
 		assertEquals(
-				String.format(MessageConstants.INVALID_FIELD_CRITERIA, "tdy")
+				String.format(GlobalConstants.INVALID_FIELD_CRITERIA, "tdy")
 						+ String.format(
-								MessageConstants.INVALID_FIELD_CRITERIA, "tmr"),
+								GlobalConstants.INVALID_FIELD_CRITERIA, "tmr"),
 				testCommandParser.getFeedback().toString());
 
 		testCommandParser = new CommandParser("find start before due after");
@@ -219,9 +219,9 @@ public class CommandParserTest {
 				testCommandParser.getFieldStringClean());
 		assertNull(testCommandParser.getTaskName());
 		assertEquals(
-				MessageConstants.NAME_NO_CLOSE
+				GlobalConstants.NAME_NO_CLOSE
 						+ String.format(
-								MessageConstants.INVALID_FIELD_FORMAT_IN,
+								GlobalConstants.INVALID_FIELD_FORMAT_IN,
 								"name task 1"), testCommandParser.getFeedback()
 						.toString());
 	}
@@ -279,21 +279,21 @@ public class CommandParserTest {
 
 		testCommandParser = new CommandParser("find xxx xxx due on tmr");
 		assertEquals("-d on tmr", testCommandParser.getFieldStringClean());
-		assertEquals(String.format(MessageConstants.INVALID_FIELD_FORMAT_IN,
+		assertEquals(String.format(GlobalConstants.INVALID_FIELD_FORMAT_IN,
 				"xxx xxx"), testCommandParser.getFeedback().toString());
 
 		testCommandParser = new CommandParser("e tdy due tmr start");
 		assertEquals("-d tmr -s", testCommandParser.getFieldStringClean());
 		assertEquals(
-				String.format(MessageConstants.INVALID_FIELD_FORMAT_IN, "tdy"),
+				String.format(GlobalConstants.INVALID_FIELD_FORMAT_IN, "tdy"),
 				testCommandParser.getFeedback().toString());
 
 		testCommandParser = new CommandParser("find low priority due tmr");
 		assertEquals("-p -d tmr", testCommandParser.getFieldStringClean());
 		assertEquals(
-				String.format(MessageConstants.INVALID_FIELD_FORMAT_IN, "l")
+				String.format(GlobalConstants.INVALID_FIELD_FORMAT_IN, "l")
 						+ String.format(
-								MessageConstants.INVALID_FIELD_CRITERIA, "tmr"),
+								GlobalConstants.INVALID_FIELD_CRITERIA, "tmr"),
 				testCommandParser.getFeedback().toString());
 
 	}

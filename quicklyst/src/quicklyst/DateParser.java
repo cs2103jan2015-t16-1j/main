@@ -76,7 +76,7 @@ public class DateParser {
 			_dateTime = null;
 			_feedback
 					.append(String.format(
-							MessageConstants.INVALID_DAY_CRITERIA,
+							GlobalConstants.INVALID_DAY_CRITERIA,
 							nextAndDay[0].trim()));
 
 		} else if (nextAndDay.length == 1) {
@@ -104,7 +104,7 @@ public class DateParser {
 
 				_dateTime = null;
 				_feedback.append(String.format(
-						MessageConstants.INVALID_DAY_CRITERIA,
+						GlobalConstants.INVALID_DAY_CRITERIA,
 						dayAndTime[0].trim()));
 
 			}
@@ -145,7 +145,7 @@ public class DateParser {
 
 			} catch (ParseException e2) {
 
-				_feedback.append(MessageConstants.INVALID_DATE_AND_TIME_FORMAT);
+				_feedback.append(GlobalConstants.INVALID_DATE_AND_TIME_FORMAT);
 				_dateTime = null;
 			}
 		}
@@ -177,7 +177,7 @@ public class DateParser {
 
 			} catch (ParseException e2) {
 
-				_feedback.append(MessageConstants.INVALID_DATE_FORMAT);
+				_feedback.append(GlobalConstants.INVALID_DATE_FORMAT);
 				_dateTime = null;
 			}
 		}
@@ -202,7 +202,7 @@ public class DateParser {
 		} catch (ParseException e) {
 
 			_dateTime = null;
-			_feedback.append(String.format(MessageConstants.INVALID_TIME,
+			_feedback.append(String.format(GlobalConstants.INVALID_TIME,
 					timeStr));
 			return;
 		}
@@ -252,7 +252,7 @@ public class DateParser {
 			} catch (ParseException e) {
 
 				_dateTime = null;
-				_feedback.append(String.format(MessageConstants.INVALID_DAY,
+				_feedback.append(String.format(GlobalConstants.INVALID_DAY,
 						dayStr));
 			}
 		}

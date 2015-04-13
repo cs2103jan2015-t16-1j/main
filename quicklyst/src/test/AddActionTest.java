@@ -12,7 +12,7 @@ import quicklyst.ActionType;
 import quicklyst.AddAction;
 import quicklyst.Field;
 import quicklyst.FieldParser;
-import quicklyst.MessageConstants;
+import quicklyst.GlobalConstants;
 import quicklyst.Task;
 
 //@author A0102015H
@@ -53,7 +53,7 @@ public class AddActionTest {
 		add.execute(displayList, masterList);
 		assertEquals(0, displayList.size());
 		assertEquals(0, masterList.size());
-		assertEquals(MessageConstants.NOTHING_ADDED, add.getFeedback()
+		assertEquals(GlobalConstants.NOTHING_ADDED, add.getFeedback()
 				.toString());
 
 		/* One word name */
@@ -62,7 +62,7 @@ public class AddActionTest {
 		assertEquals("task", displayList.getFirst().getName());
 		assertEquals("task", masterList.getFirst().getName());
 		assertEquals(
-				String.format(MessageConstants.ADD_SUCCESS, "task"),
+				String.format(GlobalConstants.ADD_SUCCESS, "task"),
 				add.getFeedback().toString());
 		displayList.clear();
 		masterList.clear();
@@ -72,7 +72,7 @@ public class AddActionTest {
 		add.execute(displayList, masterList);
 		assertEquals("task one two", displayList.getFirst().getName());
 		assertEquals("task one two", masterList.getFirst().getName());
-		assertEquals(String.format(MessageConstants.ADD_SUCCESS,
+		assertEquals(String.format(GlobalConstants.ADD_SUCCESS,
 				"task one two"), add.getFeedback().toString());
 		displayList.clear();
 		masterList.clear();
@@ -88,8 +88,8 @@ public class AddActionTest {
 		fields.add(fp.getField());
 		add = new AddAction("task one two", fields);
 		add.execute(displayList, masterList);
-		assertEquals(String.format(MessageConstants.ADD_SUCCESS
-				+ MessageConstants.DUE_DATE_SET, "task one two",
+		assertEquals(String.format(GlobalConstants.ADD_SUCCESS
+				+ GlobalConstants.DUE_DATE_SET, "task one two",
 				"12/12/2012 0730H"), add.getFeedback().toString());
 		displayList.clear();
 		masterList.clear();
@@ -100,8 +100,8 @@ public class AddActionTest {
 		fields.add(fp.getField());
 		add = new AddAction("task one two", fields);
 		add.execute(displayList, masterList);
-		assertEquals(String.format(MessageConstants.ADD_SUCCESS
-				+ MessageConstants.START_DATE_SET, "task one two",
+		assertEquals(String.format(GlobalConstants.ADD_SUCCESS
+				+ GlobalConstants.START_DATE_SET, "task one two",
 				"12/12/2012"), add.getFeedback().toString());
 		displayList.clear();
 		masterList.clear();
@@ -112,8 +112,8 @@ public class AddActionTest {
 		fields.add(fp.getField());
 		add = new AddAction("task one two", fields);
 		add.execute(displayList, masterList);
-		assertEquals(String.format(MessageConstants.ADD_SUCCESS
-				+ MessageConstants.PRIORITY_SET, "task one two", "H"),
+		assertEquals(String.format(GlobalConstants.ADD_SUCCESS
+				+ GlobalConstants.PRIORITY_SET, "task one two", "H"),
 				add.getFeedback().toString());
 		displayList.clear();
 		masterList.clear();
@@ -127,7 +127,7 @@ public class AddActionTest {
 		add.execute(displayList, masterList);
 		assertEquals(0, displayList.size());
 		assertEquals(0, masterList.size());
-		assertEquals(MessageConstants.NOTHING_ADDED, add.getFeedback()
+		assertEquals(GlobalConstants.NOTHING_ADDED, add.getFeedback()
 				.toString());
 
 	}

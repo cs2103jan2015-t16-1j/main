@@ -1,6 +1,6 @@
 package quicklyst;
 
-public class MessageConstants {
+public class GlobalConstants {
 
 	public static final String ADD_SUCCESS = "Task: \"%s\" added. ";
 	public static final String DEFAULT_TASK_FILE_USED = "Default task file is used. ";
@@ -67,6 +67,7 @@ public class MessageConstants {
 	public static final String ERROR_DIRECTORY_FILE = "%s is a file. ";
 	
 	//Google Integration
+	public static final String GOOGLESERVICES_APPLICATION_NAME = "Quicklyst";
 	public static final String ERROR_SYNC = "Unable to sync with Google services. ";
 	public static final String ERROR_SECURE_CONNECTION_UNAVAILABLE = "Unable to initialise secure connection. ";
 	

@@ -31,7 +31,7 @@ public class AddAction extends Action {
 
 		if (_newTask == null) {
 
-			_feedback.append(MessageConstants.NOTHING_ADDED);
+			_feedback.append(GlobalConstants.NOTHING_ADDED);
 			_isSuccess = false;
 			return;
 
@@ -41,7 +41,7 @@ public class AddAction extends Action {
 			masterList.add(_newTask);
 
 			_isSuccess = true;
-			_feedback.append(String.format(MessageConstants.TASK_ADDED,
+			_feedback.append(String.format(GlobalConstants.TASK_ADDED,
 					_newTask.getName()));
 
 			if (_editAction != null) {
@@ -50,12 +50,12 @@ public class AddAction extends Action {
 				_feedback.append(_editAction.getFeedback().toString());
 
 				if (!_editAction.isSuccess()) {
-					LOGGER.info(MessageConstants.SORTING_DISPLAY_LIST);
+					LOGGER.info(GlobalConstants.SORTING_DISPLAY_LIST);
 					_defaultSort.execute(displayList, masterList);
 				}
 
 			} else {
-				LOGGER.info(MessageConstants.SORTING_DISPLAY_LIST);
+				LOGGER.info(GlobalConstants.SORTING_DISPLAY_LIST);
 				_defaultSort.execute(displayList, masterList);
 			}
 		}

@@ -5,7 +5,7 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 
 import quicklyst.CommandTips;
-import quicklyst.MessageConstants;
+import quicklyst.GlobalConstants;
 
 //@author A0112971J
 public class CommandTipsTest {
@@ -67,7 +67,7 @@ public class CommandTipsTest {
         assertEquals(expectedOutput, instance.getTips(userInput11));
         
         String userInput12 = "ad d";
-        assertEquals(MessageConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput12)); 
+        assertEquals(GlobalConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput12)); 
     }
     
     @Test
@@ -97,10 +97,10 @@ public class CommandTipsTest {
         assertEquals(expectedOutput, instance.getTips(userInput7)); 
         
         String userInput11 = "deleted";
-        assertEquals(MessageConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput11));
+        assertEquals(GlobalConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput11));
         
         String userInput12 = "dl";
-        assertEquals(MessageConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput12));
+        assertEquals(GlobalConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput12));
     }
     
     @Test
@@ -155,7 +155,7 @@ public class CommandTipsTest {
         assertEquals(expectedOutput, instance.getTips(userInput7));
         
         String userInput8 = "fi ";
-        assertEquals(MessageConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput8));
+        assertEquals(GlobalConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput8));
     }
     
     @Test
@@ -185,7 +185,7 @@ public class CommandTipsTest {
         assertEquals(expectedOutput, instance.getTips(userInput7));
         
         String userInput8 = "lo ad";
-        assertEquals(MessageConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput8));
+        assertEquals(GlobalConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput8));
     }
     
     @Test
@@ -212,7 +212,7 @@ public class CommandTipsTest {
         assertEquals(expectedOutput, instance.getTips(userInput6));
         
         String userInput7 = "saved";
-        assertEquals(MessageConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput7));
+        assertEquals(GlobalConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput7));
         
 
     }
@@ -231,10 +231,10 @@ public class CommandTipsTest {
         assertEquals(expectedOutput, instance.getTips(userInput3));
         
         String userInput4 = " c f ";
-        assertEquals(MessageConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput4));
+        assertEquals(GlobalConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput4));
         
         String userInput5 = "c ";
-        assertEquals(MessageConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput5));
+        assertEquals(GlobalConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput5));
     }
     
     @Test
@@ -263,7 +263,7 @@ public class CommandTipsTest {
         assertEquals(expectedOutput, instance.getTips(userInput6));
         
         String userInput7 = " syncd";
-        assertEquals(MessageConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput7));
+        assertEquals(GlobalConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput7));
     }
     
     @Test
@@ -293,19 +293,19 @@ public class CommandTipsTest {
         assertEquals(expectedOutput, instance.getTips(userInput7));
         
         String userInput8 = "lo ";
-        assertEquals(MessageConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput8));
+        assertEquals(GlobalConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput8));
     }
     
     @Test
     public void testShowInvalidCommandTips() {
         String userInput1 = "abcd";
-        assertEquals(MessageConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput1));
+        assertEquals(GlobalConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput1));
               
         String userInput2 = "daege";
-        assertEquals(MessageConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput2));
+        assertEquals(GlobalConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput2));
         
         String userInput3 = "!@$%";
-        assertEquals(MessageConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput3));   
+        assertEquals(GlobalConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput3));   
         
     }
 }

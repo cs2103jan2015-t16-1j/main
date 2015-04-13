@@ -14,7 +14,7 @@ import quicklyst.Field;
 import quicklyst.FieldCriteria;
 import quicklyst.FieldParser;
 import quicklyst.FieldType;
-import quicklyst.MessageConstants;
+import quicklyst.GlobalConstants;
 
 //@author A0102015H
 /*
@@ -63,7 +63,7 @@ public class FieldParserTest {
 		assertNull(field.getDate());
 		assertEquals(FieldType.DUE_DATE, field.getFieldType());
 		assertEquals(
-				String.format(MessageConstants.INVALID_DAY_CRITERIA, "xxx"),
+				String.format(GlobalConstants.INVALID_DAY_CRITERIA, "xxx"),
 				fieldParser.getFeedback());
 
 		fieldParser = new FieldParser("d xxx");
@@ -71,7 +71,7 @@ public class FieldParserTest {
 		field = fieldParser.getField();
 		assertNull(field.getDate());
 		assertEquals(FieldType.DUE_DATE, field.getFieldType());
-		assertEquals(String.format(MessageConstants.INVALID_DAY, "xxx"),
+		assertEquals(String.format(GlobalConstants.INVALID_DAY, "xxx"),
 				fieldParser.getFeedback());
 
 		/* Valid start date and time */
@@ -99,7 +99,7 @@ public class FieldParserTest {
 		assertNull(field.getDate());
 		assertEquals(FieldType.START_DATE, field.getFieldType());
 		assertEquals(
-				String.format(MessageConstants.INVALID_DAY_CRITERIA, "xxx"),
+				String.format(GlobalConstants.INVALID_DAY_CRITERIA, "xxx"),
 				fieldParser.getFeedback());
 
 		fieldParser = new FieldParser("s xxx");
@@ -107,7 +107,7 @@ public class FieldParserTest {
 		field = fieldParser.getField();
 		assertNull(field.getDate());
 		assertEquals(FieldType.START_DATE, field.getFieldType());
-		assertEquals(String.format(MessageConstants.INVALID_DAY, "xxx"),
+		assertEquals(String.format(GlobalConstants.INVALID_DAY, "xxx"),
 				fieldParser.getFeedback());
 	}
 
@@ -167,7 +167,7 @@ public class FieldParserTest {
 		assertNull(field.getDateRange());
 		assertEquals(FieldType.START_DATE, field.getFieldType());
 		assertEquals(FieldCriteria.BETWEEN, field.getCriteria());
-		assertEquals(MessageConstants.INVALID_DATE_RANGE,
+		assertEquals(GlobalConstants.INVALID_DATE_RANGE,
 				fieldParser.getFeedback());
 
 		fieldParser = new FieldParser("s btw 12/12/12 & xxx");
@@ -179,7 +179,7 @@ public class FieldParserTest {
 		assertNull(field.getDateRange());
 		assertEquals(FieldType.START_DATE, field.getFieldType());
 		assertEquals(FieldCriteria.BETWEEN, field.getCriteria());
-		assertEquals(String.format(MessageConstants.INVALID_DAY, "xxx"),
+		assertEquals(String.format(GlobalConstants.INVALID_DAY, "xxx"),
 				fieldParser.getFeedback());
 
 		fieldParser = new FieldParser("d btw xxx & 12/12/12");
@@ -191,7 +191,7 @@ public class FieldParserTest {
 		assertNull(field.getDateRange());
 		assertEquals(FieldType.DUE_DATE, field.getFieldType());
 		assertEquals(FieldCriteria.BETWEEN, field.getCriteria());
-		assertEquals(String.format(MessageConstants.INVALID_DAY, "xxx"),
+		assertEquals(String.format(GlobalConstants.INVALID_DAY, "xxx"),
 				fieldParser.getFeedback());
 
 		fieldParser = new FieldParser("d btw xxx & yyy");
@@ -203,8 +203,8 @@ public class FieldParserTest {
 		assertNull(field.getDateRange());
 		assertEquals(FieldType.DUE_DATE, field.getFieldType());
 		assertEquals(FieldCriteria.BETWEEN, field.getCriteria());
-		assertEquals(String.format(MessageConstants.INVALID_DAY, "xxx")
-				+ String.format(MessageConstants.INVALID_DAY, "yyy"),
+		assertEquals(String.format(GlobalConstants.INVALID_DAY, "xxx")
+				+ String.format(GlobalConstants.INVALID_DAY, "yyy"),
 				fieldParser.getFeedback());
 
 		fieldParser = new FieldParser("d btw 12/12/12 to 13/12/12");
@@ -216,7 +216,7 @@ public class FieldParserTest {
 		assertNull(field.getDateRange());
 		assertEquals(FieldType.DUE_DATE, field.getFieldType());
 		assertEquals(FieldCriteria.BETWEEN, field.getCriteria());
-		assertEquals(MessageConstants.INVALID_DATE_RANGE,
+		assertEquals(GlobalConstants.INVALID_DATE_RANGE,
 				fieldParser.getFeedback());
 	}
 
@@ -278,7 +278,7 @@ public class FieldParserTest {
 		assertNull(field.getPriority());
 		assertEquals(FieldType.PRIORITY, field.getFieldType());
 		assertEquals(
-				String.format(MessageConstants.INVALID_PRIORITY_LEVEL, "n"),
+				String.format(GlobalConstants.INVALID_PRIORITY_LEVEL, "n"),
 				fieldParser.getFeedback());
 
 		fieldParser = new FieldParser("p n");
@@ -287,7 +287,7 @@ public class FieldParserTest {
 		assertNull(field.getPriority());
 		assertEquals(FieldType.PRIORITY, field.getFieldType());
 		assertEquals(
-				String.format(MessageConstants.INVALID_PRIORITY_LEVEL, "n"),
+				String.format(GlobalConstants.INVALID_PRIORITY_LEVEL, "n"),
 				fieldParser.getFeedback());
 
 		/* Test valid priority clear */
@@ -350,7 +350,7 @@ public class FieldParserTest {
 		assertNull(field.getCriteria());
 		assertEquals(FieldType.OVERDUE, field.getFieldType());
 		assertEquals(
-				String.format(MessageConstants.INVALID_FIELD_CRITERIA, "m"),
+				String.format(GlobalConstants.INVALID_FIELD_CRITERIA, "m"),
 				fieldParser.getFeedback());
 
 	}
@@ -399,7 +399,7 @@ public class FieldParserTest {
 		assertNull(field.getCriteria());
 		assertEquals(FieldType.COMPLETED, field.getFieldType());
 		assertEquals(
-				String.format(MessageConstants.INVALID_FIELD_CRITERIA, "m"),
+				String.format(GlobalConstants.INVALID_FIELD_CRITERIA, "m"),
 				fieldParser.getFeedback());
 	}
 
@@ -418,7 +418,7 @@ public class FieldParserTest {
 		assertEquals(FieldType.DUE_DATE, field.getFieldType());
 		assertNull(field.getCriteria());
 		assertEquals(
-				String.format(MessageConstants.INVALID_FIELD_CRITERIA, "y"),
+				String.format(GlobalConstants.INVALID_FIELD_CRITERIA, "y"),
 				fieldParser.getFeedback());
 
 		fieldParser = new FieldParser("s clr 12/12/12 & 13/12/12");
@@ -431,7 +431,7 @@ public class FieldParserTest {
 		assertEquals(FieldType.START_DATE, field.getFieldType());
 		assertNull(field.getCriteria());
 		assertEquals(
-				String.format(MessageConstants.INVALID_FIELD_CRITERIA, "clr"),
+				String.format(GlobalConstants.INVALID_FIELD_CRITERIA, "clr"),
 				fieldParser.getFeedback());
 
 		fieldParser = new FieldParser("s 12/12/12 & 13/12/12");
@@ -440,7 +440,7 @@ public class FieldParserTest {
 		assertNull(field.getDateRange());
 		assertEquals(FieldType.START_DATE, field.getFieldType());
 		assertNull(field.getCriteria());
-		assertEquals(String.format(MessageConstants.INVALID_FIELD_CRITERIA,
+		assertEquals(String.format(GlobalConstants.INVALID_FIELD_CRITERIA,
 				"12/12/12"), fieldParser.getFeedback());
 
 		fieldParser = new FieldParser("d tdy");
@@ -450,7 +450,7 @@ public class FieldParserTest {
 		assertEquals(FieldType.DUE_DATE, field.getFieldType());
 		assertNull(field.getCriteria());
 		assertEquals(
-				String.format(MessageConstants.INVALID_FIELD_CRITERIA, "tdy"),
+				String.format(GlobalConstants.INVALID_FIELD_CRITERIA, "tdy"),
 				fieldParser.getFeedback());
 
 		/* Overdue status for FIND */
@@ -460,7 +460,7 @@ public class FieldParserTest {
 		assertNull(field.getCriteria());
 		assertEquals(FieldType.OVERDUE, field.getFieldType());
 		assertEquals(
-				String.format(MessageConstants.INVALID_FIELD_CRITERIA, "on"),
+				String.format(GlobalConstants.INVALID_FIELD_CRITERIA, "on"),
 				fieldParser.getFeedback());
 
 		fieldParser = new FieldParser("o af");
@@ -469,7 +469,7 @@ public class FieldParserTest {
 		assertNull(field.getCriteria());
 		assertEquals(FieldType.OVERDUE, field.getFieldType());
 		assertEquals(
-				String.format(MessageConstants.INVALID_FIELD_CRITERIA, "af"),
+				String.format(GlobalConstants.INVALID_FIELD_CRITERIA, "af"),
 				fieldParser.getFeedback());
 
 		/* Completed status for FIND */
@@ -479,7 +479,7 @@ public class FieldParserTest {
 		assertNull(field.getCriteria());
 		assertEquals(FieldType.COMPLETED, field.getFieldType());
 		assertEquals(
-				String.format(MessageConstants.INVALID_FIELD_CRITERIA, "btw"),
+				String.format(GlobalConstants.INVALID_FIELD_CRITERIA, "btw"),
 				fieldParser.getFeedback());
 
 		fieldParser = new FieldParser("c bf");
@@ -488,7 +488,7 @@ public class FieldParserTest {
 		assertNull(field.getCriteria());
 		assertEquals(FieldType.COMPLETED, field.getFieldType());
 		assertEquals(
-				String.format(MessageConstants.INVALID_FIELD_CRITERIA, "bf"),
+				String.format(GlobalConstants.INVALID_FIELD_CRITERIA, "bf"),
 				fieldParser.getFeedback());
 	}
 }
