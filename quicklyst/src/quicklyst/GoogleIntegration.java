@@ -652,6 +652,7 @@ public class GoogleIntegration {
     //push, pull changed to a more user-friendly sync
     /*
     public void syncFrom(List<Task> taskList) {
+        assert taskList != null;
         try {
 
             if (!isInitiated()) {
@@ -675,6 +676,7 @@ public class GoogleIntegration {
     }
 
     public void syncTo(List<Task> taskList) {
+        assert taskList != null;
         try {
 
             if (!isInitiated()) {

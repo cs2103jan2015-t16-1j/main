@@ -53,6 +53,7 @@ public class Settings {
     }
     
     public void updatePrefFilePath(String filePath) {
+        assert filePath != null;
     	_prefFilePath = filePath;
     	save();
     }
