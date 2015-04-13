@@ -7,27 +7,30 @@ import javax.swing.AbstractAction;
 
 //@author A0112971J
 public class HotkeysAction extends AbstractAction {
-    private static final Logger LOGGER = Logger
-            .getLogger(HotkeysAction.class.getName());
-    private static final String UNDO = "Undo";
-    private static final String REDO = "Redo";
     
-    private String keyPressed;
-    private GUI guiInstance;
+    private static final String UNDO = "Undo";
+    private static final String REDO = "Redo";    
+    
+    private static final Logger LOGGER = Logger.getLogger(HotkeysAction
+                                                          .class.getName());
+
+    private String _keyPressed;
+    private GUI _instance;
    
     public HotkeysAction (String keyPressed, GUI gui) {
-        this.keyPressed = keyPressed;
-        guiInstance = gui;
+        this._keyPressed = keyPressed;
+        _instance = gui;
     }
     
     @Override
     public void actionPerformed(ActionEvent e) {
-        // TODO Auto-generated method stub
-        LOGGER.info(keyPressed);
-        if (keyPressed.equalsIgnoreCase(UNDO)) {
-            guiInstance.executeCommand(UNDO);
+        
+        LOGGER.info(_keyPressed);
+        
+        if (_keyPressed.equalsIgnoreCase(UNDO)) {
+            _instance.executeCommand(UNDO);
         } else {
-            guiInstance.executeCommand(REDO);                
+            _instance.executeCommand(REDO);                
         }
     }    
 }
