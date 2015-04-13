@@ -1,0 +1,2096 @@
+//@author: a01112707n
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\GoogleCalConn.java
+	 */
+
+public class GoogleCalConn {
+
+    private static final JsonFactory JSON_FACTORY = GsonFactory
+            .getDefaultInstance();
+
+    private Credential _credential;
+    private HttpTransport _httpTransport;
+
+    private com.google.api.services.calendar.Calendar getService() {
+
+        return new com.google.api.services.calendar.Calendar.Builder(
+                _httpTransport, JSON_FACTORY, _credential).setApplicationName(
+                GlobalConstants.GOOGLESERVICES_APPLICATION_NAME).build();
+    }
+
+    public GoogleCalConn(Credential credential, HttpTransport httpTransport) {
+        _credential = credential;
+        _httpTransport = httpTransport;
+    }
+    
+    public CalendarList getCalendars() throws IOException {
+        return getService().calendarList().list().execute();
+    }
+
+    public Events getEvents(String calendarId) throws IOException {
+        return getService().events().list(calendarId).execute();
+    }
+
+    public Calendar getCalendar(String calendarId) throws IOException {
+        return getService().calendars().get(calendarId).execute();
+    }
+
+    public Event getEvent(String calendarId, String eventId) throws IOException {
+        return getService().events().get(calendarId, eventId).execute();
+    }
+
+    public Calendar createCalendar(Calendar calendar) throws IOException {
+        return getService().calendars().insert(calendar).execute();
+    }
+
+    public Event createEvent(String calendarId, Event event) throws IOException {
+        return getService().events().insert(calendarId, event).execute();
+    }
+
+    public Calendar updateCalendar(String calendarId, Calendar newCalendar)
+            throws IOException {
+        return getService().calendars().update(calendarId, newCalendar)
+                .execute();
+    }
+
+    public Event updateEvent(String calendarId, String eventId, Event newEvent)
+            throws IOException {
+        return getService().events().update(calendarId, eventId, newEvent)
+                .execute();
+    }
+
+    public void deleteCalendar(String calendarId) throws IOException {
+        getService().calendars().delete(calendarId).execute();
+    }
+
+    public void deleteEvent(String calendarId, String eventId)
+            throws IOException {
+        getService().events().delete(calendarId, eventId).execute();
+    }
+}
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\GoogleCalConn.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\GoogleIntegration.java
+	 */
+
+public class GoogleIntegration {
+
+    private static final int TIME_LAST_HOUR = 23;
+    private static final int TIME_LAST_MINUTE = 59;
+    private static final int TIME_LAST_SECOND = 59;
+
+    private static final int RFC3339_END_INDEX_DATE = 10;
+    private static final int RFC3339_END_INDEX_MONTH = 7;
+    private static final int RFC3339_END_INDEX_YEAR = 4;
+    private static final int RFC3339_START_INDEX_DATE = 8;
+    private static final int RFC3339_START_INDEX_MONTH = 5;
+    private static final int RFC3339_START_INDEX_YEAR = 0;
+
+    private static final String RFC3339_SUFFIX_TIME_ZERO = "T00:00:00Z";
+
+    private static final String RFC3339_DATEFORMAT = "yyyy-MM-dd";
+
+    private static final String LOG_SYNC_EVENT = "syncing event %s with local task";
+    private static final String LOG_RETRIEVING_EVENTS = "Retrieving events from Google service";
+    private static final String LOG_SYNCING_LOCALLY_DELETED_EVENT = "Deleting locally-deleted event";
+    private static final String LOG_SYNCING_LOCAL_EVENTS = "Add local events to Google service";
+    private static final String LOG_SYNCING_LOCAL_TASKS = "Add local tasks to Google service";
+    private static final String LOG_SYNCING_REMOTELY_DELETED = "Removing local tasks that are deleted on Google service";
+    private static final String LOG_SYNC_TASK = "syncing task %s with local task";
+    private static final String LOG_CREATE_TASK = "Creating new task %s";
+    private static final String LOG_RETRIEVING_TASKS = "Retrieving tasks from Google service";
+    private static final String LOG_SYNCING_LOCALLY_DELETED_TASK = "Deleting locally-deleted task";
+    private static final String LOG_GOOGLE_TASKS_SYNC = "Syncing with Google Tasks";
+    private static final String LOG_GOOGLE_CALENDAR_SYNC = "Syncing with Google Calendar";
+    private static final String LOG_INITIALIZE_GOOGLE = "Initializing Google Integration";
+    private static final String LOG_EXCEPTION = "%s was thrown";
+
+    private static final int MILLISECONDS_DIFFERENCE_THRESHOLD = 60000;
+
+    private static final String STRING_NEXTLINECHAR = "\n";
+
+    private static final String DEFAULT_TASK_NAME = "(No Title)";
+
+    private static final String FILEDATASTORE_CHILD_DIRECTORY = ".quicklyst";
+    private static final String FILEDATASTORE_PARENT_DIRECTORY = System
+            .getProperty("user.home");
+
+    private static final String PRIMARY_CALENDAR_ID = "primary";
+    private static final String PRIMARY_TASKS_ID = "@default";
+
+    private static final String PREFIX_GOOGLEID_TASKS = "t";
+    private static final String PREFIX_GOOGLEID_CALENDAR = "c";
+    private static final String USER_ID = "u";
+
+    private static final String STATUS_TASKS_NEEDSACTION = "needsAction";
+    private static final String STATUS_TASKS_COMPLETED = "completed";
+
+    private static final int LENGTH_NEXTLINECHAR = 1;
+
+    private static final int OFFSET_MONTH = -1;
+    private static final int OFFSET_DUESECOND = -1;
+    private static final int OFFSET_DUEDATE = 1;
+    private static final int OFFSET_GOOGLEID_PREFIX = 1;
+
+    private final static Logger LOGGER = Logger
+            .getLogger(GoogleIntegration.class.getName());
+
+    private static GoogleIntegration _instance;
+
+    private String _userId;
+    private boolean _shouldRememberLogin;
+
+    private Credential _cred;
+    private GoogleCalConn _googleCalendar;
+    private GoogleTaskConn _googleTasks;
+    private GoogleLogin _googleLogin;
+
+    private HttpTransport _httpTransport;
+
+    private GoogleIntegration() {
+        this(USER_ID, true);
+    }
+
+    private GoogleIntegration(String userId, boolean shouldRememberLogin) {
+        _userId = userId;
+        _shouldRememberLogin = shouldRememberLogin;
+    }
+
+    public static GoogleIntegration getInstance() {
+        if (_instance == null) {
+            _instance = new GoogleIntegration();
+        }
+        return _instance;
+    }
+
+    private void init() throws GeneralSecurityException, IOException {
+
+        _httpTransport = GoogleNetHttpTransport.newTrustedTransport();
+
+        DataStoreFactory dataStoreFactory = null;
+        if (_shouldRememberLogin) {
+            File f = new File(FILEDATASTORE_PARENT_DIRECTORY,
+                    FILEDATASTORE_CHILD_DIRECTORY);
+            try {
+                dataStoreFactory = new FileDataStoreFactory(f);
+            } catch (IOException e) {
+                LOGGER.severe(String.format(LOG_EXCEPTION, e.getClass()
+                        .getName()));
+                dataStoreFactory = new MemoryDataStoreFactory();
+            }
+        } else {
+            dataStoreFactory = new MemoryDataStoreFactory();
+        }
+
+        _googleLogin = new GoogleLogin(_userId, _httpTransport,
+                dataStoreFactory);
+
+        _cred = _googleLogin.getCredential();
+
+        _googleCalendar = new GoogleCalConn(_cred, _httpTransport);
+        _googleTasks = new GoogleTaskConn(_cred, _httpTransport);
+    }
+
+    private boolean isInitiated() {
+        return (_googleLogin != null && _cred != null
+                && _googleCalendar != null && _googleTasks != null);
+    }
+
+    public boolean logout() {
+        try {
+            GoogleLogin temp = _googleLogin;
+            _cred = null;
+            _googleCalendar = null;
+            _googleTasks = null;
+            _googleLogin = null;
+            if (temp != null) {
+                return temp.logout();
+            }
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    public void sync(List<Task> taskList, List<String> deletedIds) {
+        assert taskList != null;
+        assert deletedIds != null;
+
+        try {
+            if (!isInitiated()) {
+                LOGGER.info(LOG_INITIALIZE_GOOGLE);
+                init();
+            }
+
+            String calId = PRIMARY_CALENDAR_ID;
+            String taskListId = PRIMARY_TASKS_ID;
+
+            LOGGER.info(LOG_GOOGLE_CALENDAR_SYNC);
+            syncWithGoogleCalendar(taskList, deletedIds, _googleCalendar,
+                    _googleTasks, calId, taskListId);
+
+            LOGGER.info(LOG_GOOGLE_TASKS_SYNC);
+            syncWithGoogleTask(taskList, deletedIds, _googleCalendar,
+                    _googleTasks, calId, taskListId);
+
+        } catch (GeneralSecurityException e) {
+            LOGGER.severe(String.format(LOG_EXCEPTION, e.getClass().getName()));
+            throw new Error(
+                    GlobalConstants.ERROR_SECURE_CONNECTION_UNAVAILABLE);
+        } catch (IOException e) {
+            LOGGER.severe(String.format(LOG_EXCEPTION, e.getClass().getName()));
+            throw new Error(GlobalConstants.ERROR_SYNC);
+        }
+
+    }
+
+    private void syncWithGoogleTask(List<Task> taskList,
+            List<String> deletedIds, GoogleCalConn googleCalendar,
+            GoogleTaskConn googleTasks, String calId, String taskListId)
+            throws IOException {
+
+        Map<String, Task> tasksTask = new HashMap<String, Task>();
+
+        generateGoogleTasksMap(taskList, tasksTask);
+
+        removeExistingTaskFromDeletedList(deletedIds, tasksTask);
+
+        LOGGER.info(LOG_SYNCING_LOCALLY_DELETED_TASK);
+        deleteTasksFromGoogleServices(deletedIds, googleTasks, taskListId);
+
+        LOGGER.info(LOG_RETRIEVING_TASKS);
+        List<com.google.api.services.tasks.model.Task> tasks = getTasksFromGoogleServices(
+                googleTasks, taskListId);
+
+        if (tasks != null) {
+            for (com.google.api.services.tasks.model.Task gt : tasks) {
+                Task matchingTask = tasksTask.remove(PREFIX_GOOGLEID_TASKS
+                        + gt.getId());
+
+                if (matchingTask == null) {
+                    LOGGER.info(String.format(LOG_CREATE_TASK, gt.getTitle()));
+                    createNewTaskFromGoogleTasks(taskList, gt);
+                } else {
+                    LOGGER.info(String.format(LOG_SYNC_TASK, gt.getTitle()));
+                    syncGoogleTaskWithLocalTask(googleCalendar, googleTasks,
+                            calId, taskListId, gt, matchingTask);
+                }
+            }
+        }
+
+        LOGGER.info(LOG_SYNCING_REMOTELY_DELETED);
+        removeLocalTasks(taskList, tasksTask);
+
+        LOGGER.info(LOG_SYNCING_LOCAL_TASKS);
+        addTasksToGoogleServices(taskList, googleTasks, taskListId);
+    }
+
+    private void createNewTaskFromGoogleTasks(List<Task> taskList,
+            com.google.api.services.tasks.model.Task gt) {
+        if (!isEmptyGoogleTask(gt)) {
+            Task newTask = new Task(DEFAULT_TASK_NAME);
+            updateTaskWithGoogleTask(newTask, gt);
+            taskList.add(newTask);
+        }
+    }
+
+    private void syncGoogleTaskWithLocalTask(GoogleCalConn googleCalendar,
+            GoogleTaskConn googleTasks, String calId, String taskListId,
+            com.google.api.services.tasks.model.Task gt, Task matchingTask)
+            throws IOException {
+        long difference = matchingTask.getLastUpdated().getTimeInMillis()
+                - gt.getUpdated().getValue();
+        if (((-MILLISECONDS_DIFFERENCE_THRESHOLD > difference) || 
+             (difference > MILLISECONDS_DIFFERENCE_THRESHOLD)) && 
+            (matchingTask.getLastUpdated().getTimeInMillis() > gt.getUpdated().getValue())) {
+            if (!isCalendarEvent(matchingTask)) {
+                updateTaskToGoogleTasks(matchingTask, googleTasks, taskListId);
+            } else {
+                changeGoogleTaskToGoogleCalendar(matchingTask, googleCalendar,
+                        googleTasks, calId, taskListId);
+            }
+        } else {
+            updateTaskWithGoogleTask(matchingTask, gt);
+        }
+    }
+
+    private void addTasksToGoogleServices(List<Task> taskList,
+            GoogleTaskConn googleTasks, String taskListId) throws IOException {
+        for (Task t : taskList) {
+            if ((t != null)
+                    && ((t.getGoogleId() == null) || (t.getGoogleId().isEmpty()))) {
+                if (!isCalendarEvent(t)) {
+                    createNewTaskToGoogleTasks(t, googleTasks, taskListId);
+                }
+            }
+        }
+    }
+
+    private void removeLocalTasks(List<Task> taskList,
+            Map<String, Task> remainingMap) {
+        for (Task t : remainingMap.values()) {
+            taskList.remove(t);
+        }
+    }
+
+    private List<com.google.api.services.tasks.model.Task> getTasksFromGoogleServices(
+            GoogleTaskConn googleTasks, String taskListId) throws IOException {
+        List<com.google.api.services.tasks.model.Task> tasks = googleTasks
+                .getTasks(taskListId).getItems();
+        return tasks;
+    }
+
+    private void deleteTasksFromGoogleServices(List<String> deletedIds,
+            GoogleTaskConn googleTasks, String taskListId) throws IOException {
+        for (String id : deletedIds) {
+            if ((id != null) && (id.startsWith(PREFIX_GOOGLEID_TASKS))) {
+                googleTasks.deleteTask(taskListId,
+                        id.substring(OFFSET_GOOGLEID_PREFIX));
+            }
+        }
+    }
+
+    private void removeExistingTaskFromDeletedList(List<String> deletedIds,
+            Map<String, Task> existingMap) {
+        deletedIds.removeAll(existingMap.keySet());
+    }
+
+    private void generateGoogleTasksMap(List<Task> taskList,
+            Map<String, Task> tasksTask) {
+        for (Task t : taskList) {
+            if ((t != null) && (t.getGoogleId() != null)
+                    && (!t.getGoogleId().isEmpty())) {
+                if (t.getGoogleId().startsWith(PREFIX_GOOGLEID_TASKS)) {
+                    tasksTask.put(t.getGoogleId(), t);
+                }
+            }
+        }
+    }
+
+    private void syncWithGoogleCalendar(List<Task> taskList,
+            List<String> deletedIds, GoogleCalConn googleCalendar,
+            GoogleTaskConn googleTasks, String calId, String taskListId)
+            throws IOException {
+
+        Map<String, Task> calendarTask = new HashMap<String, Task>();
+
+        generateGoogleEventsMap(taskList, calendarTask);
+
+        removeExistingTaskFromDeletedList(deletedIds, calendarTask);
+
+        LOGGER.info(LOG_SYNCING_LOCALLY_DELETED_EVENT);
+        deleteEventsFromGoogleServices(deletedIds, googleCalendar, calId);
+
+        LOGGER.info(LOG_RETRIEVING_EVENTS);
+        List<Event> events = getEventsFromGoogleServices(googleCalendar, calId);
+
+        if (events != null) {
+            for (Event e : events) {
+                Task matchingTask = calendarTask
+                        .remove(PREFIX_GOOGLEID_CALENDAR + e.getId());
+
+                if (matchingTask == null) {
+                    LOGGER.info(String.format(LOG_CREATE_TASK, e.getSummary()));
+                    createNewTaskFromGoogleEvents(taskList, e);
+                } else {
+                    LOGGER.info(String.format(LOG_SYNC_EVENT, e.getSummary()));
+                    syncGoogleEventWithLocalTask(googleCalendar, googleTasks,
+                            calId, taskListId, e, matchingTask);
+                }
+            }
+        }
+
+        LOGGER.info(LOG_SYNCING_REMOTELY_DELETED);
+        removeLocalTasks(taskList, calendarTask);
+
+        LOGGER.info(LOG_SYNCING_LOCAL_EVENTS);
+        addEventsToGoogleServices(taskList, googleCalendar, calId);
+    }
+
+    private void addEventsToGoogleServices(List<Task> taskList,
+            GoogleCalConn googleCalendar, String calId) throws IOException {
+        for (Task t : taskList) {
+            if ((t != null)
+                    && ((t.getGoogleId() == null) || (t.getGoogleId().isEmpty()))) {
+                if (isCalendarEvent(t)) {
+                    createNewEventToGoogleCalendar(t, googleCalendar, calId);
+                }
+            }
+        }
+    }
+
+    private void syncGoogleEventWithLocalTask(GoogleCalConn googleCalendar,
+            GoogleTaskConn googleTasks, String calId, String taskListId,
+            Event e, Task matchingTask) throws IOException {
+        long difference = matchingTask.getLastUpdated().getTimeInMillis()
+                - e.getUpdated().getValue();
+        if (((-MILLISECONDS_DIFFERENCE_THRESHOLD > difference) || 
+             (difference > MILLISECONDS_DIFFERENCE_THRESHOLD)) && 
+            (matchingTask.getLastUpdated().getTimeInMillis() > e.getUpdated().getValue())) {
+            if (isCalendarEvent(matchingTask)) {
+                updateEventToGoogleCalendar(matchingTask, googleCalendar, calId);
+            } else {
+                changeGoogleCalendarToGoogleTasks(matchingTask, googleCalendar,
+                        googleTasks, calId, taskListId);
+            }
+        } else {
+            updateTaskWithGoogleEvent(matchingTask, e);
+        }
+    }
+
+    private void createNewTaskFromGoogleEvents(List<Task> taskList, Event e) {
+        if (e.getRecurrence() == null) {
+            Task newTask = new Task(DEFAULT_TASK_NAME);
+            updateTaskWithGoogleEvent(newTask, e);
+            taskList.add(newTask);
+        }
+    }
+
+    private List<Event> getEventsFromGoogleServices(
+            GoogleCalConn googleCalendar, String calId) throws IOException {
+        return googleCalendar.getEvents(calId).getItems();
+    }
+
+    private void deleteEventsFromGoogleServices(List<String> deletedIds,
+            GoogleCalConn googleCalendar, String calId) throws IOException {
+        for (String id : deletedIds) {
+            if ((id != null) && (id.startsWith(PREFIX_GOOGLEID_CALENDAR))) {
+                googleCalendar.deleteEvent(calId,
+                        id.substring(OFFSET_GOOGLEID_PREFIX));
+            }
+        }
+    }
+
+    private void generateGoogleEventsMap(List<Task> taskList,
+            Map<String, Task> calendarTask) {
+        for (Task t : taskList) {
+            if ((t != null) && (t.getGoogleId() != null)
+                    && (!t.getGoogleId().isEmpty())) {
+                if (t.getGoogleId().startsWith(PREFIX_GOOGLEID_CALENDAR)) {
+                    calendarTask.put(t.getGoogleId(), t);
+                }
+            }
+        }
+    }
+
+    private void updateEventToGoogleCalendar(Task t,
+            GoogleCalConn googleCalendar, String calId) throws IOException {
+        String id = t.getGoogleId().substring(OFFSET_GOOGLEID_PREFIX);
+        Event e = googleCalendar.getEvent(calId, id);
+        e = updateGoogleEventWithTask(e, t);
+        googleCalendar.updateEvent(calId, id, e);
+    }
+
+    private void createNewEventToGoogleCalendar(Task t,
+            GoogleCalConn googleCalendar, String calId) throws IOException {
+        Event e = new Event();
+        e = updateGoogleEventWithTask(e, t);
+        t.setGoogleId(PREFIX_GOOGLEID_CALENDAR
+                + googleCalendar.createEvent(calId, e).getId());
+    }
+
+    private void changeGoogleTaskToGoogleCalendar(Task t,
+            GoogleCalConn googleCalendar, GoogleTaskConn googleTasks,
+            String calId, String taskListId) throws IOException {
+        googleTasks.deleteTask(taskListId,
+                t.getGoogleId().substring(OFFSET_GOOGLEID_PREFIX));
+        t.setGoogleId(null);
+        createNewEventToGoogleCalendar(t, googleCalendar, calId);
+    }
+
+    private void updateTaskToGoogleTasks(Task t, GoogleTaskConn googleTasks,
+            String taskListId) throws IOException {
+        String id = t.getGoogleId().substring(OFFSET_GOOGLEID_PREFIX);
+        com.google.api.services.tasks.model.Task gt = googleTasks.getTask(
+                taskListId, id);
+        gt = updateGoogleTaskWithTask(gt, t);
+        googleTasks.updateTask(taskListId, id, gt);
+    }
+
+    private void createNewTaskToGoogleTasks(Task t, GoogleTaskConn googleTasks,
+            String taskListId) throws IOException {
+        com.google.api.services.tasks.model.Task gt = 
+                new com.google.api.services.tasks.model.Task();
+        gt = updateGoogleTaskWithTask(gt, t);
+        t.setGoogleId(PREFIX_GOOGLEID_TASKS
+                + googleTasks.createTask(taskListId, gt).getId());
+    }
+
+    private void changeGoogleCalendarToGoogleTasks(Task t,
+            GoogleCalConn googleCalendar, GoogleTaskConn googleTasks,
+            String calId, String taskListId) throws IOException {
+        googleCalendar.deleteEvent(calId,
+                t.getGoogleId().substring(OFFSET_GOOGLEID_PREFIX));
+        t.setGoogleId(null);
+        createNewTaskToGoogleTasks(t, googleTasks, taskListId);
+    }
+
+    private void updateTaskWithGoogleEvent(Task t, Event e) {
+        t.setName(correctEmptySummaryToProperName(e.getSummary()));
+        t.setDescription(e.getDescription());
+        t.setGoogleId(PREFIX_GOOGLEID_CALENDAR + e.getId());
+        if (e.getStart().getDateTime() != null) {
+            java.util.Calendar cal = dateTimeToCalendar(e.getStart()
+                    .getDateTime());
+            t.setStartDate(cal);
+            t.setHasStartTime(true);
+        } else if (e.getStart().getDate() != null) {
+            java.util.Calendar cal = dateToCalendar(e.getStart().getDate());
+            t.setStartDate(cal);
+            t.setHasStartTime(false);
+        }
+        if (e.getEnd().getDateTime() != null) {
+            java.util.Calendar cal = dateTimeToCalendar(e.getEnd()
+                    .getDateTime());
+            t.setDueDate(cal);
+            t.setHasDueTime(true);
+        } else if (e.getEnd().getDate() != null) {
+            java.util.Calendar cal = dateToCalendar(e.getEnd().getDate());
+            cal.add(java.util.Calendar.SECOND, OFFSET_DUESECOND);
+            t.setDueDate(cal);
+            t.setHasDueTime(false);
+        }
+        t.setLastUpdated(dateTimeToCalendar(e.getUpdated()));
+    }
+
+    private void updateTaskWithGoogleTask(Task t,
+            com.google.api.services.tasks.model.Task gt) {
+        t.setName(correctEmptySummaryToProperName(gt.getTitle()));
+        t.setDescription(gt.getNotes());
+        t.setGoogleId(PREFIX_GOOGLEID_TASKS + gt.getId());
+        if (gt.getDue() != null) {
+            java.util.Calendar cal = tasksDateTimeToCalendar(gt.getDue());
+            t.setDueDate(cal);
+            t.setHasDueTime(false);
+        }
+        if (gt.getStatus().equals(STATUS_TASKS_COMPLETED)) {
+            t.setIsCompleted(true);
+        } else {
+            t.setIsCompleted(false);
+        }
+        t.setLastUpdated(dateTimeToCalendar(gt.getUpdated()));
+    }
+
+    private Event updateGoogleEventWithTask(Event e, Task t) {
+        e.setSummary(t.getName());
+        e.setDescription(t.getDescription());
+
+        if ((e.getStart() != null) && (e.getStart().getDateTime() != null)) {
+            DateTime startDT = calendarToDateTime(t.getStartDate());
+            e.setStart(new EventDateTime().setDateTime(startDT));
+
+            DateTime endDT = calendarToDateTime(t.getDueDate());
+            e.setEnd(new EventDateTime().setDateTime(endDT));
+        } else if (t.getHasDueTime() != t.getHasStartTime()) {
+            DateTime startDT = calendarToDateTime(t.getStartDate());
+            e.setStart(new EventDateTime().setDateTime(startDT));
+
+            DateTime endDT = calendarToDateTime(t.getDueDate());
+            e.setEnd(new EventDateTime().setDateTime(endDT));
+        } else if (t.getHasStartTime()) {
+            DateTime startDT = calendarToDateTime(t.getStartDate());
+            e.setStart(new EventDateTime().setDateTime(startDT));
+
+            DateTime endDT = calendarToDateTime(t.getDueDate());
+            e.setEnd(new EventDateTime().setDateTime(endDT));
+        } else {
+            DateTime startDT = calendarToDate(t.getStartDate());
+            e.setStart(new EventDateTime().setDate(startDT));
+
+            java.util.Calendar dueCal = (java.util.Calendar) t.getDueDate()
+                    .clone();
+            dueCal.add(java.util.Calendar.DATE, OFFSET_DUEDATE);
+            DateTime endDT = calendarToDate(dueCal);
+            e.setEnd(new EventDateTime().setDate(endDT));
+        }
+
+        return e;
+    }
+
+    private com.google.api.services.tasks.model.Task updateGoogleTaskWithTask(
+            com.google.api.services.tasks.model.Task gt, Task t) {
+        gt.setTitle(t.getName());
+        gt.setNotes(t.getDescription());
+        if (t.getDueDate() != null) {
+            DateTime dt = tasksCalendarToDateTime(t.getDueDate());
+            gt.setDue(dt);
+        }
+        if ((t.getIsCompleted()) && (gt.getCompleted() == null)) {
+            DateTime dt = new DateTime(new Date());
+            gt.setCompleted(dt);
+            gt.setStatus(STATUS_TASKS_COMPLETED);
+        } else if (!t.getIsCompleted()) {
+            gt.setCompleted(null);
+            gt.setStatus(STATUS_TASKS_NEEDSACTION);
+        }
+        return gt;
+    }
+
+    private boolean isCalendarEvent(Task t) {
+        return ((t.getStartDate() != null) && (t.getDueDate() != null));
+    }
+
+    private boolean isEmptyGoogleTask(com.google.api.services.tasks.model.Task t) {
+        if ((t.getTitle().isEmpty()) && (t.getDue() == null)
+                && (t.getNotes() == null)) {
+            return true;
+        }
+        // Fixes an issue where empty tasks is added
+        // because google calendar web interface is used on the browser Opera
+        // 12.14
+        if ((t.getTitle().length() == LENGTH_NEXTLINECHAR)
+                && (t.getTitle().equals(STRING_NEXTLINECHAR))) {
+            return true;
+        }
+        return false;
+    }
+
+    private String correctEmptySummaryToProperName(String s) {
+        if ((s != null) && (!s.isEmpty())) {
+            return s;
+        }
+        return DEFAULT_TASK_NAME;
+    }
+
+    private DateTime calendarToDateTime(java.util.Calendar c) {
+        return new DateTime(false, c.getTimeInMillis(), null);
+    }
+
+    private DateTime calendarToDate(java.util.Calendar c) {
+        SimpleDateFormat sdf = new SimpleDateFormat(RFC3339_DATEFORMAT);
+        return DateTime.parseRfc3339(sdf.format(c.getTime()));
+    }
+
+    private java.util.Calendar dateTimeToCalendar(DateTime dt) {
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.setTimeInMillis(dt.getValue());
+        return cal;
+    }
+
+    private java.util.Calendar dateToCalendar(DateTime dt) {
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.setTimeInMillis(dt.getValue() - cal.getTimeZone().getRawOffset());
+        return cal;
+    }
+
+    private DateTime tasksCalendarToDateTime(java.util.Calendar c) {
+        SimpleDateFormat sdf = new SimpleDateFormat(RFC3339_DATEFORMAT);
+        return DateTime.parseRfc3339(sdf.format(c.getTime())
+                + RFC3339_SUFFIX_TIME_ZERO);
+    }
+
+    private Calendar tasksDateTimeToCalendar(DateTime dt) {
+        try {
+            String rfc3339 = dt.toStringRfc3339();
+            Calendar cal = Calendar.getInstance();
+            cal.set(Calendar.YEAR, Integer.parseInt(rfc3339.substring(
+                    RFC3339_START_INDEX_YEAR, RFC3339_END_INDEX_YEAR)));
+            cal.set(Calendar.MONTH,
+                    Integer.parseInt(rfc3339.substring(
+                            RFC3339_START_INDEX_MONTH, RFC3339_END_INDEX_MONTH))
+                            + OFFSET_MONTH);
+            cal.set(Calendar.DATE, Integer.parseInt(rfc3339.substring(
+                    RFC3339_START_INDEX_DATE, RFC3339_END_INDEX_DATE)));
+            cal.set(Calendar.HOUR_OF_DAY, TIME_LAST_HOUR);
+            cal.set(Calendar.MINUTE, TIME_LAST_MINUTE);
+            cal.set(Calendar.SECOND, TIME_LAST_SECOND);
+            return cal;
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\GoogleIntegration.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\GoogleLogin.java
+	 */
+
+public class GoogleLogin {
+    
+    private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
+    
+    private static final String CLIENT_ID = 
+            "657661987639-mula0sgv7qbs35pe24eq7vg2jj1fqvl8.apps.googleusercontent.com";
+    private static final String CLIENT_SECRET = "Lk2nEQ38cw0of3vSLIjeY6VT";
+    
+    private String _user;
+    private HttpTransport _httpTransport;
+    private DataStoreFactory _dataStoreFactory;
+
+    public GoogleLogin(String user, HttpTransport httpTransport, DataStoreFactory dataStoreFactory) {
+        _user = user;
+        _httpTransport = httpTransport;
+        _dataStoreFactory = dataStoreFactory;
+    }
+
+    public Credential getCredential() throws IOException {
+        
+        Collection<String> scopes = new HashSet<String>();
+        scopes.add(CalendarScopes.CALENDAR);
+        scopes.add(TasksScopes.TASKS);
+
+        GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
+                _httpTransport, JSON_FACTORY, CLIENT_ID, CLIENT_SECRET,
+                scopes).setDataStoreFactory(_dataStoreFactory)
+                .build();
+
+        return new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver()).authorize(_user);
+    }
+    
+    public boolean logout() throws IOException {
+        if (StoredCredential.getDefaultDataStore(_dataStoreFactory).containsKey(_user)) {
+            StoredCredential.getDefaultDataStore(_dataStoreFactory).delete(_user);
+            return true;
+        }
+        return false;
+    }
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\GoogleLogin.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\GoogleTaskConn.java
+	 */
+
+public class GoogleTaskConn {
+    
+    private static final JsonFactory JSON_FACTORY = GsonFactory
+            .getDefaultInstance();
+
+    private Credential _credential;
+    private HttpTransport _httpTransport;
+
+    private com.google.api.services.tasks.Tasks getService() {
+
+        return new com.google.api.services.tasks.Tasks.Builder(_httpTransport,
+                JSON_FACTORY, _credential).setApplicationName(
+                GlobalConstants.GOOGLESERVICES_APPLICATION_NAME).build();
+    }
+
+    public GoogleTaskConn(Credential credential, HttpTransport httpTransport) {
+        _credential = credential;
+        _httpTransport = httpTransport;
+    }
+
+    public TaskLists getTaskLists() throws IOException {
+        return getService().tasklists().list().execute();
+    }
+
+    public Tasks getTasks(String taskListId) throws IOException {
+        return getService().tasks().list(taskListId).execute();
+    }
+
+    public TaskList getTaskList(String taskListId) throws IOException {
+        return getService().tasklists().get(taskListId).execute();
+    }
+
+    public Task getTask(String taskListId, String taskId) throws IOException {
+        return getService().tasks().get(taskListId, taskId).execute();
+    }
+
+    public TaskList createTaskList(TaskList taskList) throws IOException {
+        return getService().tasklists().insert(taskList).execute();
+    }
+
+    public Task createTask(String taskListId, Task task) throws IOException {
+        return getService().tasks().insert(taskListId, task).execute();
+    }
+
+    public TaskList updateTaskList(String taskListId, TaskList newTaskList)
+            throws IOException {
+        return getService().tasklists().update(taskListId, newTaskList)
+                .execute();
+    }
+
+    public Task updateTask(String taskListId, String taskId, Task newTask)
+            throws IOException {
+        return getService().tasks().update(taskListId, taskId, newTask)
+                .execute();
+    }
+
+    public void deleteTaskList(String taskListId) throws IOException {
+        getService().tasklists().delete(taskListId).execute();
+    }
+
+    public void deleteTask(String taskListId, String taskId) throws IOException {
+        getService().tasks().delete(taskListId, taskId).execute();
+    }
+
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\GoogleTaskConn.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\Settings.java
+	 */
+
+public class Settings {
+	
+    public static Settings _instance;
+    
+    private String _settingsPath;
+    private String _prefFilePath;
+    private boolean isLoaded;
+    
+    public static void testCleanUp() {
+        _instance = null;
+    }
+    
+    public static Settings getTestInstance(String filePath) {
+        Settings instance = new Settings();
+        instance._settingsPath = filePath;
+        return instance;
+    }
+    
+    public static Settings getInstance() {
+        if (_instance == null) {
+            _instance = new Settings();
+        }
+        return _instance;
+    }
+    
+    private Settings() {
+        _settingsPath = GlobalConstants.FILEPATH_SETTINGS;
+        _prefFilePath = null;
+        isLoaded = false;
+    }
+    
+    public String getPrefFilePath() {
+        if (!isLoaded) {
+            load();
+        }
+    	return _prefFilePath;
+    }
+    
+    public String getDefaultFilePath() {
+        return GlobalConstants.FILEPATH_DEFAULT_SAVE;
+    }
+    
+    public void updatePrefFilePath(String filePath) {
+        assert filePath != null;
+    	_prefFilePath = filePath;
+    	save();
+    }
+    
+    private void load() {
+        try (FileReader f = new FileReader(_settingsPath)) {
+            Gson gson = new Gson();
+            _prefFilePath = gson.fromJson(f, String.class);
+        } catch (FileNotFoundException e) {
+            _prefFilePath = null;
+        } catch (IOException e) {
+            throw new Error(GlobalConstants.ERROR_READ_SETTINGS);
+        } catch (JsonSyntaxException | JsonIOException e) {
+            throw new Error(GlobalConstants.ERROR_READ_SETTINGS);
+        }
+    }
+    
+    private void save() {
+    	try (FileWriter f = new FileWriter(_settingsPath)) {
+    		Gson gson = new Gson();
+    		gson.toJson(_prefFilePath, f);
+    	} catch (IOException | JsonIOException e) {
+			throw new Error(GlobalConstants.ERROR_WRITE_SETTINGS);
+		}
+    }
+}
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\Settings.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\Storage.java
+	 */
+
+public class Storage {
+
+    private static final int INDEX_OFFSET_FOUND = 1;
+    private static final int INDEX_NOT_FOUND = -1;
+    private static final int INDEX_PATH_START = 0;
+
+    private static final String LOG_READING_FROM_FILE = "Reading %s";
+    private static final String LOG_EXCEPTION = "%s was thrown";
+    private static final String LOG_CREATED_DIRECTORY = "Directory %s created";
+    private static final String LOG_CREATE_DIRECTORY = "Creating %s";
+    private static final String LOG_INVALID_DIRECTORY = "%s is a file";
+    private static final String LOG_ENCODING_TASKLIST = "Encoding taskList into file";
+    private static final String LOG_ADDING_TASKS = "Adding loaded tasks into taskList";
+    private static final String LOG_DECODING_FILE = "Decoding taskList from file";
+    private static final String LOG_WRITING_TO_FILE = "Writing %s";
+    private static final String LOG_UNABLE_WRITE_FILE = "%s cannot be writen";
+    private static final String LOG_UNABLE_READ_FILE = "%s cannot be read";
+    private static final String LOG_DIRECTORY_FILEPATH = "%s points to a directory";
+    private static final String LOG_NO_SUCH_FILE = "%s does not exist";
+    private static final String LOG_INVALID_FILEPATH = "%s is invalid";
+
+    private static final String JSON_OBJECT_DELETEDIDS = "deletedIds";
+    private static final String JSON_OBJECT_TASKS = "tasks";
+    private static final String JSON_OBJECT_TASKNAME = "_name";
+
+    private static final String DEFAULT_TASK_NAME = "(No Title)";
+
+    private static final String REGEX_WINDOWS_INVALID_CHAR = ".*[<>\"].*";
+
+    private final static Logger LOGGER = Logger.getLogger(Storage.class
+            .getName());
+
+    private class TasksWrapper {
+        private ArrayList<Task> tasks;
+        private ArrayList<String> deletedIds;
+
+        public TasksWrapper(List<Task> t, List<String> d) {
+            tasks = new ArrayList<Task>(t);
+            deletedIds = new ArrayList<String>(d);
+        }
+    }
+
+    private class TaskWrapperDeserializer implements
+            JsonDeserializer<TasksWrapper> {
+
+        @Override
+        public TasksWrapper deserialize(JsonElement json, Type typeOfT,
+                JsonDeserializationContext context) throws JsonParseException {
+
+            JsonObject taskObj = json.getAsJsonObject();
+            Type stringListType = new TypeToken<List<String>>() {
+            }.getType();
+            Type taskListType = new TypeToken<List<Task>>() {
+            }.getType();
+            Gson g = new GsonBuilder()
+                    .registerTypeAdapter(stringListType,
+                            new StringListDeserializer())
+                    .registerTypeAdapter(taskListType,
+                            new TaskListDeserializer()).create();
+
+            List<Task> tasks;
+            List<String> deletedIds;
+
+            if ((taskObj.has(JSON_OBJECT_TASKS))
+                    && (!taskObj.get(JSON_OBJECT_TASKS).isJsonNull())) {
+                tasks = g
+                        .fromJson(taskObj.get(JSON_OBJECT_TASKS), taskListType);
+            } else {
+                tasks = new ArrayList<Task>();
+            }
+            if ((taskObj.has(JSON_OBJECT_DELETEDIDS))
+                    && (!taskObj.get(JSON_OBJECT_DELETEDIDS).isJsonNull())) {
+                deletedIds = g.fromJson(taskObj.get(JSON_OBJECT_DELETEDIDS),
+                        stringListType);
+            } else {
+                deletedIds = new ArrayList<String>();
+            }
+
+            return new TasksWrapper(tasks, deletedIds);
+        }
+    }
+
+    private class StringListDeserializer implements
+            JsonDeserializer<List<String>> {
+        @Override
+        public List<String> deserialize(JsonElement json, Type typeOfT,
+                JsonDeserializationContext context) throws JsonParseException {
+
+            List<String> list = new ArrayList<String>();
+            Gson g = new Gson();
+
+            for (JsonElement e : json.getAsJsonArray()) {
+                if (!e.isJsonNull()) {
+                    list.add(g.fromJson(e, String.class));
+                }
+            }
+            return list;
+        }
+    }
+
+    private class TaskListDeserializer implements JsonDeserializer<List<Task>> {
+        @Override
+        public List<Task> deserialize(JsonElement json, Type typeOfT,
+                JsonDeserializationContext context) throws JsonParseException {
+
+            List<Task> list = new ArrayList<Task>();
+            Gson g = new GsonBuilder().registerTypeAdapter(Task.class,
+                    new TaskDeserializer()).create();
+
+            for (JsonElement e : json.getAsJsonArray()) {
+                if (!e.isJsonNull()) {
+                    list.add(g.fromJson(e, Task.class));
+                }
+            }
+            return list;
+        }
+    }
+
+    private class TaskDeserializer implements JsonDeserializer<Task> {
+        @Override
+        public Task deserialize(JsonElement json, Type typeOfT,
+                JsonDeserializationContext context) throws JsonParseException {
+
+            Gson g = new Gson();
+            Task t = g.fromJson(json, Task.class);
+            JsonObject taskObj = json.getAsJsonObject();
+            if (!taskObj.has(JSON_OBJECT_TASKNAME)
+                    || taskObj.get(JSON_OBJECT_TASKNAME).isJsonNull()) {
+                t.setName(DEFAULT_TASK_NAME);
+            }
+            if (t.getLastUpdated() == null) {
+                t.setLastUpdated(Calendar.getInstance());
+            }
+            return t;
+        }
+    }
+
+    private static Storage _instance;
+
+    private Storage() {
+    }
+
+    public static Storage getInstance() {
+        if (_instance == null) {
+            _instance = new Storage();
+        }
+        return _instance;
+    }
+
+    public boolean isValidFile(String filePath) {
+        assert filePath != null;
+
+        if (!isValidFilepath(filePath)) {
+            return false;
+        }
+
+        if (!hasFile(filePath)) {
+            return true;
+        }
+        if ((hasFile(filePath)) && (!isDirectory(filePath))
+                && (isReadable(filePath)) && (isWritable(filePath))) {
+            return true;
+        }
+        return false;
+    }
+
+    public void loadFile(List<Task> taskList, List<String> deletedIds,
+            String filePath) {
+        assert taskList != null;
+        assert taskList.isEmpty();
+        assert taskList != null;
+        assert deletedIds.isEmpty();
+        assert filePath != null;
+
+        if (!isValidFilepath(filePath)) {
+            LOGGER.warning(String.format(LOG_INVALID_FILEPATH, filePath));
+            throw new Error(GlobalConstants.ERROR_INVALID_FILEPATH);
+        }
+
+        if (!hasFile(filePath)) {
+            LOGGER.info(String.format(LOG_NO_SUCH_FILE, filePath));
+            return;
+        }
+
+        if (isDirectory(filePath)) {
+            LOGGER.warning(String.format(LOG_DIRECTORY_FILEPATH, filePath));
+            throw new Error(GlobalConstants.ERROR_DIRECTORY);
+        }
+
+        if (!isReadable(filePath)) {
+            LOGGER.warning(String.format(LOG_UNABLE_READ_FILE, filePath));
+            throw new Error(GlobalConstants.ERROR_UNABLE_READ_FILE);
+        }
+
+        LOGGER.info(String.format(LOG_READING_FROM_FILE, filePath));
+        readListFromFile(taskList, deletedIds, filePath);
+
+    }
+
+    public void saveFile(List<Task> taskList, List<String> deletedIds,
+            String filePath) {
+        assert taskList != null;
+        assert deletedIds != null;
+        assert filePath != null;
+
+        if (!isValidFilepath(filePath)) {
+            LOGGER.warning(String.format(LOG_INVALID_FILEPATH, filePath));
+            throw new Error(GlobalConstants.ERROR_INVALID_FILEPATH);
+        }
+
+        if ((hasFile(filePath)) && (!isWritable(filePath))) {
+            LOGGER.warning(String.format(LOG_UNABLE_WRITE_FILE, filePath));
+            throw new Error(GlobalConstants.ERROR_UNABLE_WRITE_FILE);
+        }
+
+        createNecessaryDirectories(filePath);
+
+        LOGGER.info(String.format(LOG_WRITING_TO_FILE, filePath));
+
+        writeListToFile(taskList, deletedIds, filePath);
+    }
+
+    private void readListFromFile(List<Task> taskList, List<String> deletedIds,
+            String filePath) {
+        try (FileReader f = new FileReader(filePath)) {
+
+            Gson gson = new GsonBuilder().registerTypeAdapter(
+                    TasksWrapper.class, new TaskWrapperDeserializer()).create();
+
+            LOGGER.info(String.format(LOG_DECODING_FILE, filePath));
+            TasksWrapper wrapper = gson.fromJson(f, TasksWrapper.class);
+
+            LOGGER.info(LOG_ADDING_TASKS);
+            if (wrapper != null) {
+                if (wrapper.tasks != null) {
+                    taskList.addAll(wrapper.tasks);
+                }
+                if (wrapper.deletedIds != null) {
+                    deletedIds.addAll(wrapper.deletedIds);
+                }
+            }
+
+        } catch (FileNotFoundException e) {
+            LOGGER.severe(String.format(LOG_EXCEPTION, e.getClass().getName()));
+            throw new Error(String.format(GlobalConstants.ERROR_READ_FILE,
+                    filePath));
+        } catch (IOException e) {
+            LOGGER.severe(String.format(LOG_EXCEPTION, e.getClass().getName()));
+            throw new Error(String.format(GlobalConstants.ERROR_READ_FILE,
+                    filePath));
+        } catch (JsonSyntaxException | JsonIOException e) {
+            LOGGER.severe(String.format(LOG_EXCEPTION, e.getClass().getName()));
+            throw new Error(String.format(GlobalConstants.ERROR_READ_FILE,
+                    filePath));
+        }
+    }
+
+    private void writeListToFile(List<Task> taskList, List<String> deletedIds,
+            String filePath) {
+        try (FileWriter f = new FileWriter(filePath)) {
+            TasksWrapper wrapper = new TasksWrapper(taskList, deletedIds);
+
+            Gson gson = new GsonBuilder().serializeNulls().setPrettyPrinting()
+                    .create();
+
+            LOGGER.info(LOG_ENCODING_TASKLIST);
+            gson.toJson(wrapper, f);
+        } catch (IOException e) {
+            LOGGER.severe(String.format(LOG_EXCEPTION, e.getClass().getName()));
+            throw new Error(String.format(GlobalConstants.ERROR_WRITE_FILE,
+                    filePath));
+        }
+    }
+
+    private void createNecessaryDirectories(String filePath) {
+        int pathSeperatorIndex = INDEX_PATH_START;
+        while (filePath.indexOf(File.separator, pathSeperatorIndex) != INDEX_NOT_FOUND) {
+            pathSeperatorIndex = filePath.indexOf(File.separator,
+                    pathSeperatorIndex) + INDEX_OFFSET_FOUND;
+            File directory = new File(filePath.substring(INDEX_PATH_START,
+                    pathSeperatorIndex));
+
+            if (directory.exists()) {
+                if (!directory.isDirectory()) {
+                    LOGGER.warning(String.format(LOG_INVALID_DIRECTORY,
+                            directory.getPath()));
+                    throw new Error(String.format(
+                            GlobalConstants.ERROR_DIRECTORY_FILE,
+                            directory.getPath()));
+                }
+            } else {
+                LOGGER.info(String.format(LOG_CREATE_DIRECTORY,
+                        directory.getPath()));
+                if (!directory.mkdir()) {
+                    throw new Error(String.format(
+                            GlobalConstants.ERROR_UNABLE_MAKE_DIRECTORY,
+                            directory.getPath()));
+                }
+                LOGGER.info(String.format(LOG_CREATED_DIRECTORY,
+                        directory.getPath()));
+            }
+        }
+    }
+
+    private boolean hasFile(String filePath) {
+        File file = new File(filePath);
+        return file.exists();
+    }
+
+    private boolean isDirectory(String filePath) {
+        File file = new File(filePath);
+        return file.isDirectory();
+    }
+
+    private boolean isReadable(String filePath) {
+        File file = new File(filePath);
+        return file.canRead();
+    }
+
+    private boolean isWritable(String filePath) {
+        File file = new File(filePath);
+        return file.canWrite();
+    }
+
+    private boolean isValidFilepath(String filePath) {
+        if (filePath.endsWith(File.separator)) {
+            return false;
+        }
+        try {
+            File f = new File(filePath);
+            f.getCanonicalPath();
+            if (filePath.matches(REGEX_WINDOWS_INVALID_CHAR)) {
+                return false;
+            }
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\Storage.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\test\GoogleIntegrationTest.java
+	 */
+
+public class GoogleIntegrationTest {
+    
+    private GoogleIntegration _googleIntegration;
+    private String _googleId;
+    private Calendar _now;
+    private Calendar _later;
+    @BeforeClass
+    public static void setUpBeforeClass() {
+        GoogleIntegration.getInstance().logout();
+        GoogleIntegration.getInstance().sync(new LinkedList<Task>(), new LinkedList<String>());
+    }
+    
+    @AfterClass
+    public static void tearDownAfterClass() {
+        GoogleIntegration.getInstance().logout();
+    }
+    
+    @Before
+    public void setUp() throws Exception {
+        _googleIntegration = GoogleIntegration.getInstance();
+        _googleId = null;
+        _now = Calendar.getInstance();
+        _later = (Calendar) _now.clone();
+        _later.add(Calendar.DATE, 1);
+    }
+    
+    @After
+    public void tearDown() throws Exception {
+        if ((_googleId != null) && (!_googleId.isEmpty())) {
+            List<String> delete = new LinkedList<String>();
+            delete.add(_googleId);
+            _googleIntegration.sync(new LinkedList<Task>(), delete);
+        }
+    }
+    
+    @Test
+    public void testSync() {
+        LinkedList<Task> tasks = new LinkedList<Task>();
+        LinkedList<String> deleted = new LinkedList<String>();
+        Error caught = null;
+        try {
+            _googleIntegration.sync(tasks, deleted);
+        } catch (Error e) {
+            caught = e;
+        }
+        assertNull(caught);
+    }
+    
+    @Test
+    public void testSyncWithNullsInList1() {
+        LinkedList<Task> tasks = new LinkedList<Task>();
+        LinkedList<String> deleted = new LinkedList<String>();
+        tasks.add(null);
+        Error caught = null;
+        try {
+            _googleIntegration.sync(tasks, deleted);
+        } catch (Error e) {
+            caught = e;
+        }
+        assertNull(caught);
+    }
+
+    @Test
+    public void testSyncWithNullsInList2() {
+        LinkedList<Task> tasks = new LinkedList<Task>();
+        LinkedList<String> deleted = new LinkedList<String>();
+        deleted.add(null);
+        Error caught = null;
+        try {
+            _googleIntegration.sync(tasks, deleted);
+        } catch (Error e) {
+            caught = e;
+        }
+        assertNull(caught);
+    }
+
+    @Test
+    public void testAddToGoogleTasks1() {
+        LinkedList<Task> tasks = new LinkedList<Task>();
+        LinkedList<String> deleted = new LinkedList<String>();
+        Task t = new Task("Google Testing");
+        tasks.add(t);
+        assertTrue(t.getGoogleId() == null || t.getGoogleId().isEmpty());
+        _googleIntegration.sync(tasks, deleted);
+        _googleId = t.getGoogleId();
+        assertTrue(tasks.contains(t));
+        assertTrue(t.getGoogleId() != null && !t.getGoogleId().isEmpty());
+        assertTrue(t.getGoogleId().startsWith("t"));
+    }
+    
+    @Test
+    public void testAddToGoogleTasks2() {
+        LinkedList<Task> tasks = new LinkedList<Task>();
+        LinkedList<String> deleted = new LinkedList<String>();
+        Task t = new Task("Google Testing");
+        t.setDueDate(_later);
+        tasks.add(t);
+        assertTrue(t.getGoogleId() == null || t.getGoogleId().isEmpty());
+        _googleIntegration.sync(tasks, deleted);
+        _googleId = t.getGoogleId();
+        assertTrue(tasks.contains(t));
+        assertTrue(t.getGoogleId() != null && !t.getGoogleId().isEmpty());
+        assertTrue(t.getGoogleId().startsWith("t"));
+    }
+    
+    @Test
+    public void testAddToGoogleCalendar() {
+        LinkedList<Task> tasks = new LinkedList<Task>();
+        LinkedList<String> deleted = new LinkedList<String>();
+        Task t = new Task("Google Testing");
+        t.setStartDate(_now);
+        t.setDueDate(_later);
+        tasks.add(t);
+        assertTrue(t.getGoogleId() == null || t.getGoogleId().isEmpty());
+        _googleIntegration.sync(tasks, deleted);
+        _googleId = t.getGoogleId();
+        assertTrue(tasks.contains(t));
+        assertTrue(t.getGoogleId() != null && !t.getGoogleId().isEmpty());
+        assertTrue(t.getGoogleId().startsWith("c"));
+    }
+    
+    @Test
+    public void testDeleteFromGoogleTasks1() {
+        LinkedList<Task> tasks = new LinkedList<Task>();
+        LinkedList<String> deleted = new LinkedList<String>();
+        Task t = new Task("Google Testing");
+        tasks.add(t);
+        _googleIntegration.sync(tasks, deleted);
+        _googleId = t.getGoogleId();
+        
+        LinkedList<Task> tasks2 = new LinkedList<Task>();
+        _googleIntegration.sync(tasks2, new LinkedList<String>());
+        assertTrue(hasTask(tasks2, t));
+        
+        tasks.remove(t);
+        deleted.add(_googleId);
+        _googleIntegration.sync(tasks, deleted);
+        
+        _googleIntegration.sync(tasks2, new LinkedList<String>());
+        assertFalse(hasTask(tasks2, t));
+        _googleId = null;
+    }
+    
+    @Test
+    public void testDeleteFromGoogleTasks2() {
+        LinkedList<Task> tasks = new LinkedList<Task>();
+        LinkedList<String> deleted = new LinkedList<String>();
+        Task t = new Task("Google Testing");
+        t.setDueDate(_later);
+        tasks.add(t);
+        _googleIntegration.sync(tasks, deleted);
+        _googleId = t.getGoogleId();
+        
+        LinkedList<Task> tasks2 = new LinkedList<Task>();
+        _googleIntegration.sync(tasks2, new LinkedList<String>());
+        assertTrue(hasTask(tasks2, t));
+        
+        tasks.remove(t);
+        deleted.add(_googleId);
+        _googleIntegration.sync(tasks, deleted);
+        
+        _googleIntegration.sync(tasks2, new LinkedList<String>());
+        assertFalse(hasTask(tasks2, t));
+        _googleId = null;
+    }
+    
+    @Test
+    public void testDeleteFromGoogleCalendar() {
+        LinkedList<Task> tasks = new LinkedList<Task>();
+        LinkedList<String> deleted = new LinkedList<String>();
+        Task t = new Task("Google Testing");
+        t.setStartDate(_now);
+        t.setDueDate(_later);
+        tasks.add(t);
+        _googleIntegration.sync(tasks, deleted);
+        _googleId = t.getGoogleId();
+        
+        LinkedList<Task> tasks2 = new LinkedList<Task>();
+        _googleIntegration.sync(tasks2, new LinkedList<String>());
+        assertTrue(hasTask(tasks2, t));
+        
+        tasks.remove(t);
+        deleted.add(_googleId);
+        _googleIntegration.sync(tasks, deleted);
+        
+        _googleIntegration.sync(tasks2, new LinkedList<String>());
+        assertFalse(hasTask(tasks2, t));
+        _googleId = null;
+    }
+    
+    @Test
+    public void testEditGoogleTask1() {
+        LinkedList<Task> tasks = new LinkedList<Task>();
+        LinkedList<String> deleted = new LinkedList<String>();
+        Task t = new Task("Google Testing");
+        tasks.add(t);
+        _googleIntegration.sync(tasks, deleted);
+        _googleId = t.getGoogleId();
+        
+        LinkedList<Task> tasks2 = new LinkedList<Task>();
+        _googleIntegration.sync(tasks2, new LinkedList<String>());
+        Task match = getTask(tasks2, t);
+        assertNotNull(match);
+        assertEquals(t.getName(), match.getName());
+        
+        t.setName("Something new");
+        t.setLastUpdated(_later);
+        _googleIntegration.sync(tasks, deleted);
+        
+        tasks2 = new LinkedList<Task>();
+        _googleIntegration.sync(tasks2, new LinkedList<String>());
+        match = getTask(tasks2, t);
+        assertNotNull(match);
+        assertEquals(t.getName(), match.getName());
+    }
+    
+    @Test
+    public void testEditGoogleTask2() {
+        LinkedList<Task> tasks = new LinkedList<Task>();
+        LinkedList<String> deleted = new LinkedList<String>();
+        Task t = new Task("Google Testing");
+        t.setDueDate(_now);
+        tasks.add(t);
+        _googleIntegration.sync(tasks, deleted);
+        _googleId = t.getGoogleId();
+        
+        LinkedList<Task> tasks2 = new LinkedList<Task>();
+        _googleIntegration.sync(tasks2, new LinkedList<String>());
+        Task match = getTask(tasks2, t);
+        assertNotNull(match);
+        assertDateEquals(t.getDueDate(), match.getDueDate());
+        
+        t.setDueDate(_later);
+        t.setLastUpdated(_later);
+        _googleIntegration.sync(tasks, deleted);
+        
+        tasks2 = new LinkedList<Task>();
+        _googleIntegration.sync(tasks2, new LinkedList<String>());
+        match = getTask(tasks2, t);
+        assertNotNull(match);
+        assertDateEquals(t.getDueDate(), match.getDueDate());
+    }
+    
+    @Test
+    public void testEditGoogleCalendar() {
+        LinkedList<Task> tasks = new LinkedList<Task>();
+        LinkedList<String> deleted = new LinkedList<String>();
+        Task t = new Task("Google Testing");
+        t.setStartDate(_now);
+        t.setHasStartTime(true);
+        t.setDueDate(_later);
+        t.setHasDueTime(true);
+        tasks.add(t);
+        _googleIntegration.sync(tasks, deleted);
+        _googleId = t.getGoogleId();
+        
+        LinkedList<Task> tasks2 = new LinkedList<Task>();
+        _googleIntegration.sync(tasks2, new LinkedList<String>());
+        Task match = getTask(tasks2, t);
+        assertNotNull(match);
+        assertCalendarEquals(t.getStartDate(), match.getStartDate());
+        assertCalendarEquals(t.getDueDate(), match.getDueDate());
+        
+        _later.add(Calendar.DATE, 1);
+        t.setDueDate((Calendar) _later.clone());
+        t.setLastUpdated(_later);
+        _googleIntegration.sync(tasks, deleted);
+        
+        tasks2 = new LinkedList<Task>();
+        _googleIntegration.sync(tasks2, new LinkedList<String>());
+        match = getTask(tasks2, t);
+        assertNotNull(match);
+        assertCalendarEquals(t.getStartDate(), match.getStartDate());
+        assertCalendarEquals(t.getDueDate(), match.getDueDate());
+    }
+    
+    public boolean hasTask(List<Task> tasks, Task task) {
+        for (Task t : tasks) {
+            if (t.getGoogleId().equals(task.getGoogleId())) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    public Task getTask(List<Task> tasks, Task task) {
+        for (Task t : tasks) {
+            if (t.getGoogleId().equals(task.getGoogleId())) {
+                return t;
+            }
+        }
+        return null;
+    }
+    
+    private void assertCalendarEquals(Calendar expected, Calendar actual) {
+        assertEquals(expected == null, actual == null);
+        if (expected != null) {
+            assertEquals(expected.getTimeInMillis()/1000, actual.getTimeInMillis()/1000);
+        }
+    }
+    
+    private void assertDateEquals(Calendar expected, Calendar actual) {
+        assertEquals(expected == null, actual == null);
+        if (expected != null) {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            assertEquals(sdf.format(expected.getTime()), sdf.format(actual.getTime()));
+        }
+    }
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\test\GoogleIntegrationTest.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\test\SettingsTest.java
+	 */
+
+public class SettingsTest {
+    
+    private Settings _settings;
+    private String _filePath;
+
+    @Before
+    public void setUp() throws Exception {
+        _filePath = "testingSettings.json";
+        _settings = Settings.getTestInstance(_filePath);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        _settings.testCleanUp();
+        File file = new File(_filePath);
+        file.delete();
+    }
+    
+    @Test
+    public void testGetDefault() {
+        _settings.updatePrefFilePath("savefile.json");
+        assertEquals("savefile.json", _settings.getPrefFilePath());
+        assertEquals("save.json", _settings.getDefaultFilePath());
+        _settings.updatePrefFilePath("tasks.json");
+        assertEquals("tasks.json", _settings.getPrefFilePath());
+        assertEquals("save.json", _settings.getDefaultFilePath());
+    }
+
+    @Test
+    public void testSetPref() {
+        _settings.updatePrefFilePath("savefile.json");
+        assertEquals("savefile.json", _settings.getPrefFilePath());
+        _settings.updatePrefFilePath("tasks.json");
+        assertEquals("tasks.json", _settings.getPrefFilePath());
+    }
+    
+    @Test
+    public void testInvalidFile() throws IOException {
+        try (FileWriter fw = new FileWriter(_filePath)) {
+            fw.write("::::");
+        }
+        Error caught = null;
+        try {
+            _settings.getPrefFilePath();
+        } catch (Error e) {
+            caught = e;
+        }
+        assertNotNull(caught);
+        assertEquals(GlobalConstants.ERROR_READ_SETTINGS, caught.getMessage());
+    }
+    
+        
+
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\test\SettingsTest.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\test\StorageTest.java
+	 */
+
+public class StorageTest {
+    
+    private Storage _storage;
+    private List<Task> _tasks;
+    private List<String> _deletedIDs;
+    private String _filename;
+
+    @Before
+    public void setUp() throws Exception {
+        _storage = Storage.getInstance();
+        _tasks = new LinkedList<Task>();
+        _deletedIDs = new LinkedList<String>(); 
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        if (_filename != null) {
+            File file = new File(_filename);
+            if (!file.delete()) {
+                file.deleteOnExit();
+            }
+        }
+    }
+
+    @Test
+    public void testSaveAndLoad() {
+        Calendar now = Calendar.getInstance();
+        _tasks.add(instantiateTask("0",
+                                   "0",
+                                   "L",
+                                   "0",
+                                   now,
+                                   oneMinuteAfter(now), 
+                                   now, 
+                                   false,
+                                   true,
+                                   false, 
+                                   true));
+        _deletedIDs.add("0");
+        for (int i = 1; i < 10; ++i) {
+            Task prev = _tasks.get(i-1);
+            Task newTask = instantiateTask(prev.getName() + i,
+                                           prev.getDescription() + i,
+                                           nextPriority(prev.getPriority()),
+                                           prev.getGoogleId() + i,
+                                           oneMinuteAfter(prev.getStartDate()),
+                                           oneMinuteAfter(prev.getDueDate()), 
+                                           oneMinuteAfter(prev.getLastUpdated()), 
+                                           !prev.getIsCompleted(),
+                                           !prev.getShouldSync(),
+                                           !prev.getHasStartTime(), 
+                                           !prev.getHasDueTime());
+            _tasks.add(newTask);
+            _deletedIDs.add(_deletedIDs.get(i-1) + i);
+        }
+        _filename = "testSaveAndLoad.json";
+        _storage.saveFile(_tasks, _deletedIDs, _filename);
+        
+        List<Task> newTasks = new LinkedList<Task>();
+        List<String> newDeletedIDs = new LinkedList<String>();
+        _storage.loadFile(newTasks, newDeletedIDs, _filename);
+        assertEquals(_tasks.size(), newTasks.size());
+        assertEquals(_deletedIDs.size(), newDeletedIDs.size());
+        for (int i = 0; i < _tasks.size(); ++i) {
+            assertTaskEquals(_tasks.get(i), newTasks.get(i));
+        }
+    }
+    
+    @Test
+    public void testSavingEmpty() {
+        _tasks.clear();
+        _deletedIDs.clear();
+        _filename = "testSavingEmpty.json";
+        _storage.saveFile(_tasks, _deletedIDs, _filename);
+        
+        List<Task> newTasks = new LinkedList<Task>();
+        List<String> newDeletedIDs = new LinkedList<String>();
+        _storage.loadFile(newTasks, newDeletedIDs, _filename);
+        assertEquals(_tasks.size(), newTasks.size());
+        assertEquals(_deletedIDs.size(), newDeletedIDs.size());
+    }
+    
+    @Test
+    public void testSavingSpecialCharacters() {
+        _tasks.add(instantiateTask("[](){}\":,=>\t\r\n",
+                                   "[](){}\":,=>\t\r\n",
+                                   "L",
+                                   "[](){}\":,=>\t\r\n",
+                                   Calendar.getInstance(),
+                                   Calendar.getInstance(), 
+                                   Calendar.getInstance(), 
+                                   false,
+                                   true,
+                                   false, 
+                                   true));
+        _deletedIDs.add("[](){}\":,=>\t\r\n");
+        _filename = "testSavingSpecialCharacters.json";
+        _storage.saveFile(_tasks, _deletedIDs, _filename);
+        
+        List<Task> newTasks = new LinkedList<Task>();
+        List<String> newDeletedIDs = new LinkedList<String>();
+        _storage.loadFile(newTasks, newDeletedIDs, _filename);
+        assertEquals(_tasks.size(), newTasks.size());
+        assertEquals(_deletedIDs.size(), newDeletedIDs.size());
+        for (int i = 0; i < _tasks.size(); ++i) {
+            assertTaskEquals(_tasks.get(i), newTasks.get(i));
+        }
+    }
+    
+    @Test
+    public void testSavingIntoOpenedFiles() throws IOException {
+        _filename = "openedfile.json";
+        (new File(_filename)).createNewFile(); 
+        try (RandomAccessFile raf = new RandomAccessFile(_filename, "rw");
+                FileChannel channel = raf.getChannel()) {
+            FileLock lock = channel.lock();
+            _tasks.clear();
+            _deletedIDs.clear();
+            Error caught = null;
+            try {
+                _storage.saveFile(_tasks, _deletedIDs, _filename);
+            } catch (Error e) {
+                caught = e;
+            }
+            assertNotNull(caught);
+            lock.release();
+        }
+    }
+    
+    @Test
+    public void testLoadingNonexistingFile() {
+        _filename = "nonexistent.json";
+        File file = new File(_filename);
+        while (file.exists()) {
+            _filename = _filename + "1";
+            file = new File(_filename);
+        }
+        try {
+            _storage.loadFile(_tasks, _deletedIDs, _filename);
+        } catch (Error e) {
+            fail("Error caught unexpectedly");
+        }
+        assertEquals(0, _tasks.size());
+        assertEquals(0, _deletedIDs.size());
+    }
+    
+    @Test
+    public void testSavingValidFilepath() {
+        Error caught = null;
+        try {
+            _filename = "legal.json";
+            _storage.saveFile(_tasks, _deletedIDs, _filename);
+        } catch (Error e) {
+            caught = e;
+        }
+        assertNull(caught);
+    }
+    
+    @Test
+    public void testSavingValidFilepath2() {
+        Error caught = null;
+        try {
+            _filename = "C:\\legal.json";
+            _storage.saveFile(_tasks, _deletedIDs, _filename);
+        } catch (Error e) {
+            caught = e;
+        }
+        if (caught != null) {
+            assertNotEquals(GlobalConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
+        }
+    }
+    
+    @Test
+    public void testSavingInvalidFilepath1() {
+        Error caught = null;
+        try {
+            _filename = "ille:gal.json";
+            _storage.saveFile(_tasks, _deletedIDs, _filename);
+        } catch (Error e) {
+            caught = e;
+        }
+        assertNotNull(caught);
+        assertEquals(GlobalConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
+    }
+    
+    @Test
+    public void testSavingInvalidFilepath2() {
+        Error caught = null;
+        try {
+            _filename = "ille*gal.json";
+            _storage.saveFile(_tasks, _deletedIDs, _filename);
+        } catch (Error e) {
+            caught = e;
+        }
+        assertNotNull(caught);
+        assertEquals(GlobalConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
+    }
+    
+    @Test
+    public void testSavingInvalidFilepath3() {
+        Error caught = null;
+        try {
+            _filename = "ille?gal.json";
+            _storage.saveFile(_tasks, _deletedIDs, _filename);
+        } catch (Error e) {
+            caught = e;
+        }
+        assertNotNull(caught);
+        assertEquals(GlobalConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
+    }
+    
+    @Test
+    public void testSavingInvalidFilepath4() {
+        Error caught = null;
+        try {
+            _filename = "ille\"gal.json";
+            _storage.saveFile(_tasks, _deletedIDs, _filename);
+        } catch (Error e) {
+            caught = e;
+        }
+        assertNotNull(caught);
+        assertEquals(GlobalConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
+    }
+    
+    @Test
+    public void testSavingInvalidFilepath5() {
+        Error caught = null;
+        try {
+            _filename = "ille<gal.json";
+            _storage.saveFile(_tasks, _deletedIDs, _filename);
+        } catch (Error e) {
+            caught = e;
+        }
+        assertNotNull(caught);
+        assertEquals(GlobalConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
+    }
+    
+    @Test
+    public void testSavingInvalidFilepath6() {
+        Error caught = null;
+        try {
+            _filename = "ille>gal.json";
+            _storage.saveFile(_tasks, _deletedIDs, _filename);
+        } catch (Error e) {
+            caught = e;
+        }
+        assertNotNull(caught);
+        assertEquals(GlobalConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
+    }
+    
+    @Test
+    public void testSavingInvalidFilepath7() {
+        Error caught = null;
+        try {
+            _filename = "ille|gal.json";
+            _storage.saveFile(_tasks, _deletedIDs, _filename);
+        } catch (Error e) {
+            caught = e;
+        }
+        assertNotNull(caught);
+        assertEquals(GlobalConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
+    }
+    
+    @Test
+    public void testLoadingValidFilepath() {
+        Error caught = null;
+        try {
+            _filename = "legal.json";
+            _storage.loadFile(_tasks, _deletedIDs, _filename);
+        } catch (Error e) {
+            caught = e;
+        }
+        assertNull(caught);
+    }
+    
+    @Test
+    public void testLoadingInvalidFilepath1() {
+        Error caught = null;
+        try {
+            _filename = "ille:gal.json";
+            _storage.loadFile(_tasks, _deletedIDs, _filename);
+        } catch (Error e) {
+            caught = e;
+        }
+        assertNotNull(caught);
+        assertEquals(GlobalConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
+    }
+    
+    @Test
+    public void testLoadingInvalidFilepath2() {
+        Error caught = null;
+        try {
+            _filename = "ille*gal.json";
+            _storage.loadFile(_tasks, _deletedIDs, _filename);
+        } catch (Error e) {
+            caught = e;
+        }
+        assertNotNull(caught);
+        assertEquals(GlobalConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
+    }
+    
+    @Test
+    public void testLoadingInvalidFilepath3() {
+        Error caught = null;
+        try {
+            _filename = "ille?gal.json";
+            _storage.loadFile(_tasks, _deletedIDs, _filename);
+        } catch (Error e) {
+            caught = e;
+        }
+        assertNotNull(caught);
+        assertEquals(GlobalConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
+    }
+    
+    @Test
+    public void testLoadingInvalidFilepath4() {
+        Error caught = null;
+        try {
+            _filename = "ille\"gal.json";
+            _storage.loadFile(_tasks, _deletedIDs, _filename);
+        } catch (Error e) {
+            caught = e;
+        }
+        assertNotNull(caught);
+        assertEquals(GlobalConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
+    }
+    
+    @Test
+    public void testLoadingInvalidFilepath5() {
+        Error caught = null;
+        try {
+            _filename = "ille<gal.json";
+            _storage.loadFile(_tasks, _deletedIDs, _filename);
+        } catch (Error e) {
+            caught = e;
+        }
+        assertNotNull(caught);
+        assertEquals(GlobalConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
+    }
+    
+    @Test
+    public void testLoadingInvalidFilepath6() {
+        Error caught = null;
+        try {
+            _filename = "ille>gal.json";
+            _storage.loadFile(_tasks, _deletedIDs, _filename);
+        } catch (Error e) {
+            caught = e;
+        }
+        assertNotNull(caught);
+        assertEquals(GlobalConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
+    }
+    
+    @Test
+    public void testLoadingInvalidFilepath7() {
+        Error caught = null;
+        try {
+            _filename = "ille|gal.json";
+            _storage.loadFile(_tasks, _deletedIDs, _filename);
+        } catch (Error e) {
+            caught = e;
+        }
+        assertNotNull(caught);
+        assertEquals(GlobalConstants.ERROR_INVALID_FILEPATH, caught.getMessage());
+    }
+    
+    private String nextPriority(String priority) {
+        switch (priority) {
+        case "L":
+            return "M";
+        case "M":
+            return "H";
+        case "H":
+            return "L";
+        default:
+            return "";
+        }
+    }
+    
+    private Calendar oneMinuteAfter(Calendar instance) {
+        Calendar nextMinute = (Calendar) instance.clone();
+        nextMinute.add(Calendar.MINUTE, 1);
+        return nextMinute;
+    }
+    
+    private Task instantiateTask(String name, String description, String priority, 
+            String googleId, Calendar start, Calendar due, Calendar lastUpdated, 
+            boolean isCompleted, boolean shouldSync, boolean hasStartTime, 
+            boolean hasDueTime) {
+        Task task = new Task(name);
+        task.setDescription(description);
+        task.setPriority(priority);
+        task.setGoogleId(googleId);
+        task.setStartDate(start);
+        task.setDueDate(due);
+        task.setLastUpdated(lastUpdated);
+        task.setIsCompleted(isCompleted);
+        task.setShouldSync(shouldSync);
+        task.setHasStartTime(hasStartTime);
+        task.setHasDueTime(hasDueTime);
+        return task;
+    }
+    
+    private void assertTaskEquals(Task expected, Task actual) {
+        assertEquals(expected.getName(), actual.getName());
+        assertEquals(expected.getDescription(), actual.getDescription());
+        assertEquals(expected.getPriority(), actual.getPriority());
+        assertEquals(expected.getGoogleId(), actual.getGoogleId());
+        assertCalendarEquals(expected.getStartDate(), actual.getStartDate());
+        assertCalendarEquals(expected.getDueDate(), actual.getDueDate());
+        assertCalendarEquals(expected.getLastUpdated(), actual.getLastUpdated());
+        assertEquals(expected.getIsCompleted(), actual.getIsCompleted());
+        assertEquals(expected.getIsOverdue(), actual.getIsOverdue());
+        assertEquals(expected.getShouldSync(), actual.getShouldSync());
+        assertEquals(expected.getHasStartTime(), actual.getHasStartTime());
+        assertEquals(expected.getHasDueTime(), actual.getHasDueTime());
+    }
+    
+    private void assertCalendarEquals(Calendar expected, Calendar actual) {
+        assertEquals(expected == null, actual == null);
+        if (expected != null) {
+            assertEquals(expected.getTimeInMillis()/1000, actual.getTimeInMillis()/1000);
+        }
+    }
+}
+
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\test\StorageTest.java
+
+
+
+
+

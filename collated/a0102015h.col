@@ -1,0 +1,4384 @@
+//@author: a0102015h
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\Action.java
+	 */
+
+public abstract class Action {
+
+	protected static final Logger LOGGER = Logger.getLogger(Action.class
+			.getName());
+
+	protected ActionType _type;
+	protected StringBuilder _feedback;
+	protected boolean _isSuccess;
+
+	public abstract void execute(LinkedList<Task> displayList,
+			LinkedList<Task> masterList);
+
+	public StringBuilder getFeedback() {
+		return _feedback;
+	}
+
+	public boolean isSuccess() {
+		return _isSuccess;
+	}
+
+	public void setSuccess(boolean isSuccess) {
+		_isSuccess = isSuccess;
+	}
+
+	public ActionType getType() {
+		return _type;
+	}
+
+	public boolean shouldShowAllCompleted() {
+		return false;
+	}
+
+	public String getDeletedTaskID() {
+		return null;
+	}
+
+	public void attachDeletedList(LinkedList<String> list) {
+		return;
+	}
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\Action.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\ActionType.java
+	 */
+
+public enum ActionType {
+	ADD, DELETE, EDIT, SORT, FIND, COMPLETE, SYNC, LOG_OUT;
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\ActionType.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\AddAction.java
+	 */
+
+public class AddAction extends Action {
+
+	private Task _newTask;
+	private EditAction _editAction;
+	private SortAction _defaultSort;
+
+	public AddAction(String taskName, LinkedList<Field> fields) {
+
+		assert !taskName.isEmpty() && taskName != null;
+
+		_feedback = new StringBuilder();
+		_type = ActionType.ADD;
+		_defaultSort = new SortAction();
+
+		if (taskName != null) {
+			_newTask = new Task(taskName);
+		}
+
+		if (fields != null) {
+			_editAction = new EditAction(_newTask, fields);
+		}
+	}
+
+	public void execute(LinkedList<Task> displayList,
+			LinkedList<Task> masterList) {
+
+		if (_newTask == null) {
+
+			_feedback.append(GlobalConstants.NOTHING_ADDED);
+			_isSuccess = false;
+			return;
+
+		} else {
+
+			displayList.add(_newTask);
+			masterList.add(_newTask);
+
+			_isSuccess = true;
+			_feedback.append(String.format(GlobalConstants.TASK_ADDED,
+					_newTask.getName()));
+
+			if (_editAction != null) {
+
+				_editAction.execute(displayList, masterList);
+				_feedback.append(_editAction.getFeedback().toString());
+
+				if (!_editAction.isSuccess()) {
+					LOGGER.info(GlobalConstants.SORTING_DISPLAY_LIST);
+					_defaultSort.execute(displayList, masterList);
+				}
+
+			} else {
+				LOGGER.info(GlobalConstants.SORTING_DISPLAY_LIST);
+				_defaultSort.execute(displayList, masterList);
+			}
+		}
+	}
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\AddAction.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\CommandParser.java
+	 */
+
+public class CommandParser {
+
+	private static final String STRING_SPACE = " ";
+	private static final String STRING_DASH = "-";
+	private static final char CHAR_DASH = '-';
+	private static final String STRING_EMPTY = "";
+	private static final String PRIM_NAME = "-n";
+	private static final String STRING_NAME = "name";
+	private static final String STRING_NO = "no";
+	private static final String STRING_YES = "yes";
+	private static final String STRING_N = "n";
+	private static final String STRING_Y = "y";
+	private static final String STRING_ALL = "all";
+	private static final String COMMAND_LOGOUT_ABBREV = "LG";
+	private static final String COMMAND_LOGOUT = "LOGOUT";
+	private static final String COMMAND_SYNC_ABBREV = "SG";
+	private static final String COMMAND_SYNC = "SYNC";
+	private static final String COMMAND_COMPLETE_ABBREV = "C";
+	private static final String COMMAND_COMPLETE = "COMPLETE";
+	private static final String COMMAND_FIND_ABBREV = "F";
+	private static final String COMMAND_FIND = "FIND";
+	private static final String COMMAND_DELETE_ABBREV = "D";
+	private static final String COMMAND_DELETE = "DELETE";
+	private static final String COMMAND_EDIT_ABBREV = "E";
+	private static final String COMMAND_EDIT = "EDIT";
+	private static final String COMMAND_ADD_ABBREV = "A";
+	private static final String COMMAND_ADD = "ADD";
+
+	private static final char IDENTIFIER_CHAR_BACKSLASH = '\\';
+	private static final String IDENTIFIER_BACKSLASH = "\\\\";
+
+	private static final String[][] CONVERSION_TABLE = { { "from", "-s" },
+			{ "start", "-s" }, { "to", "-d" }, { "due", "-d" }, { "by", "-d" },
+			{ "end", "-d" }, { "priority", "-p" }, { "prio", "-p" },
+			{ "overdue", "-o" }, { "completed", "-c" }, { "duration", "-l" },
+			{ "ascend", "a" }, { "descend", "d" }, { "high", "h" },
+			{ "medium", "m" }, { "low", "l" }, { "yes", "y" }, { "no", "n" },
+			{ "before", "bf" }, { "after", "af" }, { "on", "on" },
+			{ "between", "btw" }, { "and", "&" }, { "today", "tdy" },
+			{ "tomorrow", "tmr" }, { "monday", "mon" }, { "tuesday", "tue" },
+			{ "wednesday", "wed" }, { "thursday", "thu" }, { "friday", "fri" },
+			{ "saturday", "sat" }, { "sunday", "sun" }, { "clear", "clr" } };
+
+	private StringBuilder _feedback;
+	private String _taskName;
+	private int _taskNumber;
+	private ActionType _actionType;
+	private LinkedList<Field> _fields;
+
+	private Boolean _completeYesNo;
+	private boolean _findAll;
+	private boolean _noTaskName;
+
+	/* Test variable */
+	private String _fieldStringPrim;
+	private String _fieldStringClean;
+
+	public CommandParser(String command) {
+		_feedback = new StringBuilder();
+		_fields = new LinkedList<Field>();
+		_noTaskName = false;
+		command = command.trim();
+		processCmdString(command);
+	}
+
+	public StringBuilder getFeedback() {
+		return _feedback;
+	}
+
+	public Action getAction() {
+		if (_actionType == null) {
+			return null;
+		}
+
+		switch (_actionType) {
+		case ADD:
+			return new AddAction(_taskName, _fields);
+		case DELETE:
+			return new DeleteAction(_taskNumber);
+		case EDIT:
+			return new EditAction(_taskNumber, _fields, _taskName);
+		case SORT:
+			return new SortAction(_fields);
+		case FIND:
+			return new FindAction(_fields, _findAll, _taskName);
+		case COMPLETE:
+			return new CompleteAction(_taskNumber, _completeYesNo);
+		case SYNC:
+			return new SyncAction();
+		case LOG_OUT:
+			return new LogOutAction();
+		default:
+			return null;
+		}
+	}
+
+	/* Test method */
+	public int getTaskNumber() {
+		return _taskNumber;
+	}
+
+	/* Test method */
+	public String getTaskName() {
+		return _taskName;
+	}
+
+	/* Test method */
+	public String getFieldStringPrim() {
+		return _fieldStringPrim;
+	}
+
+	/* Test method */
+	public boolean getFindAll() {
+		return _findAll;
+	}
+
+	/* Test method */
+	public boolean getCompleteYesNo() {
+		return _completeYesNo;
+	}
+
+	/* Test method */
+	public String getFieldStringClean() {
+		return _fieldStringClean;
+	}
+
+	/* Test method */
+	public LinkedList<Field> getFields() {
+		return _fields;
+	}
+
+	private void processCmdString(String cmdString) {
+
+		if (cmdString.trim().equals(STRING_EMPTY)) {
+			_feedback.append(GlobalConstants.NO_COMMAND);
+			return;
+		}
+
+		String[] actionAndContents = cmdString.split(STRING_SPACE, 2);
+
+		determineActionType(actionAndContents[0].trim());
+
+		if (_actionType == null) {
+			return;
+		}
+
+		if (actionAndContents.length == 1
+				|| actionAndContents[1].trim().isEmpty()) {
+
+			if (_actionType == ActionType.ADD) {
+				_feedback.append(GlobalConstants.NO_TASK_NAME);
+
+			}
+			return;
+		}
+
+		determineActionDetails(actionAndContents[1].trim());
+	}
+
+	private String convertToPrim(String cmdString) {
+		for (String[] conversion : CONVERSION_TABLE) {
+			String natForm = conversion[0];
+			String primForm = conversion[1];
+			cmdString = cmdString.replaceAll("\\b" + "(?i)" + natForm + "\\b",
+					primForm);
+		}
+
+		// for testing purpose;
+		_fieldStringPrim = cmdString;
+
+		return cmdString;
+	}
+
+	private String extractTaskNumber(String fieldsString) {
+		String[] numberAndFields = fieldsString.split(STRING_SPACE, 2);
+		String taskNumString = numberAndFields[0].trim();
+
+		try {
+			
+			_taskNumber = Integer.parseInt(taskNumString);
+			
+			fieldsString = fieldsString.replaceFirst(
+					String.valueOf(_taskNumber), STRING_EMPTY).trim();
+			
+		} catch (NumberFormatException e) {
+			_taskNumber = 0;
+		}
+		return fieldsString;
+	}
+
+	private String extractTaskName(String fieldsString) {
+
+		int stopIndex = fieldsString.indexOf(IDENTIFIER_CHAR_BACKSLASH);
+		if (stopIndex == -1) {
+			_feedback.append(GlobalConstants.NAME_NO_CLOSE);
+		} else if (stopIndex == 0) {
+			_feedback.append(GlobalConstants.TASK_NAME_BLANK);
+		} else {
+			String taskName = fieldsString.substring(0, stopIndex).trim();
+			if (taskName.isEmpty()) {
+				_feedback.append(GlobalConstants.TASK_NAME_BLANK);
+			} else {
+				_taskName = taskName;
+				fieldsString = fieldsString
+						.substring(
+								fieldsString.indexOf(IDENTIFIER_CHAR_BACKSLASH))
+						.replaceFirst(IDENTIFIER_BACKSLASH, STRING_EMPTY)
+						.trim();
+			}
+		}
+		return fieldsString;
+	}
+
+	private String extractFindEditName(String fieldsString) {
+
+		fieldsString = fieldsString.replaceFirst("\\b(?i)" + STRING_NAME
+				+ "\\b", PRIM_NAME);
+		int initLength = fieldsString.length();
+		fieldsString = fieldsString.replaceFirst(PRIM_NAME,
+				IDENTIFIER_BACKSLASH);
+		int endLength = fieldsString.length();
+		if (initLength != endLength) {
+			return extractTaskNameWithBackSlash(fieldsString);
+		} else {
+			return fieldsString;
+		}
+
+	}
+
+	private String extractTaskNameWithBackSlash(String fieldsString) {
+		int quoteStart = -1, quoteEnd = -1;
+		int i, j;
+		for (i = 0; i < fieldsString.length(); i++) {
+			if (fieldsString.charAt(i) == IDENTIFIER_CHAR_BACKSLASH) {
+				quoteStart = i;
+				break;
+			}
+		}
+
+		for (j = fieldsString.length() - 1; j >= 0 && j > i; j--) {
+			if (fieldsString.charAt(j) == IDENTIFIER_CHAR_BACKSLASH) {
+				quoteEnd = j;
+				break;
+			}
+		}
+
+		if (quoteStart != -1 && quoteEnd == -1) {
+			_feedback.append(GlobalConstants.NAME_NO_CLOSE);
+
+			return fieldsString.replaceFirst(IDENTIFIER_BACKSLASH, STRING_NAME);
+
+		} else if (quoteStart != -1 && quoteEnd != -1) {
+
+			_taskName = fieldsString.substring(quoteStart + 1, quoteEnd).trim();
+
+			if (_taskName.isEmpty()) {
+				_feedback.append(GlobalConstants.NO_TASK_NAME);
+				_taskName = null;
+			}
+
+			String front = fieldsString.substring(0, quoteStart).trim();
+			String back;
+			if (quoteEnd == fieldsString.length() - 1) {
+				back = STRING_EMPTY;
+			} else {
+				back = fieldsString.substring(quoteEnd + 1).trim();
+			}
+			return front + STRING_SPACE + back;
+		} else {
+			return fieldsString;
+		}
+	}
+
+	private void determineActionType(String actionString) {
+		if (actionString.equalsIgnoreCase(COMMAND_ADD)
+				|| actionString.equalsIgnoreCase(COMMAND_ADD_ABBREV)) {
+
+			_actionType = ActionType.ADD;
+
+		} else if (actionString.equalsIgnoreCase(COMMAND_EDIT)
+				|| actionString.equalsIgnoreCase(COMMAND_EDIT_ABBREV)) {
+
+			_actionType = ActionType.EDIT;
+
+		} else if (actionString.equalsIgnoreCase(COMMAND_DELETE)
+				|| actionString.equalsIgnoreCase(COMMAND_DELETE_ABBREV)) {
+
+			_actionType = ActionType.DELETE;
+
+		} else if (actionString.equalsIgnoreCase(COMMAND_FIND)
+				|| actionString.equalsIgnoreCase(COMMAND_FIND_ABBREV)) {
+
+			_actionType = ActionType.FIND;
+
+		} else if (actionString.equalsIgnoreCase(COMMAND_COMPLETE)
+				|| actionString.equalsIgnoreCase(COMMAND_COMPLETE_ABBREV)) {
+
+			_actionType = ActionType.COMPLETE;
+
+		} else if (actionString.equalsIgnoreCase(COMMAND_SYNC)
+				|| actionString.equalsIgnoreCase(COMMAND_SYNC_ABBREV)) {
+
+			_actionType = ActionType.SYNC;
+
+		} else if (actionString.equalsIgnoreCase(COMMAND_LOGOUT)
+				|| actionString.equalsIgnoreCase(COMMAND_LOGOUT_ABBREV)) {
+
+			_actionType = ActionType.LOG_OUT;
+
+		} else {
+			_feedback.append(GlobalConstants.INVALID_ACTION_TYPE);
+			return;
+		}
+	}
+
+	private void determineActionDetails(String fieldsString) {
+
+		fieldsString = determineNonFieldInputs(fieldsString).trim();
+		if (_actionType == ActionType.COMPLETE
+				|| _actionType == ActionType.DELETE
+				|| _actionType == ActionType.SYNC
+				|| _actionType == ActionType.LOG_OUT || _noTaskName || _findAll) {
+			return;
+		} else {
+			fieldsString = convertToPrim(fieldsString).trim();
+			fieldsString = removeWrongInputs(fieldsString).trim();
+			determineFields(fieldsString);
+		}
+	}
+
+	private void determineFields(String fieldsString) {
+
+		String[] fieldStringArray = fieldsString.split(STRING_DASH);
+
+		for (String fieldString : fieldStringArray) {
+			fieldString = fieldString.trim();
+			if (!fieldString.isEmpty()) {
+				FieldParser fp = new FieldParser(fieldString);
+				fp.setActionType(_actionType);
+				Field field = fp.getField();
+				_feedback.append(fp.getFeedback());
+				if (field != null) {
+					_fields.add(field);
+				}
+			}
+		}
+	}
+
+	private String determineNonFieldInputs(String fieldsString) {
+
+		switch (_actionType) {
+		case ADD:
+
+			fieldsString = extractTaskName(fieldsString);
+
+			if (_taskName == null) {
+				_feedback.append(GlobalConstants.NO_TASK_NAME);
+				_noTaskName = true;
+			} else {
+				_noTaskName = false;
+			}
+
+			break;
+
+		case EDIT:
+		case DELETE:
+		case COMPLETE:
+
+			fieldsString = extractTaskNumber(fieldsString);
+
+			if (_actionType == ActionType.EDIT && _taskNumber > 0) {
+				fieldsString = extractFindEditName(fieldsString);
+			}
+
+			if (_actionType == ActionType.COMPLETE && _taskNumber > 0) {
+				if (fieldsString.trim().equalsIgnoreCase(STRING_Y)
+						|| fieldsString.trim().equalsIgnoreCase(STRING_YES)) {
+					_completeYesNo = true;
+				} else if (fieldsString.trim().equalsIgnoreCase(STRING_N)
+						|| fieldsString.trim().equalsIgnoreCase(STRING_NO)) {
+					_completeYesNo = false;
+				} else {
+					_completeYesNo = null;
+				}
+			}
+
+			break;
+
+		case FIND:
+
+			if (fieldsString.trim().equalsIgnoreCase(STRING_ALL)) {
+				_findAll = true;
+			} else {
+				_findAll = false;
+			}
+
+			fieldsString = extractFindEditName(fieldsString);
+			break;
+
+		default:
+			break;
+		}
+
+		return fieldsString;
+	}
+
+	private String removeWrongInputs(String fieldsString) {
+
+		if (fieldsString.isEmpty()) {
+			return fieldsString;
+		}
+
+		if (fieldsString.charAt(0) != CHAR_DASH
+				&& !fieldsString.equalsIgnoreCase(STRING_ALL)
+				&& !fieldsString.equalsIgnoreCase(STRING_Y)
+				&& !fieldsString.equalsIgnoreCase(STRING_N)) {
+
+			int indexDash = fieldsString.indexOf(CHAR_DASH);
+			String wrongFields;
+
+			if (indexDash != -1) {
+				wrongFields = fieldsString.substring(0,
+						fieldsString.indexOf(CHAR_DASH));
+			} else {
+				wrongFields = fieldsString;
+			}
+
+			_feedback.append(String.format(
+					GlobalConstants.INVALID_FIELD_FORMAT_IN,
+					wrongFields.trim()));
+
+			fieldsString = fieldsString.replaceFirst(
+					Pattern.quote(wrongFields), STRING_EMPTY);
+		}
+
+		// For testing purposes
+		_fieldStringClean = fieldsString;
+
+		return fieldsString;
+	}
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\CommandParser.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\CompleteAction.java
+	 */
+
+public class CompleteAction extends Action {
+
+	private static final String STRING_NOT_COMPLETED = "not completed";
+	private static final String STRING_COMPLETED = "completed";
+	
+	private int _taskIndex;
+	private Boolean _yesNo;
+
+	public CompleteAction(int taskNumber, Boolean yesNO) {
+
+		this._feedback = new StringBuilder();
+		this._type = ActionType.COMPLETE;
+		_yesNo = yesNO;
+
+		if (taskNumber != 0) {
+			_taskIndex = taskNumber - 1;
+		} else {
+			_taskIndex = -1;
+		}
+	}
+
+	@Override
+	public void execute(LinkedList<Task> displayList,
+			LinkedList<Task> masterList) {
+
+		if (isTaskIndexInRange(displayList)) {
+
+			Task taskToComplete = displayList.get(_taskIndex);
+
+			if (_yesNo == null) {
+				taskToComplete.toggleCompleted();
+			} else {
+				taskToComplete.setIsCompleted(_yesNo);
+			}
+
+			this._isSuccess = true;
+			this._feedback.append(String.format(GlobalConstants.TASK_NO_IS,
+					_taskIndex + 1,
+					(taskToComplete.getIsCompleted() ? STRING_COMPLETED
+							: STRING_NOT_COMPLETED)));
+
+			taskToComplete.setLastUpdated(Calendar.getInstance());
+			
+		} else {
+			
+			this._isSuccess = false;
+			this._feedback.append(GlobalConstants.TASK_NO_OUT_OF_RANGE);
+			return;
+		}
+	}
+
+	private boolean isTaskIndexInRange(LinkedList<Task> displayList) {
+		if (_taskIndex < 0 || _taskIndex >= displayList.size()) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\CompleteAction.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\DateParser.java
+	 */
+
+public class DateParser {
+
+	private static final String PRIM_TODAY = "tdy";
+	private static final String PRIM_TOMORROW = "tmr";
+	private static final String STRING_NEXT = "next";
+	private static final String SPACE = " ";
+	private static final String BACK_SLASH = "/";
+	private static final String COLON = ":";
+
+	private static final String DATE_TIME_FORMAT_1 = "dd/MM/yy HH:mm";
+	private static final String DATE_TIME_FORMAT_2 = "dd/MM HH:mm";
+	private static final String DATE_FORMAT_1 = "dd/MM/yy";
+	private static final String DATE_FORMAT_2 = "dd/MM";
+	private static final String TIME_FORMAT = "HH:mm";
+	private static final String DAY_FORMAT = "EEE";
+
+	private Calendar _dateTime;
+	private StringBuilder _feedback;
+
+	private boolean _dateParsed;
+	private boolean _timeParsed;
+
+	public DateParser(String dateTimeStr) {
+		_feedback = new StringBuilder();
+		_dateTime = new GregorianCalendar();
+		_dateParsed = false;
+		_timeParsed = false;
+		parse(dateTimeStr);
+	}
+
+	private void parse(String dateTimeStr) {
+
+		if (dateTimeStr.contains(COLON) && dateTimeStr.contains(BACK_SLASH)) {
+
+			parseDateTime(dateTimeStr);
+
+		} else if (dateTimeStr.contains(COLON) && dateTimeStr.contains(SPACE)) {
+
+			parseDayTime(dateTimeStr);
+
+		} else if (dateTimeStr.contains(COLON)) {
+
+			parseTime(dateTimeStr);
+
+		} else if (dateTimeStr.contains(BACK_SLASH)) {
+
+			parseDate(dateTimeStr);
+
+		} else {
+
+			determineDay(dateTimeStr);
+		}
+	}
+
+	private void determineDay(String dateTimeStr) {
+		String nextAndDay[] = dateTimeStr.split(SPACE, 2);
+		String day;
+
+		if (nextAndDay.length == 2
+				&& nextAndDay[0].trim().equalsIgnoreCase(STRING_NEXT)) {
+
+			day = nextAndDay[1];
+			parseDay(day, true);
+
+		} else if (nextAndDay.length == 2
+				&& !nextAndDay[0].trim().equalsIgnoreCase(STRING_NEXT)) {
+
+			_dateTime = null;
+			_feedback
+					.append(String.format(
+							GlobalConstants.INVALID_DAY_CRITERIA,
+							nextAndDay[0].trim()));
+
+		} else if (nextAndDay.length == 1) {
+
+			day = nextAndDay[0];
+			parseDay(day, false);
+		}
+	}
+
+	private void parseDayTime(String dateTimeStr) {
+		String[] dayAndTime = dateTimeStr.split(SPACE, 3);
+		String day;
+		String time;
+
+		if (dayAndTime.length == 3) {
+
+			if (dayAndTime[0].trim().equalsIgnoreCase(STRING_NEXT)) {
+
+				day = dayAndTime[1];
+				time = dayAndTime[2];
+				parseDay(day, true);
+				parseTime(time);
+
+			} else {
+
+				_dateTime = null;
+				_feedback.append(String.format(
+						GlobalConstants.INVALID_DAY_CRITERIA,
+						dayAndTime[0].trim()));
+
+			}
+
+		} else if (dayAndTime.length == 2) {
+
+			day = dayAndTime[0];
+			time = dayAndTime[1];
+			parseDay(day, false);
+			parseTime(time);
+		}
+	}
+
+	private void parseDateTime(String dateTimeStr) {
+		try {
+
+			SimpleDateFormat dateTimeFormat = new SimpleDateFormat(
+					DATE_TIME_FORMAT_1);
+			_dateTime.setTime(dateTimeFormat.parse(dateTimeStr));
+			_dateParsed = true;
+			_timeParsed = true;
+
+		} catch (NullPointerException e) {
+
+			_dateTime = null;
+
+		} catch (ParseException e) {
+
+			try {
+
+				SimpleDateFormat dateTimeFormat = new SimpleDateFormat(
+						DATE_TIME_FORMAT_2);
+				_dateTime.setTime(dateTimeFormat.parse(dateTimeStr));
+				_dateTime.set(Calendar.YEAR,
+						Calendar.getInstance().get(Calendar.YEAR));
+				_dateParsed = true;
+				_timeParsed = true;
+
+			} catch (ParseException e2) {
+
+				_feedback.append(GlobalConstants.INVALID_DATE_AND_TIME_FORMAT);
+				_dateTime = null;
+			}
+		}
+	}
+
+	private void parseDate(String dateStr) {
+
+		SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT_1);
+
+		try {
+
+			_dateTime.setTime(dateFormat.parse(dateStr));
+			_dateParsed = true;
+
+		} catch (NullPointerException e) {
+
+			_dateTime = null;
+
+		} catch (ParseException e) {
+
+			try {
+
+				SimpleDateFormat timeFormat = new SimpleDateFormat(
+						DATE_FORMAT_2);
+				_dateTime.setTime(timeFormat.parse(dateStr));
+				_dateTime.set(Calendar.YEAR,
+						Calendar.getInstance().get(Calendar.YEAR));
+				_dateParsed = true;
+
+			} catch (ParseException e2) {
+
+				_feedback.append(GlobalConstants.INVALID_DATE_FORMAT);
+				_dateTime = null;
+			}
+		}
+	}
+
+	private void parseTime(String timeStr) {
+
+		SimpleDateFormat timeFormat = new SimpleDateFormat(TIME_FORMAT);
+
+		Calendar timeOfDay = new GregorianCalendar();
+
+		try {
+
+			timeOfDay.setTime(timeFormat.parse(timeStr));
+			_timeParsed = true;
+
+		} catch (NullPointerException e) {
+
+			_dateTime = null;
+			return;
+
+		} catch (ParseException e) {
+
+			_dateTime = null;
+			_feedback.append(String.format(GlobalConstants.INVALID_TIME,
+					timeStr));
+			return;
+		}
+
+		if (_dateTime != null) {
+
+			_dateTime.set(Calendar.HOUR_OF_DAY,
+					timeOfDay.get(Calendar.HOUR_OF_DAY));
+			_dateTime.set(Calendar.MINUTE, timeOfDay.get(Calendar.MINUTE));
+
+			if (!_dateParsed) {
+
+				Calendar now = new GregorianCalendar();
+
+				if (_dateTime.compareTo(now) < 0) {
+					_dateTime.add(Calendar.DAY_OF_MONTH, 1);
+				}
+			}
+		}
+	}
+
+	private void parseDay(String dayStr, boolean isNextWeek) {
+
+		if (dayStr.equalsIgnoreCase(PRIM_TOMORROW)
+				|| dayStr.equalsIgnoreCase(PRIM_TODAY)) {
+
+			if (dayStr.equalsIgnoreCase(PRIM_TOMORROW)) {
+				_dateTime.add(Calendar.DAY_OF_MONTH, 1);
+			}
+			_dateParsed = true;
+
+		} else {
+
+			SimpleDateFormat format = new SimpleDateFormat(DAY_FORMAT);
+			Calendar dayOfWeek = new GregorianCalendar();
+
+			try {
+
+				dayOfWeek.setTime(format.parse(dayStr));
+				_dateParsed = true;
+				determineDateFromDay(isNextWeek, dayOfWeek);
+
+			} catch (NullPointerException e) {
+
+				_dateTime = null;
+
+			} catch (ParseException e) {
+
+				_dateTime = null;
+				_feedback.append(String.format(GlobalConstants.INVALID_DAY,
+						dayStr));
+			}
+		}
+	}
+
+	private void determineDateFromDay(boolean isNextWeek, Calendar dayOfWeek) {
+		int dayOfWeekInt = dayOfWeek.get(Calendar.DAY_OF_WEEK);
+
+		if (isNextWeek) {
+
+			boolean weekCrossed = false;
+			int prevDay = _dateTime.get(Calendar.DAY_OF_WEEK);
+
+			while (dayOfWeekInt != _dateTime.get(Calendar.DAY_OF_WEEK)
+					|| !weekCrossed) {
+
+				_dateTime.add(Calendar.DAY_OF_MONTH, 1);
+
+				if (!weekCrossed
+						&& _dateTime.get(Calendar.DAY_OF_WEEK) <= prevDay) {
+
+					weekCrossed = true;
+				}
+			}
+
+		} else {
+
+			while (dayOfWeekInt != _dateTime.get(Calendar.DAY_OF_WEEK)) {
+
+				_dateTime.add(Calendar.DAY_OF_MONTH, 1);
+			}
+		}
+	}
+
+	public Calendar getDateTime() {
+		return _dateTime;
+	}
+
+	public StringBuilder getFeedback() {
+		return _feedback;
+	}
+
+	public boolean isDateParsed() {
+		return _dateParsed;
+	}
+
+	public boolean isTimeParsed() {
+		return _timeParsed;
+	}
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\DateParser.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\DeleteAction.java
+	 */
+
+public class DeleteAction extends Action {
+
+	private static final String STRING_DELETED = "deleted";
+
+	private int _taskIndex;
+
+	private String _deletedTaskID;
+
+	public DeleteAction(int taskNumber) {
+		this._feedback = new StringBuilder();
+		this._type = ActionType.DELETE;
+
+		if (taskNumber != 0) {
+			_taskIndex = taskNumber - 1;
+		} else {
+			_taskIndex = -1;
+		}
+	}
+
+	public void execute(LinkedList<Task> workingList,
+			LinkedList<Task> workingListMaster) {
+
+		if (isTaskIndexInRange(workingList)) {
+
+			Task taskToDel = workingList.get(_taskIndex);
+
+			workingList.remove(taskToDel);
+			workingListMaster.remove(taskToDel);
+
+			_deletedTaskID = taskToDel.getGoogleId();
+
+			this._isSuccess = true;
+			this._feedback.append(String.format(GlobalConstants.TASK_NO_IS,
+					_taskIndex + 1, STRING_DELETED));
+
+		} else {
+
+			this._isSuccess = false;
+			this._feedback.append(GlobalConstants.TASK_NO_OUT_OF_RANGE);
+			return;
+		}
+	}
+
+	public String getDeletedTaskID() {
+		return _deletedTaskID;
+	}
+
+	private boolean isTaskIndexInRange(LinkedList<Task> workingList) {
+
+		if (_taskIndex < 0 || _taskIndex >= workingList.size()) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\DeleteAction.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\EditAction.java
+	 */
+
+public class EditAction extends Action {
+
+	private static final String STRING_L = "L";
+	private static final String STRING_M = "M";
+	private static final String STRING_H = "H";
+	
+	private int _taskIndex;
+	private LinkedList<Field> _fields;
+	private Task _task;
+	private SortAction _defaultSort;
+	private String _taskName;
+
+	public EditAction(int taskNumber, LinkedList<Field> fields, String taskName) {
+
+		_isSuccess = false;
+		_feedback = new StringBuilder();
+		_type = ActionType.EDIT;
+		_taskName = taskName;
+		_defaultSort = new SortAction();
+
+		if (taskNumber != 0) {
+			_taskIndex = taskNumber - 1;
+		} else {
+			_taskIndex = -1;
+		}
+
+		_fields = fields;
+	}
+
+	/* For add action */
+	public EditAction(Task task, LinkedList<Field> fields) {
+
+		_isSuccess = false;
+		_feedback = new StringBuilder();
+		_type = ActionType.EDIT;
+		_task = task;
+		_fields = fields;
+		_defaultSort = new SortAction();
+	}
+
+	@Override
+	public void execute(LinkedList<Task> displayList,
+			LinkedList<Task> masterList) {
+
+		if (_task != null) {
+			execute();
+		} else if (isTaskIndexInRange(displayList)) {
+			_task = displayList.get(_taskIndex);
+			execute();
+		} else {
+			_feedback.append(GlobalConstants.TASK_NO_OUT_OF_RANGE);
+		}
+
+		if (_isSuccess) {
+			LOGGER.info(GlobalConstants.SORTING_DISPLAY_LIST);
+			_task.setLastUpdated(Calendar.getInstance());
+			_defaultSort.execute(displayList, masterList);
+		}
+	}
+
+	private void execute() {
+		
+		if (_taskName != null) {
+			updateTaskName();
+		}
+
+		for (Field field : _fields) {
+			FieldType fieldType = field.getFieldType();
+
+			switch (fieldType) {
+			case START_DATE:
+				updateStartDate(field);
+				break;
+			case DUE_DATE:
+				updateDueDate(field);
+				break;
+			case PRIORITY:
+				updatePriority(field);
+				break;
+			default:
+				break;
+			}
+		}
+	}
+
+	private void updatePriority(Field field) {
+		
+		assert field.getPriority().equalsIgnoreCase(STRING_H)
+				|| field.getPriority().equalsIgnoreCase(STRING_M)
+				|| field.getPriority().equalsIgnoreCase(STRING_L);
+
+		if (field.shouldClearPriority()) {
+
+			_task.setPriority((String) null);
+			_isSuccess = true;
+			_feedback.append(GlobalConstants.PRIORITY_CLEARED);
+
+		} else if (field.getPriority() == null) {
+
+			_isSuccess = false;
+
+		} else {
+
+			_task.setPriority(field.getPriority());
+			_isSuccess = true;
+			_feedback.append(String.format(GlobalConstants.PRIORITY_SET,
+					field.getPriority()));
+		}
+	}
+
+	private void updateTaskName() {
+		
+		assert !_taskName.isEmpty();
+		_task.setName(_taskName);
+		_feedback.append(String.format(GlobalConstants.TASK_NAME_SET,
+				_taskName));
+		_isSuccess = true;
+	}
+
+	private void updateDueDate(Field field) {
+		
+		if (field.shouldClearDate()) {
+			_task.setDueDate((Calendar) null);
+			_task.setHasDueTime(false);
+			_isSuccess = true;
+			_feedback.append(GlobalConstants.DUE_DATE_CLEARED);
+		} else if (field.getDate() == null) {
+			return;
+		} else {
+			Calendar newDate = (Calendar) field.getDate().clone();
+			boolean hasDueTime = calibrateDueDate(field, newDate);
+			setDueDate(newDate, hasDueTime, field.isTimeParsed());
+		}
+	}
+
+	private void setDueDate(Calendar newDate, boolean hasDueTime,
+			boolean isTimeParsed) {
+		
+		if (_task.getStartDate() != null
+				&& newDate.compareTo(_task.getStartDate()) < 0) {
+			_feedback.append(GlobalConstants.DUE_SMALLER_THAN_START);
+		} else {
+
+			_task.setDueDate(newDate);
+			_task.setHasDueTime(hasDueTime);
+			_isSuccess = true;
+			_feedback.append(String.format(GlobalConstants.DUE_DATE_SET,
+					_task.getDueDateString()));
+		}
+	}
+
+	private boolean calibrateDueDate(Field field, Calendar newDate) {
+		boolean hasDueTime;
+
+		if (!field.isDateParsed() && field.isTimeParsed()
+				&& _task.getDueDate() != null) {
+
+			matchTaskDueDate(newDate);
+			hasDueTime = true;
+
+		} else if (!field.isDateParsed() && field.isTimeParsed()
+				&& _task.getStartDate() != null) {
+
+			matchTaskStartDate(newDate);
+			hasDueTime = true;
+
+			if (!field.isDateParsed() && _task.getStartDate() != null
+					&& newDate.compareTo(_task.getStartDate()) < 0) {
+				newDate.add(Calendar.DAY_OF_MONTH, 1);
+			}
+
+		} else if (!field.isTimeParsed()) {
+
+			configureToMaxTime(newDate);
+			hasDueTime = false;
+
+		} else {
+
+			hasDueTime = true;
+
+		}
+		return hasDueTime;
+	}
+
+	private void updateStartDate(Field field) {
+		
+		if (field.shouldClearDate()) {
+			
+			_task.setStartDate((Calendar) null);
+			_task.setHasStartTime(false);
+			_isSuccess = true;
+			_feedback.append(GlobalConstants.START_DATE_CLEARED);
+			
+		} else if (field.getDate() == null) {
+			
+			return;
+			
+		} else {
+			
+			Calendar newDate = (Calendar) field.getDate().clone();
+			boolean hasStartTime = calibrateStartDate(field, newDate);
+			setStartDate(newDate, hasStartTime);
+		}
+	}
+
+	private void setStartDate(Calendar newDate, boolean hasStartTime) {
+		
+		if (_task.getDueDate() != null
+				&& newDate.compareTo(_task.getDueDate()) > 0) {
+			
+			_feedback.append(GlobalConstants.START_BIGGER_THAN_DUE);
+			
+		} else {
+
+			_task.setStartDate(newDate);
+			_task.setHasStartTime(hasStartTime);
+			_isSuccess = true;
+			_feedback
+					.append(String.format(GlobalConstants.START_DATE_SET,
+							_task.getStartDateString()));
+		}
+	}
+
+	private boolean calibrateStartDate(Field field, Calendar newDate) {
+		boolean hasStartTime;
+
+		if (!field.isDateParsed() && field.isTimeParsed()
+				&& _task.getStartDate() != null) {
+
+			matchTaskStartDate(newDate);
+			hasStartTime = true;
+
+		} else if (!field.isDateParsed() && field.isTimeParsed()
+				&& _task.getDueDate() != null) {
+
+			matchTaskDueDate(newDate);
+			hasStartTime = true;
+
+			if (!field.isDateParsed() && _task.getDueDate() != null
+					&& newDate.compareTo(_task.getDueDate()) > 0) {
+				newDate.add(Calendar.DAY_OF_MONTH, -1);
+			}
+
+		} else if (!field.isTimeParsed()) {
+
+			configureToMinTime(newDate);
+			hasStartTime = false;
+
+		} else {
+
+			hasStartTime = true;
+
+		}
+		return hasStartTime;
+	}
+
+	private boolean isTaskIndexInRange(LinkedList<Task> displayList) {
+		if (_taskIndex < 0 || _taskIndex >= displayList.size()) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+
+	private void configureToMinTime(Calendar newDate) {
+		newDate.set(Calendar.HOUR_OF_DAY, 0);
+		newDate.set(Calendar.MINUTE, 0);
+		newDate.set(Calendar.SECOND, 0);
+	}
+
+	private void configureToMaxTime(Calendar newDate) {
+		newDate.set(Calendar.HOUR_OF_DAY, 23);
+		newDate.set(Calendar.MINUTE, 59);
+		newDate.set(Calendar.SECOND, 59);
+	}
+
+	private void matchTaskDueDate(Calendar newDate) {
+		newDate.set(Calendar.YEAR, _task.getDueDate().get(Calendar.YEAR));
+		newDate.set(Calendar.MONTH, _task.getDueDate().get(Calendar.MONTH));
+		newDate.set(Calendar.DAY_OF_MONTH,
+				_task.getDueDate().get(Calendar.DAY_OF_MONTH));
+	}
+
+	private void matchTaskStartDate(Calendar newDate) {
+		newDate.set(Calendar.YEAR, _task.getStartDate().get(Calendar.YEAR));
+		newDate.set(Calendar.MONTH, _task.getStartDate().get(Calendar.MONTH));
+		newDate.set(Calendar.DAY_OF_MONTH,
+				_task.getStartDate().get(Calendar.DAY_OF_MONTH));
+	}
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\EditAction.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\Field.java
+	 */
+
+public class Field {
+
+	private FieldType _fieldType;
+
+	private String _taskName;
+	private String _priority;
+	
+	private Calendar _date;
+	private Calendar[] _dateRange;
+
+	private FieldCriteria _fieldCriteria;
+
+	private boolean _isDateParsed = false;
+	private boolean _isTimeParsed = false;
+
+	public Field(FieldType fieldType) {
+		_fieldType = fieldType;
+	}
+
+	public Field(FieldType fieldType, Object fieldContent) {
+
+		_fieldType = fieldType;
+		updateFieldContent(fieldContent);
+	}
+
+	public Field(FieldType fieldType, Object fieldContent,
+			FieldCriteria fieldCriteria) {
+
+		_fieldType = fieldType;
+		updateFieldContent(fieldContent);
+		updateFieldCriteria(fieldCriteria);
+	}
+
+	public Field(FieldType fieldType, FieldCriteria fieldCriteria) {
+
+		_fieldType = fieldType;
+		updateFieldCriteria(fieldCriteria);
+	}
+
+	private void updateFieldContent(Object content) {
+		
+		switch (_fieldType) {
+			
+		case START_DATE:
+		case DUE_DATE:
+			
+			try {
+				_date = (Calendar) content;
+			} catch (ClassCastException e) {
+				_dateRange = (Calendar[]) content;
+			}
+			break;
+			
+		case PRIORITY:
+			
+			_priority = (String) content;
+			break;
+
+		default:
+			break;
+		}
+	}
+
+	private void updateFieldCriteria(FieldCriteria fieldCriteria) {
+		_fieldCriteria = fieldCriteria;
+	}
+
+	public void setDateParsed(boolean yesNo) {
+		_isDateParsed = yesNo;
+	}
+
+	public void setTimeParsed(boolean yesNo) {
+		_isTimeParsed = yesNo;
+	}
+
+	public FieldType getFieldType() {
+		return _fieldType;
+	}
+
+	public String getTaskName() {
+		return _taskName;
+	}
+
+	public Calendar getDate() {
+		return _date;
+	}
+
+	public Calendar[] getDateRange() {
+		return _dateRange;
+	}
+
+	public String getPriority() {
+		return _priority;
+	}
+
+	public FieldCriteria getCriteria() {
+		return _fieldCriteria;
+	}
+
+	public boolean isDateParsed() {
+		return _isDateParsed;
+	}
+
+	public boolean isTimeParsed() {
+		return _isTimeParsed;
+	}
+
+	public boolean shouldClearDate() {
+		if (_fieldCriteria == FieldCriteria.CLEAR_DATE) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public boolean shouldClearPriority() {
+		if (_fieldCriteria == FieldCriteria.CLEAR_PRIORITY) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\Field.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\FieldCriteria.java
+	 */
+
+public enum FieldCriteria {
+	
+	//Sorting
+	ASCEND,
+	DESCEND,
+	
+	//start date, due date
+	BEFORE,
+	ON,
+	AFTER,
+	BETWEEN,
+	
+	//completed
+	//overdue
+	YES,
+	NO,
+	
+	//start date, due date
+	CLEAR_DATE,
+	
+	//priority
+	CLEAR_PRIORITY,
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\FieldCriteria.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\FieldParser.java
+	 */
+
+public class FieldParser {
+
+	private static final String PRIM_NO = "n";
+	private static final String PRIM_YES = "y";
+	private static final String PRIM_BETWEEN = "btw";
+	private static final String PRIM_ON = "on";
+	private static final String PRIM_AFTER = "af";
+	private static final String PRIM_BEFORE = "bf";
+	private static final String PRIM_DESCEND = "d";
+	private static final String PRIM_ASCEND = "a";
+	private static final String STRING_H = "H";
+	private static final String STRING_M = "M";
+	private static final String STRING_L = "L";
+	private static final String PRIM_AND = "&";
+	private static final String PRIM_CLEAR = "clr";
+	private static final String SPACE = " ";
+
+	private StringBuilder _feedback;
+	
+	private String _fieldString;
+
+	private ActionType _actionType;
+	private FieldType _fieldType;
+	private Object _fieldContent;
+	private FieldCriteria _fieldCriteria;
+	
+	private boolean _dateParsed;
+	private boolean _timeParsed;
+
+	private Field _field;
+
+	public FieldParser(String fieldString) {
+		
+		assert !fieldString.isEmpty();
+	
+		_feedback = new StringBuilder();
+		_fieldString = fieldString;
+	}
+
+	public void setActionType(ActionType a) {
+		_actionType = a;
+	}
+
+	private void parseField() {
+
+		String[] typeAndContent = _fieldString.split(SPACE, 2);
+
+		determineType(typeAndContent[0].trim());
+
+		if (typeAndContent.length == 2 && _fieldType != null) {
+			determineContent(typeAndContent[1].trim());
+		}
+	}
+
+	private void determineType(String type) {
+
+		if (type.length() != 1) {
+
+			_feedback.append(String
+					.format(GlobalConstants.INVALID_FIELD, type));
+			return;
+
+		} else {
+
+			switch (type.charAt(0)) {
+			case 'd':
+				_fieldType = FieldType.DUE_DATE;
+				break;
+			case 's':
+				_fieldType = FieldType.START_DATE;
+				break;
+			case 'p':
+				_fieldType = FieldType.PRIORITY;
+				break;
+			case 'c':
+				_fieldType = FieldType.COMPLETED;
+				break;
+			case 'o':
+				_fieldType = FieldType.OVERDUE;
+				break;
+			default:
+				break;
+			}
+		}
+	}
+
+	private void determineContent(String content) {
+
+		if (content.isEmpty()) {
+
+			return;
+
+		} else if (_fieldType == FieldType.DUE_DATE
+				|| _fieldType == FieldType.START_DATE) {
+
+			switch (_actionType) {
+			case ADD:
+			case EDIT:
+				determineDate(content);
+				break;
+			case FIND:
+				determineFindDate(content);
+				break;
+			case SORT:
+				determineCriteria(content);
+				break;
+			default:
+				break;
+			}
+
+		} else if (_fieldType == FieldType.PRIORITY) {
+
+			switch (_actionType) {
+			case ADD:
+			case EDIT:
+			case FIND:
+				determinePriority(content);
+				break;
+			case SORT:
+				determineCriteria(content);
+				break;
+			default:
+				break;
+			}
+
+		} else if (_fieldType == FieldType.COMPLETED
+				|| _fieldType == FieldType.OVERDUE) {
+
+			determineCriteria(content);
+		}
+	}
+
+	private void determineFindDate(String content) {
+
+		String[] contents = content.split(SPACE, 2);
+
+		determineCriteria(contents[0].trim());
+
+		if (_fieldCriteria == null) {
+			return;
+		}
+
+		if (contents.length == 2) {
+
+			if (_fieldCriteria == FieldCriteria.BETWEEN) {
+				determineDateRange(contents[1].trim());
+			} else {
+				determineDate(contents[1]);
+			}
+		}
+	}
+
+	private void determineDate(String content) {
+
+		if (content.equalsIgnoreCase(PRIM_CLEAR)) {
+			_fieldCriteria = FieldCriteria.CLEAR_DATE;
+			return;
+		}
+
+		DateParser dateParser = new DateParser(content);
+
+		_fieldContent = dateParser.getDateTime();
+		_dateParsed = dateParser.isDateParsed();
+		_timeParsed = dateParser.isTimeParsed();
+		_feedback.append(dateParser.getFeedback());
+	}
+
+	private void determineDateRange(String content) {
+
+		String fromAndTo[] = content.split(PRIM_AND, 2);
+
+		if (fromAndTo.length == 1) {
+
+			_feedback.append(GlobalConstants.INVALID_DATE_RANGE);
+
+		} else {
+
+			DateParser fromDateParser = new DateParser(fromAndTo[0].trim());
+			DateParser toDateParser = new DateParser(fromAndTo[1].trim());
+
+			Calendar fromDate = fromDateParser.getDateTime();
+			Calendar toDate = toDateParser.getDateTime();
+
+			_feedback.append(fromDateParser.getFeedback());
+			_feedback.append(toDateParser.getFeedback());
+
+			if (fromDate != null && toDate != null) {
+
+				Calendar[] dateRange = { fromDateParser.getDateTime(),
+						toDateParser.getDateTime() };
+
+				_fieldContent = dateRange;
+			}
+		}
+	}
+
+	private void determineCriteria(String content) {
+
+		if (content.equalsIgnoreCase(PRIM_ASCEND)
+				&& (_fieldType == FieldType.DUE_DATE
+						|| _fieldType == FieldType.START_DATE || _fieldType == FieldType.PRIORITY)) {
+
+			_fieldCriteria = FieldCriteria.ASCEND;
+
+		} else if (content.equalsIgnoreCase(PRIM_DESCEND)
+				&& (_fieldType == FieldType.DUE_DATE
+						|| _fieldType == FieldType.START_DATE || _fieldType == FieldType.PRIORITY)) {
+
+			_fieldCriteria = FieldCriteria.DESCEND;
+
+		} else if (content.equalsIgnoreCase(PRIM_BEFORE)
+				&& (_fieldType == FieldType.DUE_DATE || _fieldType == FieldType.START_DATE)) {
+
+			_fieldCriteria = FieldCriteria.BEFORE;
+
+		} else if (content.equalsIgnoreCase(PRIM_AFTER)
+				&& (_fieldType == FieldType.DUE_DATE || _fieldType == FieldType.START_DATE)) {
+
+			_fieldCriteria = FieldCriteria.AFTER;
+
+		} else if (content.equalsIgnoreCase(PRIM_ON)
+				&& (_fieldType == FieldType.DUE_DATE || _fieldType == FieldType.START_DATE)) {
+
+			_fieldCriteria = FieldCriteria.ON;
+
+		} else if (content.equalsIgnoreCase(PRIM_BETWEEN)
+				&& (_fieldType == FieldType.DUE_DATE || _fieldType == FieldType.START_DATE)) {
+
+			_fieldCriteria = FieldCriteria.BETWEEN;
+
+		} else if (content.equalsIgnoreCase(PRIM_YES)
+				&& (_fieldType == FieldType.OVERDUE || _fieldType == FieldType.COMPLETED)) {
+
+			_fieldCriteria = FieldCriteria.YES;
+
+		} else if (content.equalsIgnoreCase(PRIM_NO)
+				&& (_fieldType == FieldType.OVERDUE || _fieldType == FieldType.COMPLETED)) {
+
+			_fieldCriteria = FieldCriteria.NO;
+
+		} else {
+
+			_feedback.append(String.format(
+					GlobalConstants.INVALID_FIELD_CRITERIA, content));
+		}
+	}
+
+	private void determinePriority(String content) {
+
+		if (content.equalsIgnoreCase(STRING_L)) {
+			_fieldContent = STRING_L;
+		} else if (content.equalsIgnoreCase(STRING_M)) {
+			_fieldContent = STRING_M;
+		} else if (content.equalsIgnoreCase(STRING_H)) {
+			_fieldContent = STRING_H;
+		} else if (content.equalsIgnoreCase(PRIM_CLEAR)) {
+			_fieldCriteria = FieldCriteria.CLEAR_PRIORITY;
+		} else {
+			_feedback.append(String.format(
+					GlobalConstants.INVALID_PRIORITY_LEVEL, content));
+		}
+	}
+
+	public Field getField() {
+
+		parseField();
+
+		if (_fieldType == null) {
+
+			return null;
+
+		} else {
+
+			_field = new Field(_fieldType, _fieldContent, _fieldCriteria);
+			_field.setDateParsed(_dateParsed);
+			_field.setTimeParsed(_timeParsed);
+			return _field;
+		}
+	}
+
+	public String getFeedback() {
+		return _feedback.toString();
+	}
+
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\FieldParser.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\FieldType.java
+	 */
+
+public enum FieldType {
+	
+	START_DATE("start date"),
+	DUE_DATE("due date"),
+	PRIORITY("priority"),
+	COMPLETED("completed"),
+	OVERDUE("overdue");
+	
+	private String _name;
+	
+	private FieldType(String name) {
+		_name = name;
+	}
+	
+	public String toString() {
+		return _name;
+	}
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\FieldType.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\FindAction.java
+	 */
+
+public class FindAction extends Action {
+
+	private static final String SPACE = " ";
+	private LinkedList<Field> _fields;
+
+	private boolean _findAll;
+	private boolean _shouldShowAllCompleted;
+
+	private int _failCount;
+
+	private String _taskName;
+
+	private SortAction _defaultSort;
+
+	public FindAction(LinkedList<Field> fields, boolean findAll, String taskName) {
+
+		_isSuccess = false;
+		_feedback = new StringBuilder();
+		_type = ActionType.FIND;
+		_taskName = taskName;
+		_findAll = findAll;
+		_fields = fields;
+		_failCount = 0;
+		_shouldShowAllCompleted = false;
+		_defaultSort = new SortAction();
+	}
+
+	@Override
+	public void execute(LinkedList<Task> displayList,
+			LinkedList<Task> masterList) {
+
+		if (_findAll) {
+			copyList(masterList, displayList);
+			_isSuccess = true;
+			return;
+		}
+
+		if (_taskName == null && (_fields == null || _fields.isEmpty())) {
+			return;
+		}
+
+		LinkedList<Task> bufferList = new LinkedList<Task>();
+		copyList(masterList, bufferList);
+
+		if (_taskName != null) {
+
+			filterByName(_taskName, bufferList);
+
+			if (bufferList.isEmpty()) {
+				_feedback.append(GlobalConstants.NO_MATCHES_FOUND);
+				return;
+			}
+		}
+
+		for (Field field : _fields) {
+
+			filterdisplayList(field, bufferList);
+
+			if (bufferList.isEmpty()) {
+				_feedback.append(GlobalConstants.NO_MATCHES_FOUND);
+				return;
+			}
+		}
+
+		int totalUpdateSize = (_taskName == null) ? _fields.size() : _fields
+				.size() + 1;
+
+		if (_failCount == totalUpdateSize) {
+
+			_feedback.append((GlobalConstants.NO_MATCHES_FOUND));
+			return;
+
+		} else {
+
+			copyList(bufferList, displayList);
+
+			_isSuccess = true;
+			_feedback.append(String.format(GlobalConstants.MATCHES_FOUND,
+					displayList.size()));
+
+			LOGGER.info(GlobalConstants.SORTING_DISPLAY_LIST);
+			_defaultSort.execute(displayList, masterList);
+		}
+	}
+
+	public boolean shouldShowAllCompleted() {
+		return _shouldShowAllCompleted;
+	}
+
+	private void filterdisplayList(Field field, LinkedList<Task> displayList) {
+
+		FieldType fieldType = field.getFieldType();
+
+		if (fieldType == null) {
+			_failCount++;
+			return;
+		}
+
+		switch (fieldType) {
+		case DUE_DATE:
+		case START_DATE:
+			filterByDate(field, displayList);
+			break;
+		case PRIORITY:
+			String priority = field.getPriority();
+			filterByPriority(priority, displayList);
+			break;
+		case COMPLETED:
+			FieldCriteria yesNoC = field.getCriteria();
+			filterByCompleteStatus(yesNoC, displayList);
+			break;
+		case OVERDUE:
+			FieldCriteria yesNoO = field.getCriteria();
+			filterByOverdueStatus(yesNoO, displayList);
+			break;
+		default:
+			_feedback.append(GlobalConstants.INVALID_FIELD);
+			return;
+		}
+	}
+
+	private void filterByName(String taskName, LinkedList<Task> displayList) {
+
+		if (taskName == null || taskName.trim().isEmpty()) {
+
+			_feedback.append(GlobalConstants.NO_KEYWORDS);
+			_failCount++;
+			return;
+		}
+
+		String keywords[] = taskName.split(SPACE);
+
+		LinkedList<Object[]> tasksWithMatchScore = new LinkedList<Object[]>();
+
+		for (Task currTask : displayList) {
+
+			int matchScore = 0;
+
+			for (String keyword : keywords) {
+
+				keyword = keyword.trim();
+				matchScore += matchKeywordScore(currTask, keyword);
+			}
+
+			if (matchScore != 0) {
+
+				tasksWithMatchScore.add(new Object[] { currTask,
+						Integer.valueOf(matchScore) });
+			}
+		}
+
+		copyList(sortFoundTasksByMatchScore(tasksWithMatchScore), displayList);
+	}
+
+	private LinkedList<Task> sortFoundTasksByMatchScore(
+			LinkedList<Object[]> tasksWithMatchScore) {
+
+		for (int i = tasksWithMatchScore.size() - 1; i >= 0; i--) {
+
+			boolean isSorted = true;
+
+			for (int j = 0; j < i; j++) {
+
+				Object[] taskLeft = tasksWithMatchScore.get(j);
+				Object[] taskRight = tasksWithMatchScore.get(j + 1);
+
+				if ((int) taskLeft[1] < (int) taskRight[1]) {
+
+					tasksWithMatchScore.set(j + 1, taskLeft);
+					tasksWithMatchScore.set(j, taskRight);
+					isSorted = false;
+				}
+			}
+
+			if (isSorted) {
+				break;
+			}
+		}
+
+		LinkedList<Task> newdisplayList = new LinkedList<Task>();
+
+		for (Object[] taskWithMatchScore : tasksWithMatchScore) {
+			newdisplayList.add((Task) taskWithMatchScore[0]);
+		}
+
+		return newdisplayList;
+	}
+
+	private int matchKeywordScore(Task currTask, String keyword) {
+
+		keyword = keyword.toLowerCase();
+
+		String[] taskNameWords = currTask.getName().split(SPACE);
+
+		int totalScore = 0;
+
+		for (String currWord : taskNameWords) {
+
+			currWord = currWord.trim().toLowerCase();
+
+			if (currWord.contains(keyword)) {
+				totalScore++;
+			}
+
+			if (currWord.equals(keyword)) {
+				totalScore++;
+			}
+		}
+
+		return totalScore;
+	}
+
+	private void filterByOverdueStatus(FieldCriteria criteria,
+			LinkedList<Task> displayList) {
+
+		if (criteria != FieldCriteria.YES && criteria != FieldCriteria.NO) {
+			_feedback.append(GlobalConstants.NO_OVERDUE_CRITERIA);
+			_failCount++;
+			return;
+		}
+
+		LinkedList<Task> bufferList = new LinkedList<Task>();
+
+		for (Task currTask : displayList) {
+
+			if ((currTask.getIsOverdue() && criteria == FieldCriteria.YES)
+					|| (!currTask.getIsOverdue() && criteria == FieldCriteria.NO)) {
+
+				bufferList.add(currTask);
+			}
+		}
+
+		copyList(bufferList, displayList);
+	}
+
+	private void filterByCompleteStatus(FieldCriteria criteria,
+			LinkedList<Task> displayList) {
+
+		if (criteria != FieldCriteria.YES && criteria != FieldCriteria.NO) {
+			_feedback.append(GlobalConstants.NO_COMPLETE_CRITERIA);
+			_failCount++;
+			return;
+		}
+
+		if (criteria == FieldCriteria.YES) {
+			_shouldShowAllCompleted = true;
+		}
+
+		LinkedList<Task> bufferList = new LinkedList<Task>();
+
+		for (Task currTask : displayList) {
+
+			if ((currTask.getIsCompleted() && criteria == FieldCriteria.YES)
+					|| (!currTask.getIsCompleted() && criteria == FieldCriteria.NO)) {
+
+				bufferList.add(currTask);
+			}
+		}
+
+		copyList(bufferList, displayList);
+	}
+
+	private void filterByPriority(String priority, LinkedList<Task> displayList) {
+
+		if (priority == null) {
+			_feedback.append(GlobalConstants.NO_PRIORITY_LEVEL);
+			_failCount++;
+			return;
+		}
+
+		LinkedList<Task> bufferList = new LinkedList<Task>();
+		for (Task currTask : displayList) {
+
+			if (currTask.getPriority() != null
+					&& currTask.getPriority().equalsIgnoreCase(priority)) {
+
+				bufferList.add(currTask);
+			}
+		}
+
+		copyList(bufferList, displayList);
+	}
+
+	private void filterByDate(Field field, LinkedList<Task> displayList) {
+
+		FieldType fieldType = field.getFieldType();
+		FieldCriteria criteria = field.getCriteria();
+
+		if (criteria == null) {
+			_feedback.append(GlobalConstants.NO_DATE_CRITERIA);
+			_failCount++;
+			return;
+		}
+
+		switch (criteria) {
+		case BEFORE:
+		case AFTER:
+		case ON:
+			Calendar date = field.getDate();
+			filterBySingleDate(date, fieldType, criteria, displayList);
+			break;
+		case BETWEEN:
+			Calendar[] dateRange = field.getDateRange();
+			filterByDateRange(dateRange, fieldType, criteria, displayList);
+			break;
+		default:
+			break;
+		}
+	}
+
+	private void filterByDateRange(Calendar[] dateRange, FieldType fieldType,
+			FieldCriteria criteria, LinkedList<Task> displayList) {
+
+		if (dateRange == null) {
+			_failCount++;
+			return;
+		}
+
+		Calendar fromDate = dateRange[0];
+		Calendar toDate = dateRange[1];
+
+		fromDate.set(Calendar.HOUR, 0);
+		fromDate.set(Calendar.MINUTE, 0);
+		fromDate.set(Calendar.SECOND, 0);
+
+		toDate.set(Calendar.HOUR, 23);
+		toDate.set(Calendar.MINUTE, 59);
+		toDate.set(Calendar.SECOND, 59);
+
+		if (fromDate.compareTo(toDate) > 0) {
+			_feedback.append(GlobalConstants.INVALID_DATE_RANGE);
+			return;
+		}
+
+		LinkedList<Task> bufferList = new LinkedList<Task>();
+
+		for (Task currTask : displayList) {
+
+			Calendar currTaskDate;
+
+			switch (fieldType) {
+			case START_DATE:
+				currTaskDate = currTask.getStartDate();
+				break;
+			case DUE_DATE:
+				currTaskDate = currTask.getDueDate();
+				break;
+			default:
+				currTaskDate = null;
+				break;
+			}
+
+			if (currTaskDate != null && currTaskDate.compareTo(fromDate) >= 0
+					&& currTaskDate.compareTo(toDate) <= 0) {
+
+				bufferList.add(currTask);
+			}
+		}
+
+		copyList(bufferList, displayList);
+	}
+
+	private void filterBySingleDate(Calendar date, FieldType fieldType,
+			FieldCriteria criteria, LinkedList<Task> displayList) {
+
+		LinkedList<Task> bufferList = new LinkedList<Task>();
+
+		for (Task currTask : displayList) {
+
+			Calendar currTaskDate;
+
+			switch (fieldType) {
+			case START_DATE:
+				currTaskDate = currTask.getStartDate();
+				break;
+			case DUE_DATE:
+				currTaskDate = currTask.getDueDate();
+				break;
+			default:
+				currTaskDate = null;
+				break;
+			}
+
+			if (currTaskDate != null) {
+				switch (criteria) {
+				case BEFORE:
+
+					date.set(Calendar.HOUR_OF_DAY, 23);
+					date.set(Calendar.MINUTE, 59);
+					date.set(Calendar.SECOND, 59);
+					date.set(Calendar.MILLISECOND, 999);
+
+					if (currTaskDate.compareTo(date) <= 0) {
+						bufferList.add(currTask);
+					}
+
+					break;
+
+				case AFTER:
+
+					date.set(Calendar.HOUR_OF_DAY, 0);
+					date.set(Calendar.MINUTE, 0);
+					date.set(Calendar.SECOND, 0);
+					date.set(Calendar.MILLISECOND, 0);
+
+					if (currTaskDate.compareTo(date) >= 0) {
+						bufferList.add(currTask);
+					}
+
+					break;
+
+				case ON:
+
+					date.set(Calendar.HOUR_OF_DAY, 0);
+					date.set(Calendar.MINUTE, 0);
+					date.set(Calendar.SECOND, 0);
+					date.set(Calendar.MILLISECOND, 0);
+
+					currTaskDate = new GregorianCalendar(
+							currTaskDate.get(Calendar.YEAR),
+							currTaskDate.get(Calendar.MONTH),
+							currTaskDate.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
+
+					if (currTaskDate.equals(date)) {
+						bufferList.add(currTask);
+					}
+					break;
+
+				default:
+					break;
+				}
+			}
+		}
+
+		copyList(bufferList, displayList);
+	}
+
+	private <E> void copyList(LinkedList<E> fromList, LinkedList<E> toList) {
+		toList.clear();
+		for (int i = 0; i < fromList.size(); i++)
+			toList.add(fromList.get(i));
+	}
+
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\FindAction.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\HistoryManager.java
+	 */
+
+public class HistoryManager {
+
+	private LinkedList<Task> _displayList;
+	private LinkedList<Task> _masterList;
+
+	private LinkedList<String> _deletedList;
+
+	private boolean _shouldShowAllCompleted;
+
+	private Stack<LinkedList<Task>> _undoMainStack;
+	private Stack<LinkedList<Task>> _redoMainStack;
+
+	private Stack<Boolean> _undoShowAllStack;
+	private Stack<Boolean> _redoShowAllStack;
+
+	private Stack<LinkedList<String>> _undoDeletedListStack;
+	private Stack<LinkedList<String>> _redoDeletedListStack;
+
+	public HistoryManager(LinkedList<Task> displayList,
+			LinkedList<Task> masterList, LinkedList<String> deletedList,
+			boolean shouldShowAllCompleted) {
+
+		_undoMainStack = new Stack<LinkedList<Task>>();
+		_redoMainStack = new Stack<LinkedList<Task>>();
+
+		LinkedList<Task> displayListInit = new LinkedList<Task>();
+		LinkedList<Task> masterListInit = new LinkedList<Task>();
+
+		copyListWithClone(displayList, masterList, displayListInit,
+				masterListInit);
+
+		_undoMainStack.push(masterListInit);
+		_undoMainStack.push(displayListInit);
+
+		_displayList = displayListInit;
+		_masterList = masterListInit;
+
+		_shouldShowAllCompleted = shouldShowAllCompleted;
+
+		_undoShowAllStack = new Stack<Boolean>();
+		_redoShowAllStack = new Stack<Boolean>();
+
+		_undoShowAllStack.push(_shouldShowAllCompleted);
+
+		_deletedList = new LinkedList<String>(deletedList);
+
+		_undoDeletedListStack = new Stack<LinkedList<String>>();
+		_redoDeletedListStack = new Stack<LinkedList<String>>();
+
+		_undoDeletedListStack.push(_deletedList);
+	}
+
+	public LinkedList<Task> getDisplayList() {
+		return _displayList;
+	}
+
+	public LinkedList<Task> getMasterList() {
+		return _masterList;
+	}
+
+	public boolean getShouldShowAllCompleted() {
+		return _shouldShowAllCompleted;
+	}
+
+	public LinkedList<String> getDeletedList() {
+		return _deletedList;
+	}
+
+	public void updateUndoStack(LinkedList<Task> displayList,
+			LinkedList<Task> masterList, LinkedList<String> deletedList,
+			boolean shouldShowAllCompleted) {
+
+		LinkedList<Task> workingListMaster = new LinkedList<Task>();
+		LinkedList<Task> workingList = new LinkedList<Task>();
+
+		copyListWithClone(displayList, masterList, workingList,
+				workingListMaster);
+
+		_undoMainStack.push(workingListMaster);
+		_undoMainStack.push(workingList);
+		_redoMainStack.clear();
+
+		_undoShowAllStack.push(shouldShowAllCompleted);
+		_redoShowAllStack.clear();
+
+		_undoDeletedListStack.push(new LinkedList<String>(deletedList));
+		_redoDeletedListStack.clear();
+	}
+
+	public void undo(StringBuilder feedback) {
+
+		if (_undoMainStack.size() == 2) {
+			feedback.append(GlobalConstants.NOTHING_TO_UNDO);
+			return;
+		}
+
+		_redoMainStack.push(_undoMainStack.pop());
+		_redoMainStack.push(_undoMainStack.pop());
+
+		LinkedList<Task> displayList = _undoMainStack.pop();
+		LinkedList<Task> masterList = _undoMainStack.pop();
+
+		LinkedList<Task> updatedWL = new LinkedList<Task>();
+		LinkedList<Task> updatedWLM = new LinkedList<Task>();
+
+		copyListWithClone(displayList, masterList, updatedWL, updatedWLM);
+
+		_undoMainStack.push(masterList);
+		_undoMainStack.push(displayList);
+
+		_displayList = updatedWL;
+		_masterList = updatedWLM;
+
+		_redoShowAllStack.push(_undoShowAllStack.pop());
+		_shouldShowAllCompleted = _undoShowAllStack.pop();
+		_undoShowAllStack.push(_shouldShowAllCompleted);
+
+		_redoDeletedListStack.push(_undoDeletedListStack.pop());
+		LinkedList<String> deletedList = _undoDeletedListStack.pop();
+		LinkedList<String> updatedDL = new LinkedList<String>(deletedList);
+		_undoDeletedListStack.push(updatedDL);
+		_deletedList = updatedDL;
+	}
+
+	public void redo(StringBuilder feedback) {
+
+		if (_redoMainStack.isEmpty()) {
+			feedback.append(GlobalConstants.NOTHING_TO_REDO);
+			return;
+		}
+
+		LinkedList<Task> masterList = _redoMainStack.pop();
+		LinkedList<Task> displayList = _redoMainStack.pop();
+
+		LinkedList<Task> updatedWL = new LinkedList<Task>();
+		LinkedList<Task> updatedWLM = new LinkedList<Task>();
+
+		copyListWithClone(displayList, masterList, updatedWL, updatedWLM);
+
+		_undoMainStack.push(masterList);
+		_undoMainStack.push(displayList);
+
+		_displayList = updatedWL;
+		_masterList = updatedWLM;
+
+		_shouldShowAllCompleted = _redoShowAllStack.pop();
+		_undoShowAllStack.push(_shouldShowAllCompleted);
+
+		LinkedList<String> deletedList = _redoDeletedListStack.pop();
+		LinkedList<String> updatedDL = new LinkedList<String>(deletedList);
+		_undoDeletedListStack.push(deletedList);
+		_deletedList = updatedDL;
+	}
+
+	private void copyListWithClone(LinkedList<Task> subList,
+			LinkedList<Task> masterList, LinkedList<Task> subListNew,
+			LinkedList<Task> masterListNew) {
+
+		LinkedList<Integer> indexesInMasterListForRepeatTask = new LinkedList<Integer>();
+
+		for (int i = 0; i < subList.size(); i++) {
+			indexesInMasterListForRepeatTask.add(masterList.indexOf(subList
+					.get(i)));
+		}
+
+		for (int i = 0; i < masterList.size(); i++) {
+			masterListNew.add(masterList.get(i).clone());
+		}
+
+		for (int i = 0; i < indexesInMasterListForRepeatTask.size(); i++) {
+			subListNew.add(masterListNew.get(indexesInMasterListForRepeatTask
+					.get(i)));
+		}
+	}
+
+}
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\HistoryManager.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\Logic.java
+	 */
+
+public class Logic {
+
+	private static final String SPACE = " ";
+	private static final String COMMAND_LOAD_ABBREV = "l";
+	private static final String COMMAND_CHANGE_FILE = "cf";
+	private static final String COMMAND_LOAD = "load";
+	private static final String COMMAND_SAVE_ABBREV = "s";
+	private static final String COMMAND_SAVE = "save";
+	private static final String COMMAND_REDO_ABBREV = "r";
+	private static final String COMMAND_REDO = "redo";
+	private static final String COMMAND_UNO_ABBREV = "u";
+	private static final String COMMAND_UNDO = "undo";
+
+	private LinkedList<Task> _displayList;
+	private LinkedList<Task> _masterList;
+	private LinkedList<String> _deletedList;
+
+	private String _filePath;
+
+	private boolean _shouldShowAllCompleted;
+
+	private HistoryManager _historyMgnr;
+
+	private Storage _qLStorage;
+
+	private Settings _qLSettings;
+
+	private static Logic _instance;
+
+	public static Logic getInstance() {
+		if (_instance == null) {
+			_instance = new Logic();
+		}
+		return _instance;
+	}
+
+	/** General methods **/
+	public void setup(StringBuilder feedback) {
+
+		_qLStorage = Storage.getInstance();
+		_qLSettings = Settings.getInstance();
+		_masterList = new LinkedList<Task>();
+        _deletedList = new LinkedList<String>();
+		try {
+            _filePath = _qLSettings.getPrefFilePath();
+        } catch (Error e) {
+            feedback.append(GlobalConstants.ERROR_READING_SETTINGS);
+        }
+        if (_filePath != null) {
+            try {
+                _qLStorage.loadFile(_masterList, _deletedList, _filePath);
+    
+            } catch (Error e) {
+    
+                feedback.append(GlobalConstants.ERROR_READING_PREFFERED_TASK_FILE);
+                _filePath = _qLSettings.getDefaultFilePath();
+                _masterList = new LinkedList<Task>();
+                _deletedList = new LinkedList<String>();
+                try {
+                    _qLStorage.loadFile(_masterList, _deletedList, _filePath);
+                    feedback.append(GlobalConstants.DEFAULT_TASK_FILE_USED);
+                } catch (Error err) {
+                    feedback.append(GlobalConstants.ERROR_READING_DEFAULT_TASK_FILE);
+                }
+            }
+        } else {
+            _filePath = _qLSettings.getDefaultFilePath();
+            try {
+                _qLStorage.loadFile(_masterList, _deletedList, _filePath);
+            } catch (Error err) {
+                feedback.append(GlobalConstants.ERROR_READING_DEFAULT_TASK_FILE);
+            }
+        }
+
+		_displayList = new LinkedList<Task>();
+
+		copyList(_masterList, _displayList);
+
+		_historyMgnr = new HistoryManager(_displayList, _masterList,
+				_deletedList, _shouldShowAllCompleted);
+	}
+
+	/* For testing */
+	public void setupStub() {
+
+		_filePath = "test.json";
+		_shouldShowAllCompleted = false;
+		_qLStorage = Storage.getInstance();
+		_qLSettings = Settings.getInstance();
+		_displayList = new LinkedList<Task>();
+		_masterList = new LinkedList<Task>();
+		_deletedList = new LinkedList<String>();
+		_historyMgnr = new HistoryManager(_displayList, _masterList,
+				_deletedList, _shouldShowAllCompleted);
+	}
+
+	public LinkedList<Task> getDisplayList() {
+		if (!_shouldShowAllCompleted) {
+			showStreamlinedList();
+		}
+		return _displayList;
+	}
+
+	private void showStreamlinedList() {
+
+		Calendar now = Calendar.getInstance();
+		Iterator<Task> iter = _displayList.listIterator();
+
+		while (iter.hasNext()) {
+
+			Task task = iter.next();
+
+			if (task.getIsCompleted()) {
+
+				if ((task.getDueDate() == null)
+						|| (task.getDueDate().compareTo(now) < 0)) {
+					iter.remove();
+				}
+			}
+		}
+	}
+
+	public LinkedList<Task> getMasterList() {
+		return _masterList;
+	}
+
+	public void executeUndo(StringBuilder feedback) {
+
+		_historyMgnr.undo(feedback);
+
+		_displayList = _historyMgnr.getDisplayList();
+		_masterList = _historyMgnr.getMasterList();
+		_shouldShowAllCompleted = _historyMgnr.getShouldShowAllCompleted();
+		_deletedList = _historyMgnr.getDeletedList();
+
+		try {
+            _qLStorage.saveFile(_masterList, _deletedList, _filePath);
+        } catch (Error e) {
+            feedback.append(e.getMessage());
+        }
+	}
+
+	public void executeRedo(StringBuilder feedback) {
+
+		_historyMgnr.redo(feedback);
+
+		_displayList = _historyMgnr.getDisplayList();
+		_masterList = _historyMgnr.getMasterList();
+		_shouldShowAllCompleted = _historyMgnr.getShouldShowAllCompleted();
+		_deletedList = _historyMgnr.getDeletedList();
+
+		try {
+            _qLStorage.saveFile(_masterList, _deletedList, _filePath);
+        } catch (Error e) {
+            feedback.append(e.getMessage());
+        }
+	}
+
+	public void executeCommand(String command, StringBuilder feedback) {
+
+		if (command.trim().equalsIgnoreCase(COMMAND_UNDO)
+				|| command.trim().equalsIgnoreCase(COMMAND_UNO_ABBREV)) {
+			executeUndo(feedback);
+			return;
+		}
+
+		if (command.trim().equalsIgnoreCase(COMMAND_REDO)
+				|| command.trim().equalsIgnoreCase(COMMAND_REDO_ABBREV)) {
+			executeRedo(feedback);
+			return;
+		}
+
+		if (command.split(SPACE, 2)[0].equalsIgnoreCase(COMMAND_SAVE)
+				|| command.split(SPACE, 2)[0]
+						.equalsIgnoreCase(COMMAND_SAVE_ABBREV)) {
+			executeSave(command, feedback);
+			return;
+		}
+
+		if (command.split(SPACE, 2)[0].equalsIgnoreCase(COMMAND_LOAD)
+				|| command.split(SPACE, 2)[0]
+						.equalsIgnoreCase(COMMAND_LOAD_ABBREV)) {
+			executeLoad(command, feedback);
+			return;
+		}
+
+		if (command.split(SPACE, 2)[0].equalsIgnoreCase(COMMAND_CHANGE_FILE)) {
+			executeChangeFile(command, feedback);
+			return;
+		}
+
+		executeAction(command, feedback);
+	}
+
+	public boolean shouldShowAllCompleted() {
+		return _shouldShowAllCompleted;
+	}
+
+	private void executeChangeFile(String command, StringBuilder feedback) {
+
+		String commandAndPath[] = command.split(SPACE, 2);
+
+		if (commandAndPath.length == 1 || commandAndPath[1].trim().isEmpty()) {
+
+			feedback.append(GlobalConstants.NO_FILEPATH);
+
+		} else {
+
+			String filepath = commandAndPath[1].trim();
+
+			if (_qLStorage.isValidFile(filepath)) {
+			    try {
+    
+			        LinkedList<Task> tempMasterList = new LinkedList<Task>();
+			        LinkedList<String> tempDeletedList = new LinkedList<String>();
+    				
+    				
+    				_qLStorage.loadFile(tempMasterList, tempDeletedList, filepath);
+    				
+    				_qLSettings.updatePrefFilePath(filepath);
+    				
+    				_masterList = tempMasterList;
+    				_deletedList = tempDeletedList;
+    				
+    				_filePath = filepath;
+    
+    				copyList(_masterList, _displayList);
+    
+    				_historyMgnr = new HistoryManager(_displayList, _masterList,
+    						_deletedList, _shouldShowAllCompleted);
+    
+    				feedback.append(String.format(GlobalConstants.FILE_CHANGED,
+    						filepath));
+			    } catch (Error e) {
+                    feedback.append(e.getMessage());
+                }
+			} else {
+
+				feedback.append(GlobalConstants.INVALID_FILEPATH);
+			}
+		}
+	}
+
+	private void executeAction(String command, StringBuilder feedback) {
+
+		CommandParser cp = new CommandParser(command);
+
+		feedback.append(cp.getFeedback().toString());
+
+		Action action = cp.getAction();
+
+		if (action == null) {
+			return;
+		}
+
+		if (action.getType() == ActionType.SYNC) {
+			action.attachDeletedList(_deletedList);
+		}
+
+		action.execute(_displayList, _masterList);
+
+		feedback.append(action.getFeedback().toString());
+
+		if (action.getType() == ActionType.FIND) {
+			_shouldShowAllCompleted = action.shouldShowAllCompleted();
+		}
+
+		if (action.isSuccess()) {
+
+			if (action.getType() == ActionType.DELETE
+					&& action.getDeletedTaskID() != null) {
+
+				_deletedList.add(action.getDeletedTaskID());
+			}
+			try {
+			    _qLStorage.saveFile(_masterList, _deletedList, _filePath);
+			} catch (Error e) {
+			    feedback.append(e.getMessage());
+			}
+
+			if (action.getType() != ActionType.LOG_OUT) {
+
+				_historyMgnr.updateUndoStack(_displayList, _masterList,
+						_deletedList, _shouldShowAllCompleted);
+			}
+		}
+	}
+
+	private void executeLoad(String command, StringBuilder feedback) {
+
+		String commandAndPath[] = command.split(SPACE, 2);
+
+		if (commandAndPath.length == 1 || commandAndPath[1].trim().isEmpty()) {
+
+			feedback.append(GlobalConstants.NO_FILEPATH);
+
+		} else {
+
+			String filepath = commandAndPath[1].trim();
+
+			try {
+
+				_displayList = new LinkedList<Task>();
+				_deletedList = new LinkedList<String>();
+
+				_qLStorage.loadFile(_displayList, _deletedList, filepath);
+
+				_masterList = new LinkedList<Task>();
+
+				copyList(_displayList, _masterList);
+
+				try {
+	                _qLStorage.saveFile(_masterList, _deletedList, _filePath);
+	            } catch (Error e) {
+	                feedback.append(e.getMessage());
+	            }
+
+				_historyMgnr.updateUndoStack(_displayList, _masterList,
+						_deletedList, _shouldShowAllCompleted);
+
+				feedback.append(String.format(GlobalConstants.LOADED_FROM,
+						filepath));
+
+			} catch (Error e) {
+				feedback.append(e.getMessage());
+			}
+		}
+	}
+
+	private void executeSave(String command, StringBuilder feedback) {
+
+		String commandAndPath[] = command.split(SPACE, 2);
+
+		if (commandAndPath.length == 1 || commandAndPath[1].trim().isEmpty()) {
+
+			feedback.append(GlobalConstants.NO_FILEPATH);
+
+		} else {
+
+			String filepath = commandAndPath[1].trim();
+
+			try {
+
+				_qLStorage.saveFile(_masterList, _deletedList, filepath);
+				feedback.append(String.format(GlobalConstants.SAVED_TO,
+						filepath));
+
+			} catch (Error e) {
+				feedback.append(e.getMessage());
+			}
+		}
+	}
+
+	private <E> void copyList(LinkedList<E> fromList, LinkedList<E> toList) {
+		toList.clear();
+		for (int i = 0; i < fromList.size(); i++)
+			toList.add(fromList.get(i));
+	}
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\Logic.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\SortAction.java
+	 */
+
+public class SortAction extends Action {
+
+	private LinkedList<Field> _fields;
+
+	/** default sort action: due date descending **/
+	public SortAction() {
+
+		this._isSuccess = true;
+		this._type = ActionType.SORT;
+		_fields = new LinkedList<Field>();
+		_fields.add(new Field(FieldType.DUE_DATE, FieldCriteria.ASCEND));
+		_fields.add(new Field(FieldType.PRIORITY, FieldCriteria.DESCEND));
+	}
+
+	public SortAction(LinkedList<Field> fields) {
+
+		this._isSuccess = true;
+		this._feedback = new StringBuilder();
+		this._type = ActionType.SORT;
+		_fields = fields;
+	}
+
+	@Override
+	public void execute(LinkedList<Task> displayList,
+			LinkedList<Task> masterList) {
+
+		execute(displayList);
+
+		if (this._isSuccess) {
+			execute(masterList);
+		}
+	}
+
+	private void execute(LinkedList<Task> displayList) {
+
+		if (_fields == null || _fields.isEmpty()) {
+
+			this._isSuccess = false;
+			return;
+		}
+
+		for (int i = _fields.size() - 1; i >= 0; i--) {
+
+			Field field = _fields.get(i);
+			FieldType fieldType = field.getFieldType();
+
+			if (fieldType != FieldType.DUE_DATE
+					&& fieldType != FieldType.PRIORITY) {
+
+				this._isSuccess = false;
+				this._feedback.append(GlobalConstants.INVALID_FIELD_TYPE);
+				return;
+			}
+
+			FieldCriteria order = field.getCriteria();
+
+			if (order != FieldCriteria.ASCEND && order != FieldCriteria.DESCEND) {
+
+				this._isSuccess = false;
+				this._feedback.append("Invalid order. ");
+				return;
+			}
+
+			switch (field.getFieldType()) {
+			case DUE_DATE:
+				sortByDueDate(order, displayList);
+				break;
+			case PRIORITY:
+				sortByPriority(order, displayList);
+				break;
+			default:
+				break;
+			}
+		}
+	}
+
+	private void sortByPriority(FieldCriteria order,
+			LinkedList<Task> displayList) {
+
+		LinkedList<Task> tasksWithNoPriority = new LinkedList<Task>();
+
+		for (int i = 0; i < displayList.size(); i++) {
+
+			if (displayList.get(i).getPriorityInt() == 0) {
+
+				Task removedTask = displayList.remove(i);
+				tasksWithNoPriority.add(removedTask);
+				i--;
+			}
+		}
+
+		for (int i = displayList.size() - 1; i >= 0; i--) {
+
+			boolean isSorted = true;
+
+			for (int j = 0; j < i; j++) {
+
+				Task taskLeft = displayList.get(j);
+				Task taskRight = displayList.get(j + 1);
+
+				switch (order) {
+				case ASCEND:
+
+					if (taskLeft.getPriorityInt() > taskRight.getPriorityInt()) {
+						displayList.set(j + 1, taskLeft);
+						displayList.set(j, taskRight);
+						isSorted = false;
+					}
+					break;
+
+				case DESCEND:
+
+					if (taskLeft.getPriorityInt() < taskRight.getPriorityInt()) {
+						displayList.set(j + 1, taskLeft);
+						displayList.set(j, taskRight);
+						isSorted = false;
+					}
+					break;
+
+				default:
+					break;
+				}
+
+			}
+
+			if (isSorted) {
+				break;
+			}
+		}
+
+		displayList.addAll(tasksWithNoPriority);
+	}
+
+	private void sortByDueDate(FieldCriteria order, LinkedList<Task> displayList) {
+
+		LinkedList<Task> tasksWithNoDueDate = new LinkedList<Task>();
+
+		for (int i = 0; i < displayList.size(); i++) {
+
+			if (displayList.get(i).getDueDate() == null) {
+
+				Task removedTask = displayList.remove(i);
+				tasksWithNoDueDate.add(removedTask);
+				i--;
+			}
+		}
+
+		for (int i = displayList.size() - 1; i >= 0; i--) {
+
+			boolean isSorted = true;
+
+			for (int j = 0; j < i; j++) {
+
+				Task taskLeft = displayList.get(j);
+				Task taskRight = displayList.get(j + 1);
+
+				switch (order) {
+				case ASCEND:
+
+					if (taskLeft.getDueDate().compareTo(taskRight.getDueDate()) > 0) {
+						displayList.set(j + 1, taskLeft);
+						displayList.set(j, taskRight);
+						isSorted = false;
+					}
+					break;
+
+				case DESCEND:
+
+					if (taskLeft.getDueDate().compareTo(taskRight.getDueDate()) < 0) {
+						displayList.set(j + 1, taskLeft);
+						displayList.set(j, taskRight);
+						isSorted = false;
+					}
+					break;
+
+				default:
+					break;
+				}
+			}
+
+			if (isSorted) {
+				break;
+			}
+		}
+
+		displayList.addAll(tasksWithNoDueDate);
+	}
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\SortAction.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\SyncAction.java
+	 */
+
+public class SyncAction extends Action {
+
+	private SortAction _defaultSort;
+	
+	private LinkedList<String> _deletedList;
+
+	public SyncAction() {
+		setSuccess(false);
+		_feedback = new StringBuilder();
+		_type = ActionType.SYNC;
+		_defaultSort = new SortAction();
+	}
+
+	@Override
+	public void execute(LinkedList<Task> displayList,
+			LinkedList<Task> masterList) {
+
+		try {
+
+			assert _deletedList != null;
+			
+			GoogleIntegration.getInstance()
+					.sync(masterList, _deletedList);
+
+			copyList(masterList, displayList);
+
+			getFeedback().append(GlobalConstants.SYNCED);
+
+			_isSuccess = true;
+			_defaultSort.execute(displayList, masterList);
+
+		} catch (Error e) {
+			getFeedback().append(e.getMessage());
+		}
+	}
+	
+	public void attachDeletedList(LinkedList<String> list) {
+		_deletedList = list;
+	}
+	
+	private <E> void copyList(LinkedList<E> fromList,
+			LinkedList<E> toList) {
+
+		toList.clear();
+		for (int i = 0; i < fromList.size(); i++)
+			toList.add(fromList.get(i));
+	}
+
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\SyncAction.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\Task.java
+	 */
+
+public class Task {
+
+	private static final String FORMAT_DATE_NO_TIME = "dd/MM/yyyy";
+	private static final String FORMAT_DATE_WITH_TIME = "dd/MM/yyyy HHmm'H'";
+	private static final String STRING_PRIORITY_HIGH = "H";
+	private static final String STRING_PRIORITY_MEDIUM = "M";
+	private static final String STRING_PRIORITY_LOW = "L";
+
+	private static final int NUM_PRIORITY_HIGH = 3;
+	private static final int NUM_PRIORITY_MEDIUM = 2;
+	private static final int NUM_PRIORITY_LOW = 1;
+
+	private String _name;
+	private String _description;
+	private String _priority;
+	private String _googleId;
+	private Calendar _startDate;
+	private Calendar _dueDate;
+	private Calendar _lastUpdated;
+	private boolean _isCompleted;
+	private boolean _isOverdue;
+	private boolean _shouldSync;
+	private boolean _hasStartTime;
+	private boolean _hasDueTime;
+
+	/* Constructors */
+	public Task(String name) {
+		_name = new String(name);
+		_isCompleted = false;
+		_hasDueTime = false;
+		_hasStartTime = false;
+		_lastUpdated = Calendar.getInstance();
+	}
+
+	/* Mutators */
+	public void setName(String name) {
+		_name = name;
+	}
+
+	public void setDescription(String description) {
+		_description = description;
+	}
+
+	public void setPriority(String priority) {
+		_priority = priority;
+	}
+
+	public void setGoogleId(String id) {
+		_googleId = id;
+	}
+
+	public void setStartDate(Calendar startDate) {
+		_startDate = startDate;
+	}
+
+	public void setDueDate(Calendar dueDate) {
+		_dueDate = dueDate;
+		updateIsOverdue();
+	}
+
+	public void setHasStartTime(boolean hasTime) {
+		_hasStartTime = hasTime;
+	}
+
+	public void setHasDueTime(boolean hasTime) {
+		_hasDueTime = hasTime;
+	}
+
+	public void setIsCompleted(boolean isCompleted) {
+		_isCompleted = isCompleted;
+	}
+	
+	public void setLastUpdated(Calendar lastUpdated) {
+		_lastUpdated = lastUpdated;
+	}
+
+	public void toggleCompleted() {
+		if (_isCompleted) {
+			_isCompleted = false;
+		} else {
+			_isCompleted = true;
+		}
+	}
+
+	public void updateIsOverdue() {
+		Calendar today = new GregorianCalendar();
+
+		if (_dueDate == null || _isCompleted == true
+				|| _dueDate.compareTo(today) > 0) {
+			_isOverdue = false;
+		} else {
+			_isOverdue = true;
+		}
+	}
+
+	public void setShouldSync(boolean shouldSync) {
+		_shouldSync = shouldSync;
+	}
+
+	/* Accessors */
+	public String getName() {
+		return _name;
+	}
+
+	public String getDescription() {
+		return _description;
+	}
+
+	public String getPriority() {
+		
+		if (_priority == null) {
+			return null;
+		} else if (_priority.equalsIgnoreCase(STRING_PRIORITY_LOW)) {
+			return STRING_PRIORITY_LOW;
+		} else if (_priority.equalsIgnoreCase(STRING_PRIORITY_MEDIUM)) {
+			return STRING_PRIORITY_MEDIUM;
+		} else if (_priority.equalsIgnoreCase(STRING_PRIORITY_HIGH)) {
+			return STRING_PRIORITY_HIGH;
+		} else {
+			return null;
+		}
+	}
+
+	public String getGoogleId() {
+		return _googleId;
+	}
+
+	public int getPriorityInt() {
+		
+		if (_priority == null) {
+			return 0;
+		} else if (_priority.equalsIgnoreCase(STRING_PRIORITY_LOW)) {
+			return NUM_PRIORITY_LOW;
+		} else if (_priority.equalsIgnoreCase(STRING_PRIORITY_MEDIUM)) {
+			return NUM_PRIORITY_MEDIUM;
+		} else if (_priority.equalsIgnoreCase(STRING_PRIORITY_HIGH)) {
+			return NUM_PRIORITY_HIGH;
+		} else {
+			return 0;
+		}
+	}
+
+	public Calendar getStartDate() {
+		return _startDate;
+	}
+
+	public Calendar getDueDate() {
+		return _dueDate;
+	}
+
+	public String getStartDateString() {
+		
+		SimpleDateFormat sdf;
+		
+		if (_startDate == null) {
+			return "no start date";
+		}
+		
+		if(_hasStartTime) {
+			sdf = new SimpleDateFormat(FORMAT_DATE_WITH_TIME);
+			return sdf.format(_startDate.getTime());
+		} else {
+			sdf = new SimpleDateFormat(FORMAT_DATE_NO_TIME);
+			return sdf.format(_startDate.getTime());
+		}
+	}
+
+	public String getDueDateString() {
+		
+		SimpleDateFormat sdf;
+		
+		if (_dueDate == null) {
+			return "no due date";
+		}
+		
+		if(_hasDueTime) {
+			sdf = new SimpleDateFormat(FORMAT_DATE_WITH_TIME);
+			return sdf.format(_dueDate.getTime());
+		} else {
+			sdf = new SimpleDateFormat(FORMAT_DATE_NO_TIME);
+			return sdf.format(_dueDate.getTime());
+		}
+	}
+
+	public boolean getHasStartTime() {
+		return _hasStartTime;
+	}
+
+	public boolean getHasDueTime() {
+		return _hasDueTime;
+	}
+
+	public boolean getIsCompleted() {
+		return _isCompleted;
+	}
+
+	public boolean getIsOverdue() {
+		updateIsOverdue();
+		return _isOverdue;
+	}
+
+	public boolean getShouldSync() {
+		return _shouldSync;
+	}
+	
+	public Calendar getLastUpdated() {
+		return _lastUpdated;
+	}
+
+	/* Other methods */
+
+	public Task clone() {
+		
+		Task clonedTask = new Task(_name);
+		
+		if (_startDate == null) {
+			
+			clonedTask.setStartDate((Calendar) null);
+			
+		} else {
+			
+			Calendar startdate = new GregorianCalendar(
+					_startDate.get(Calendar.YEAR),
+					_startDate.get(Calendar.MONTH),
+					_startDate.get(Calendar.DAY_OF_MONTH),
+					_startDate.get(Calendar.HOUR_OF_DAY),
+					_startDate.get(Calendar.MINUTE),
+					_startDate.get(Calendar.SECOND));
+			clonedTask.setStartDate(startdate);
+		}
+		
+		if (_dueDate == null) {
+			
+			clonedTask.setStartDate((Calendar) null);
+			
+		} else {
+			
+			Calendar dueDate = new GregorianCalendar(
+					_dueDate.get(Calendar.YEAR), _dueDate.get(Calendar.MONTH),
+					_dueDate.get(Calendar.DAY_OF_MONTH),
+					_dueDate.get(Calendar.HOUR_OF_DAY),
+					_dueDate.get(Calendar.MINUTE),
+					_dueDate.get(Calendar.SECOND));
+			clonedTask.setDueDate(dueDate);
+		}
+		
+		clonedTask.setLastUpdated(_lastUpdated);
+		clonedTask.setGoogleId(_googleId);
+		clonedTask.setDescription(_description);
+		clonedTask.setIsCompleted(_isCompleted);
+		clonedTask.setPriority(_priority);
+		clonedTask.setShouldSync(_shouldSync);
+		clonedTask.setHasDueTime(_hasDueTime);
+		clonedTask.setHasStartTime(_hasStartTime);
+		
+		return clonedTask;
+	}
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\Task.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\test\AddActionTest.java
+	 */
+
+/*
+ * AddAction make use of EditAction to update fields of a task.
+ * Different Field cases are not tested extensively as it is covered in EditActionTest Class
+ * 
+ */
+public class AddActionTest {
+
+	private AddAction add;
+	private LinkedList<Field> fields;
+	private FieldParser fp;
+
+	private LinkedList<Task> displayList;
+	private LinkedList<Task> masterList;
+
+	@Before
+	public void setUp() throws Exception {
+		displayList = new LinkedList<Task>();
+		masterList = new LinkedList<Task>();
+		fields = new LinkedList<Field>();
+	}
+
+	@After
+	public void tearDown() throws Exception {
+	}
+
+	@Test
+	/*
+	 * Blank name not tested ad it is not supposed to happen in AddAction as
+	 * CommandParser Class already rejects empty name.
+	 */
+	public void testAddNoField() {
+
+		/* Null name */
+		add = new AddAction(null, null);
+		add.execute(displayList, masterList);
+		assertEquals(0, displayList.size());
+		assertEquals(0, masterList.size());
+		assertEquals(GlobalConstants.NOTHING_ADDED, add.getFeedback()
+				.toString());
+
+		/* One word name */
+		add = new AddAction("task", null);
+		add.execute(displayList, masterList);
+		assertEquals("task", displayList.getFirst().getName());
+		assertEquals("task", masterList.getFirst().getName());
+		assertEquals(
+				String.format(GlobalConstants.ADD_SUCCESS, "task"),
+				add.getFeedback().toString());
+		displayList.clear();
+		masterList.clear();
+
+		/* Multiple word name */
+		add = new AddAction("task one two", null);
+		add.execute(displayList, masterList);
+		assertEquals("task one two", displayList.getFirst().getName());
+		assertEquals("task one two", masterList.getFirst().getName());
+		assertEquals(String.format(GlobalConstants.ADD_SUCCESS,
+				"task one two"), add.getFeedback().toString());
+		displayList.clear();
+		masterList.clear();
+
+	}
+
+	@Test
+	public void testAddHasField() {
+
+		/* Not null name */
+		fp = new FieldParser("d 12/12/12 7:30");
+		fp.setActionType(ActionType.ADD);
+		fields.add(fp.getField());
+		add = new AddAction("task one two", fields);
+		add.execute(displayList, masterList);
+		assertEquals(String.format(GlobalConstants.ADD_SUCCESS
+				+ GlobalConstants.DUE_DATE_SET, "task one two",
+				"12/12/2012 0730H"), add.getFeedback().toString());
+		displayList.clear();
+		masterList.clear();
+		fields.clear();
+
+		fp = new FieldParser("s 12/12/12");
+		fp.setActionType(ActionType.ADD);
+		fields.add(fp.getField());
+		add = new AddAction("task one two", fields);
+		add.execute(displayList, masterList);
+		assertEquals(String.format(GlobalConstants.ADD_SUCCESS
+				+ GlobalConstants.START_DATE_SET, "task one two",
+				"12/12/2012"), add.getFeedback().toString());
+		displayList.clear();
+		masterList.clear();
+		fields.clear();
+
+		fp = new FieldParser("p H");
+		fp.setActionType(ActionType.ADD);
+		fields.add(fp.getField());
+		add = new AddAction("task one two", fields);
+		add.execute(displayList, masterList);
+		assertEquals(String.format(GlobalConstants.ADD_SUCCESS
+				+ GlobalConstants.PRIORITY_SET, "task one two", "H"),
+				add.getFeedback().toString());
+		displayList.clear();
+		masterList.clear();
+		fields.clear();
+
+		/* Null name */
+		fp = new FieldParser("d 12/12/12 7:30");
+		fp.setActionType(ActionType.ADD);
+		fields.add(fp.getField());
+		add = new AddAction(null, fields);
+		add.execute(displayList, masterList);
+		assertEquals(0, displayList.size());
+		assertEquals(0, masterList.size());
+		assertEquals(GlobalConstants.NOTHING_ADDED, add.getFeedback()
+				.toString());
+
+	}
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\test\AddActionTest.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\test\DateParserTest.java
+	 */
+
+
+/*
+ * Testing of day of week, today and tomorrow cannot be automated, as the result
+ * changes depending on the day the test is carried out. Such tests are done manually 
+ * 
+ */
+public class DateParserTest {
+
+	private static final String DATE_TIME_FORMAT = "dd/MM/yy HH:mm";
+	private static final String DATE_FORMAT = "dd/MM/yy";
+	private static final String TIME_FORMAT = "HH:mm";
+
+	private SimpleDateFormat formatDateTime;
+	private SimpleDateFormat formatDate;
+	private SimpleDateFormat formatTime;
+
+	private Calendar testDate;
+	private DateParser testDateParser;
+	private String testDateString;
+	private String feedback;
+
+	@Before
+	public void setUp() throws Exception {
+		formatDateTime = new SimpleDateFormat(DATE_TIME_FORMAT);
+		formatDate = new SimpleDateFormat(DATE_FORMAT);
+		formatTime = new SimpleDateFormat(TIME_FORMAT);
+	}
+
+	@After
+	public void tearDown() throws Exception {
+	}
+
+	@Test
+	/** Test valid date and time **/
+	public void testDateTimeValid() {
+
+		/* Full date and time formats */
+		testDateString = "12/12/2012 12:12";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertTrue(testDateParser.isDateParsed());
+		assertTrue(testDateParser.isTimeParsed());
+		assertEquals("12/12/12 12:12",
+				formatDateTime.format(testDate.getTime()));
+		assertEquals("", feedback);
+
+		testDateString = "12/12/12 12:12";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertTrue(testDateParser.isDateParsed());
+		assertTrue(testDateParser.isTimeParsed());
+		assertEquals("12/12/12 12:12",
+				formatDateTime.format(testDate.getTime()));
+		assertEquals("", feedback);
+
+		testDateString = "01/01/01 12:12";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertTrue(testDateParser.isDateParsed());
+		assertTrue(testDateParser.isTimeParsed());
+		assertEquals("01/01/01 12:12",
+				formatDateTime.format(testDate.getTime()));
+		assertEquals("", feedback);
+
+		testDateString = "1/1/01 12:12";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertTrue(testDateParser.isDateParsed());
+		assertTrue(testDateParser.isTimeParsed());
+		assertEquals("01/01/01 12:12",
+				formatDateTime.format(testDate.getTime()));
+		assertEquals("", feedback);
+
+		/* Half date and full time formats */
+		testDateString = "12/12 12:12";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertTrue(testDateParser.isDateParsed());
+		assertTrue(testDateParser.isTimeParsed());
+		assertEquals("12/12/15 12:12",
+				formatDateTime.format(testDate.getTime()));
+		assertEquals("", feedback);
+
+		testDateString = "01/01 12:12";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertTrue(testDateParser.isDateParsed());
+		assertTrue(testDateParser.isTimeParsed());
+		assertEquals("01/01/15 12:12",
+				formatDateTime.format(testDate.getTime()));
+		assertEquals("", feedback);
+
+		testDateString = "1/1 12:12";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertTrue(testDateParser.isDateParsed());
+		assertTrue(testDateParser.isTimeParsed());
+		assertEquals("01/01/15 12:12",
+				formatDateTime.format(testDate.getTime()));
+		assertEquals("", feedback);
+
+		/* Varying date and half time formats */
+		testDateString = "12/12/12 09:30";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertTrue(testDateParser.isDateParsed());
+		assertTrue(testDateParser.isTimeParsed());
+		assertEquals("12/12/12 09:30",
+				formatDateTime.format(testDate.getTime()));
+		assertEquals("", feedback);
+
+		testDateString = "12/12 9:30";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertTrue(testDateParser.isDateParsed());
+		assertTrue(testDateParser.isTimeParsed());
+		assertEquals("12/12/15 09:30",
+				formatDateTime.format(testDate.getTime()));
+		assertEquals("", feedback);
+
+		testDateString = "1/12 9:9";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertTrue(testDateParser.isDateParsed());
+		assertTrue(testDateParser.isTimeParsed());
+		assertEquals("01/12/15 09:09",
+				formatDateTime.format(testDate.getTime()));
+		assertEquals("", feedback);
+	}
+
+	@Test
+	/** Test valid date**/
+	public void testDateValid() {
+
+		/* Full date formats */
+		testDateString = "12/12/2012";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertTrue(testDateParser.isDateParsed());
+		assertFalse(testDateParser.isTimeParsed());
+		assertEquals("12/12/12", formatDate.format(testDate.getTime()));
+		assertEquals("", feedback);
+
+		testDateString = "12/12/12";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertTrue(testDateParser.isDateParsed());
+		assertFalse(testDateParser.isTimeParsed());
+		assertEquals("12/12/12", formatDate.format(testDate.getTime()));
+		assertEquals("", feedback);
+
+		/* Half date formats */
+		testDateString = "12/12";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertTrue(testDateParser.isDateParsed());
+		assertFalse(testDateParser.isTimeParsed());
+		assertEquals("12/12/15", formatDate.format(testDate.getTime()));
+		assertEquals("", feedback);
+
+		testDateString = "01/01";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertTrue(testDateParser.isDateParsed());
+		assertFalse(testDateParser.isTimeParsed());
+		assertEquals("01/01/15", formatDate.format(testDate.getTime()));
+		assertEquals("", feedback);
+
+		testDateString = "1/01";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertTrue(testDateParser.isDateParsed());
+		assertFalse(testDateParser.isTimeParsed());
+		assertEquals("01/01/15", formatDate.format(testDate.getTime()));
+		assertEquals("", feedback);
+
+		testDateString = "01/1";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertTrue(testDateParser.isDateParsed());
+		assertFalse(testDateParser.isTimeParsed());
+		assertEquals("01/01/15", formatDate.format(testDate.getTime()));
+		assertEquals("", feedback);
+
+		testDateString = "1/1";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertTrue(testDateParser.isDateParsed());
+		assertFalse(testDateParser.isTimeParsed());
+		assertEquals("01/01/15", formatDate.format(testDate.getTime()));
+		assertEquals("", feedback);
+	}
+
+	@Test
+	/** Test valid time**/
+	public void testTimeValid() {
+
+		testDateString = "23:59";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertFalse(testDateParser.isDateParsed());
+		assertTrue(testDateParser.isTimeParsed());
+		assertEquals("23:59", formatTime.format(testDate.getTime()));
+		assertEquals("", feedback);
+
+		testDateString = "00:00";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertFalse(testDateParser.isDateParsed());
+		assertTrue(testDateParser.isTimeParsed());
+		assertEquals("00:00", formatTime.format(testDate.getTime()));
+		assertEquals("", feedback);
+
+		testDateString = "00:0";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		assertFalse(testDateParser.isDateParsed());
+		assertTrue(testDateParser.isTimeParsed());
+		feedback = testDateParser.getFeedback().toString();
+		assertEquals("00:00", formatTime.format(testDate.getTime()));
+		assertEquals("", feedback);
+
+		testDateString = "0:00";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertFalse(testDateParser.isDateParsed());
+		assertTrue(testDateParser.isTimeParsed());
+		assertEquals("00:00", formatTime.format(testDate.getTime()));
+		assertEquals("", feedback);
+
+		testDateString = "0:0";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertFalse(testDateParser.isDateParsed());
+		assertTrue(testDateParser.isTimeParsed());
+		assertEquals("00:00", formatTime.format(testDate.getTime()));
+		assertEquals("", feedback);
+
+		testDateString = "01:01";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertFalse(testDateParser.isDateParsed());
+		assertTrue(testDateParser.isTimeParsed());
+		assertEquals("01:01", formatTime.format(testDate.getTime()));
+		assertEquals("", feedback);
+
+		testDateString = "1:01";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertFalse(testDateParser.isDateParsed());
+		assertTrue(testDateParser.isTimeParsed());
+		assertEquals("01:01", formatTime.format(testDate.getTime()));
+		assertEquals("", feedback);
+
+		testDateString = "01:1";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertFalse(testDateParser.isDateParsed());
+		assertTrue(testDateParser.isTimeParsed());
+		assertEquals("01:01", formatTime.format(testDate.getTime()));
+		assertEquals("", feedback);
+
+		testDateString = "1:1";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertFalse(testDateParser.isDateParsed());
+		assertTrue(testDateParser.isTimeParsed());
+		assertEquals("01:01", formatTime.format(testDate.getTime()));
+		assertEquals("", feedback);
+	}
+
+	@Test
+	/** Test invalid date and time**/
+	public void testDateTimeInvalid() {
+
+		/* Invalid date and time formats */
+		testDateString = "12032015 1600";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertFalse(testDateParser.isDateParsed());
+		assertFalse(testDateParser.isTimeParsed());
+		assertNull(testDate);
+
+		testDateString = "12/032015 1:600";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertTrue(testDateParser.isDateParsed());
+		assertTrue(testDateParser.isTimeParsed());
+		assertEquals("12/11/15 11:00",
+				formatDateTime.format(testDate.getTime()));
+
+		testDateString = "120320/15 160:0";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertTrue(testDateParser.isDateParsed());
+		assertTrue(testDateParser.isTimeParsed());
+		assertEquals("08/08/15 16:00",
+				formatDateTime.format(testDate.getTime()));
+
+		/* Invalid date and valid time format */
+		testDateString = "12032015 12:30";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertFalse(testDateParser.isDateParsed());
+		assertTrue(testDateParser.isTimeParsed());
+		assertNull(testDate);
+
+		testDateString = "12/032015 12:30";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertTrue(testDateParser.isDateParsed());
+		assertTrue(testDateParser.isTimeParsed());
+		assertEquals("12/11/15 12:30",
+				formatDateTime.format(testDate.getTime()));
+
+		testDateString = "120320/15  12:30";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertTrue(testDateParser.isDateParsed());
+		assertTrue(testDateParser.isTimeParsed());
+		assertEquals("02/08/15 12:30",
+				formatDateTime.format(testDate.getTime()));
+
+		/* Invalid time and valid date format */
+		testDateString = "31/12/15 1600";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertTrue(testDateParser.isDateParsed());
+		assertFalse(testDateParser.isTimeParsed());
+		assertEquals("31/12/15 00:00",
+				formatDateTime.format(testDate.getTime()));
+
+		testDateString = "31/12/15 1:600";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertTrue(testDateParser.isDateParsed());
+		assertTrue(testDateParser.isTimeParsed());
+		assertEquals("31/12/15 11:00",
+				formatDateTime.format(testDate.getTime()));
+
+		testDateString = "31/12/15 160:0";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertTrue(testDateParser.isDateParsed());
+		assertTrue(testDateParser.isTimeParsed());
+		assertEquals("06/01/16 16:00",
+				formatDateTime.format(testDate.getTime()));
+
+		/* Spaces in between numbers */
+		testDateString = "31 / 12 / 15 16 : 00";
+		testDateParser = new DateParser(testDateString);
+		testDate = testDateParser.getDateTime();
+		feedback = testDateParser.getFeedback().toString();
+		assertFalse(testDateParser.isDateParsed());
+		assertFalse(testDateParser.isTimeParsed());
+		assertNull(testDate);
+	}
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\test\DateParserTest.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\test\FieldParserTest.java
+	 */
+
+/*
+ * Dates are not tested extensively as it is covered in DateParserTest Class
+ * 
+ */
+public class FieldParserTest {
+
+	private FieldParser fieldParser;
+	private Field field;
+	private Object content;
+
+	@Before
+	public void setUp() throws Exception {
+	}
+
+	@After
+	public void tearDown() throws Exception {
+	}
+
+	@Test
+	public void testEditDateField() {
+
+		/* Valid due date and time */
+		fieldParser = new FieldParser("d 12/12/12 12:12");
+		fieldParser.setActionType(ActionType.EDIT);
+		field = fieldParser.getField();
+		content = new DateParser("12/12/12 12:12").getDateTime();
+		assertEquals((Calendar) content, field.getDate());
+		assertEquals(FieldType.DUE_DATE, field.getFieldType());
+		assertEquals("", fieldParser.getFeedback());
+
+		/* Clear due date and time */
+		fieldParser = new FieldParser("d clr");
+		fieldParser.setActionType(ActionType.EDIT);
+		field = fieldParser.getField();
+		assertEquals(FieldCriteria.CLEAR_DATE, field.getCriteria());
+		assertEquals(FieldType.DUE_DATE, field.getFieldType());
+		assertEquals("", fieldParser.getFeedback());
+
+		/* Invalid due date and time */
+		/* For detailed date parsing tests, use DateParserTest Class */
+		fieldParser = new FieldParser("d xxx xxx");
+		fieldParser.setActionType(ActionType.EDIT);
+		field = fieldParser.getField();
+		assertNull(field.getDate());
+		assertEquals(FieldType.DUE_DATE, field.getFieldType());
+		assertEquals(
+				String.format(GlobalConstants.INVALID_DAY_CRITERIA, "xxx"),
+				fieldParser.getFeedback());
+
+		fieldParser = new FieldParser("d xxx");
+		fieldParser.setActionType(ActionType.EDIT);
+		field = fieldParser.getField();
+		assertNull(field.getDate());
+		assertEquals(FieldType.DUE_DATE, field.getFieldType());
+		assertEquals(String.format(GlobalConstants.INVALID_DAY, "xxx"),
+				fieldParser.getFeedback());
+
+		/* Valid start date and time */
+		fieldParser = new FieldParser("s 12/12/12 12:12");
+		fieldParser.setActionType(ActionType.EDIT);
+		field = fieldParser.getField();
+		content = new DateParser("12/12/12 12:12").getDateTime();
+		assertEquals((Calendar) content, field.getDate());
+		assertEquals(FieldType.START_DATE, field.getFieldType());
+		assertEquals("", fieldParser.getFeedback());
+
+		/* Clear start date and time */
+		fieldParser = new FieldParser("s clr");
+		fieldParser.setActionType(ActionType.EDIT);
+		field = fieldParser.getField();
+		assertEquals(FieldCriteria.CLEAR_DATE, field.getCriteria());
+		assertEquals(FieldType.START_DATE, field.getFieldType());
+		assertEquals("", fieldParser.getFeedback());
+
+		/* Invalid start date and time */
+		/* For detailed date parsing tests, use DateParserTest Class */
+		fieldParser = new FieldParser("s xxx xxx");
+		fieldParser.setActionType(ActionType.EDIT);
+		field = fieldParser.getField();
+		assertNull(field.getDate());
+		assertEquals(FieldType.START_DATE, field.getFieldType());
+		assertEquals(
+				String.format(GlobalConstants.INVALID_DAY_CRITERIA, "xxx"),
+				fieldParser.getFeedback());
+
+		fieldParser = new FieldParser("s xxx");
+		fieldParser.setActionType(ActionType.EDIT);
+		field = fieldParser.getField();
+		assertNull(field.getDate());
+		assertEquals(FieldType.START_DATE, field.getFieldType());
+		assertEquals(String.format(GlobalConstants.INVALID_DAY, "xxx"),
+				fieldParser.getFeedback());
+	}
+
+	@Test
+	public void testFindDateField() {
+
+		/* Valid "on" criteria */
+		fieldParser = new FieldParser("d on 12/12/12");
+		fieldParser.setActionType(ActionType.FIND);
+		field = fieldParser.getField();
+		content = new DateParser("12/12/12").getDateTime();
+		assertEquals((Calendar) content, field.getDate());
+		assertEquals(FieldType.DUE_DATE, field.getFieldType());
+		assertEquals(FieldCriteria.ON, field.getCriteria());
+		assertEquals("", fieldParser.getFeedback());
+
+		/* Valid "before" criteria */
+		fieldParser = new FieldParser("s bf 12/12/12");
+		fieldParser.setActionType(ActionType.FIND);
+		field = fieldParser.getField();
+		content = new DateParser("12/12/12").getDateTime();
+		assertEquals((Calendar) content, field.getDate());
+		assertEquals(FieldType.START_DATE, field.getFieldType());
+		assertEquals(FieldCriteria.BEFORE, field.getCriteria());
+		assertEquals("", fieldParser.getFeedback());
+
+		/* Valid "after" criteria */
+		fieldParser = new FieldParser("d af 12/12/12");
+		fieldParser.setActionType(ActionType.FIND);
+		field = fieldParser.getField();
+		content = new DateParser("12/12/12").getDateTime();
+		assertEquals((Calendar) content, field.getDate());
+		assertEquals(FieldType.DUE_DATE, field.getFieldType());
+		assertEquals(FieldCriteria.AFTER, field.getCriteria());
+		assertEquals("", fieldParser.getFeedback());
+
+		/* Valid "between" criteria */
+		Calendar dateRange[];
+		fieldParser = new FieldParser("s btw 12/12/12 & 13/12/12");
+		fieldParser.setActionType(ActionType.FIND);
+		field = fieldParser.getField();
+		dateRange = new Calendar[] { new DateParser("12/12/12").getDateTime(),
+				new DateParser("13/12/12").getDateTime() };
+		content = dateRange;
+		assertEquals((Calendar[]) content, field.getDateRange());
+		assertEquals(FieldType.START_DATE, field.getFieldType());
+		assertEquals(FieldCriteria.BETWEEN, field.getCriteria());
+		assertEquals("", fieldParser.getFeedback());
+
+		/* Invalid "between" criteria */
+		fieldParser = new FieldParser("s btw 12/12/12");
+		fieldParser.setActionType(ActionType.FIND);
+		field = fieldParser.getField();
+		dateRange = new Calendar[] { new DateParser("12/12/12").getDateTime(),
+				new DateParser("13/12/12").getDateTime() };
+		content = dateRange;
+		assertNull(field.getDateRange());
+		assertEquals(FieldType.START_DATE, field.getFieldType());
+		assertEquals(FieldCriteria.BETWEEN, field.getCriteria());
+		assertEquals(GlobalConstants.INVALID_DATE_RANGE,
+				fieldParser.getFeedback());
+
+		fieldParser = new FieldParser("s btw 12/12/12 & xxx");
+		fieldParser.setActionType(ActionType.FIND);
+		field = fieldParser.getField();
+		dateRange = new Calendar[] { new DateParser("12/12/12").getDateTime(),
+				new DateParser("13/12/12").getDateTime() };
+		content = dateRange;
+		assertNull(field.getDateRange());
+		assertEquals(FieldType.START_DATE, field.getFieldType());
+		assertEquals(FieldCriteria.BETWEEN, field.getCriteria());
+		assertEquals(String.format(GlobalConstants.INVALID_DAY, "xxx"),
+				fieldParser.getFeedback());
+
+		fieldParser = new FieldParser("d btw xxx & 12/12/12");
+		fieldParser.setActionType(ActionType.FIND);
+		field = fieldParser.getField();
+		dateRange = new Calendar[] { new DateParser("12/12/12").getDateTime(),
+				new DateParser("13/12/12").getDateTime() };
+		content = dateRange;
+		assertNull(field.getDateRange());
+		assertEquals(FieldType.DUE_DATE, field.getFieldType());
+		assertEquals(FieldCriteria.BETWEEN, field.getCriteria());
+		assertEquals(String.format(GlobalConstants.INVALID_DAY, "xxx"),
+				fieldParser.getFeedback());
+
+		fieldParser = new FieldParser("d btw xxx & yyy");
+		fieldParser.setActionType(ActionType.FIND);
+		field = fieldParser.getField();
+		dateRange = new Calendar[] { new DateParser("12/12/12").getDateTime(),
+				new DateParser("13/12/12").getDateTime() };
+		content = dateRange;
+		assertNull(field.getDateRange());
+		assertEquals(FieldType.DUE_DATE, field.getFieldType());
+		assertEquals(FieldCriteria.BETWEEN, field.getCriteria());
+		assertEquals(String.format(GlobalConstants.INVALID_DAY, "xxx")
+				+ String.format(GlobalConstants.INVALID_DAY, "yyy"),
+				fieldParser.getFeedback());
+
+		fieldParser = new FieldParser("d btw 12/12/12 to 13/12/12");
+		fieldParser.setActionType(ActionType.FIND);
+		field = fieldParser.getField();
+		dateRange = new Calendar[] { new DateParser("12/12/12").getDateTime(),
+				new DateParser("13/12/12").getDateTime() };
+		content = dateRange;
+		assertNull(field.getDateRange());
+		assertEquals(FieldType.DUE_DATE, field.getFieldType());
+		assertEquals(FieldCriteria.BETWEEN, field.getCriteria());
+		assertEquals(GlobalConstants.INVALID_DATE_RANGE,
+				fieldParser.getFeedback());
+	}
+
+	@Test
+	public void testPriorityField() {
+
+		/*
+		 * Test valid priority levels
+		 * 
+		 * Full words form like "high", "low", etc are omitted as they are
+		 * processed into single letter form in CommandParser Class
+		 */
+		fieldParser = new FieldParser("p h");
+		fieldParser.setActionType(ActionType.EDIT);
+		field = fieldParser.getField();
+		assertEquals("H", field.getPriority());
+		assertEquals(FieldType.PRIORITY, field.getFieldType());
+		assertEquals("", fieldParser.getFeedback());
+
+		fieldParser = new FieldParser("p m");
+		fieldParser.setActionType(ActionType.EDIT);
+		field = fieldParser.getField();
+		assertEquals("M", field.getPriority());
+		assertEquals(FieldType.PRIORITY, field.getFieldType());
+		assertEquals("", fieldParser.getFeedback());
+
+		fieldParser = new FieldParser("p l");
+		fieldParser.setActionType(ActionType.FIND);
+		field = fieldParser.getField();
+		assertEquals("L", field.getPriority());
+		assertEquals(FieldType.PRIORITY, field.getFieldType());
+		assertEquals("", fieldParser.getFeedback());
+
+		fieldParser = new FieldParser("p H");
+		fieldParser.setActionType(ActionType.EDIT);
+		field = fieldParser.getField();
+		assertEquals("H", field.getPriority());
+		assertEquals(FieldType.PRIORITY, field.getFieldType());
+		assertEquals("", fieldParser.getFeedback());
+
+		fieldParser = new FieldParser("p M");
+		fieldParser.setActionType(ActionType.EDIT);
+		field = fieldParser.getField();
+		assertEquals("M", field.getPriority());
+		assertEquals(FieldType.PRIORITY, field.getFieldType());
+		assertEquals("", fieldParser.getFeedback());
+
+		fieldParser = new FieldParser("p L");
+		fieldParser.setActionType(ActionType.FIND);
+		field = fieldParser.getField();
+		assertEquals("L", field.getPriority());
+		assertEquals(FieldType.PRIORITY, field.getFieldType());
+		assertEquals("", fieldParser.getFeedback());
+
+		/* Test invalid priority level */
+		fieldParser = new FieldParser("p n");
+		fieldParser.setActionType(ActionType.FIND);
+		field = fieldParser.getField();
+		assertNull(field.getPriority());
+		assertEquals(FieldType.PRIORITY, field.getFieldType());
+		assertEquals(
+				String.format(GlobalConstants.INVALID_PRIORITY_LEVEL, "n"),
+				fieldParser.getFeedback());
+
+		fieldParser = new FieldParser("p n");
+		fieldParser.setActionType(ActionType.EDIT);
+		field = fieldParser.getField();
+		assertNull(field.getPriority());
+		assertEquals(FieldType.PRIORITY, field.getFieldType());
+		assertEquals(
+				String.format(GlobalConstants.INVALID_PRIORITY_LEVEL, "n"),
+				fieldParser.getFeedback());
+
+		/* Test valid priority clear */
+		fieldParser = new FieldParser("p CLR");
+		fieldParser.setActionType(ActionType.EDIT);
+		field = fieldParser.getField();
+		assertNull(field.getPriority());
+		assertEquals(FieldCriteria.CLEAR_PRIORITY, field.getCriteria());
+		assertEquals("", fieldParser.getFeedback());
+
+		fieldParser = new FieldParser("p clr");
+		fieldParser.setActionType(ActionType.EDIT);
+		field = fieldParser.getField();
+		assertNull(field.getPriority());
+		assertEquals(FieldCriteria.CLEAR_PRIORITY, field.getCriteria());
+		assertEquals("", fieldParser.getFeedback());
+	}
+
+	@Test
+	public void testOverdueField() {
+
+		/*
+		 * Test valid overdue criteria
+		 * 
+		 * Full words form "yes" and "no" are omitted as they are processed into
+		 * single letter form in CommandParser Class
+		 */
+		fieldParser = new FieldParser("o y");
+		fieldParser.setActionType(ActionType.FIND);
+		field = fieldParser.getField();
+		assertEquals(FieldCriteria.YES, field.getCriteria());
+		assertEquals(FieldType.OVERDUE, field.getFieldType());
+		assertEquals("", fieldParser.getFeedback());
+
+		fieldParser = new FieldParser("o n");
+		fieldParser.setActionType(ActionType.FIND);
+		field = fieldParser.getField();
+		assertEquals(FieldCriteria.NO, field.getCriteria());
+		assertEquals(FieldType.OVERDUE, field.getFieldType());
+		assertEquals("", fieldParser.getFeedback());
+
+		fieldParser = new FieldParser("o N");
+		fieldParser.setActionType(ActionType.FIND);
+		field = fieldParser.getField();
+		assertEquals(FieldCriteria.NO, field.getCriteria());
+		assertEquals(FieldType.OVERDUE, field.getFieldType());
+		assertEquals("", fieldParser.getFeedback());
+
+		fieldParser = new FieldParser("o Y");
+		fieldParser.setActionType(ActionType.FIND);
+		field = fieldParser.getField();
+		assertEquals(FieldCriteria.YES, field.getCriteria());
+		assertEquals(FieldType.OVERDUE, field.getFieldType());
+		assertEquals("", fieldParser.getFeedback());
+
+		/* Test invalid overdue criteria */
+		fieldParser = new FieldParser("o m");
+		fieldParser.setActionType(ActionType.FIND);
+		field = fieldParser.getField();
+		assertNull(field.getCriteria());
+		assertEquals(FieldType.OVERDUE, field.getFieldType());
+		assertEquals(
+				String.format(GlobalConstants.INVALID_FIELD_CRITERIA, "m"),
+				fieldParser.getFeedback());
+
+	}
+
+	@Test
+	public void testCompletedField() {
+
+		/*
+		 * Test valid completed criteria
+		 * 
+		 * Full words form "yes" and "no" are omitted as they are processed into
+		 * single letter form in CommandParser Class
+		 */
+		fieldParser = new FieldParser("c y");
+		fieldParser.setActionType(ActionType.FIND);
+		field = fieldParser.getField();
+		assertEquals(FieldCriteria.YES, field.getCriteria());
+		assertEquals(FieldType.COMPLETED, field.getFieldType());
+		assertEquals("", fieldParser.getFeedback());
+
+		fieldParser = new FieldParser("c n");
+		fieldParser.setActionType(ActionType.FIND);
+		field = fieldParser.getField();
+		assertEquals(FieldCriteria.NO, field.getCriteria());
+		assertEquals(FieldType.COMPLETED, field.getFieldType());
+		assertEquals("", fieldParser.getFeedback());
+
+		fieldParser = new FieldParser("c N");
+		fieldParser.setActionType(ActionType.FIND);
+		field = fieldParser.getField();
+		assertEquals(FieldCriteria.NO, field.getCriteria());
+		assertEquals(FieldType.COMPLETED, field.getFieldType());
+		assertEquals("", fieldParser.getFeedback());
+
+		fieldParser = new FieldParser("c Y");
+		fieldParser.setActionType(ActionType.FIND);
+		field = fieldParser.getField();
+		assertEquals(FieldCriteria.YES, field.getCriteria());
+		assertEquals(FieldType.COMPLETED, field.getFieldType());
+		assertEquals("", fieldParser.getFeedback());
+
+		/* Test invalid completed criteria */
+		fieldParser = new FieldParser("c m");
+		fieldParser.setActionType(ActionType.FIND);
+		field = fieldParser.getField();
+		assertNull(field.getCriteria());
+		assertEquals(FieldType.COMPLETED, field.getFieldType());
+		assertEquals(
+				String.format(GlobalConstants.INVALID_FIELD_CRITERIA, "m"),
+				fieldParser.getFeedback());
+	}
+
+	@Test
+	public void testInvalidFieldCriteriaCombinations() {
+
+		Calendar[] dateRange;
+		/* Start and due dates for FIND */
+		fieldParser = new FieldParser("d y 12/12/12 & 13/12/12");
+		fieldParser.setActionType(ActionType.FIND);
+		field = fieldParser.getField();
+		dateRange = new Calendar[] { new DateParser("12/12/12").getDateTime(),
+				new DateParser("13/12/12").getDateTime() };
+		content = dateRange;
+		assertNull(field.getDateRange());
+		assertEquals(FieldType.DUE_DATE, field.getFieldType());
+		assertNull(field.getCriteria());
+		assertEquals(
+				String.format(GlobalConstants.INVALID_FIELD_CRITERIA, "y"),
+				fieldParser.getFeedback());
+
+		fieldParser = new FieldParser("s clr 12/12/12 & 13/12/12");
+		fieldParser.setActionType(ActionType.FIND);
+		field = fieldParser.getField();
+		dateRange = new Calendar[] { new DateParser("12/12/12").getDateTime(),
+				new DateParser("13/12/12").getDateTime() };
+		content = dateRange;
+		assertNull(field.getDateRange());
+		assertEquals(FieldType.START_DATE, field.getFieldType());
+		assertNull(field.getCriteria());
+		assertEquals(
+				String.format(GlobalConstants.INVALID_FIELD_CRITERIA, "clr"),
+				fieldParser.getFeedback());
+
+		fieldParser = new FieldParser("s 12/12/12 & 13/12/12");
+		fieldParser.setActionType(ActionType.FIND);
+		field = fieldParser.getField();
+		assertNull(field.getDateRange());
+		assertEquals(FieldType.START_DATE, field.getFieldType());
+		assertNull(field.getCriteria());
+		assertEquals(String.format(GlobalConstants.INVALID_FIELD_CRITERIA,
+				"12/12/12"), fieldParser.getFeedback());
+
+		fieldParser = new FieldParser("d tdy");
+		fieldParser.setActionType(ActionType.FIND);
+		field = fieldParser.getField();
+		assertNull(field.getDate());
+		assertEquals(FieldType.DUE_DATE, field.getFieldType());
+		assertNull(field.getCriteria());
+		assertEquals(
+				String.format(GlobalConstants.INVALID_FIELD_CRITERIA, "tdy"),
+				fieldParser.getFeedback());
+
+		/* Overdue status for FIND */
+		fieldParser = new FieldParser("o on");
+		fieldParser.setActionType(ActionType.FIND);
+		field = fieldParser.getField();
+		assertNull(field.getCriteria());
+		assertEquals(FieldType.OVERDUE, field.getFieldType());
+		assertEquals(
+				String.format(GlobalConstants.INVALID_FIELD_CRITERIA, "on"),
+				fieldParser.getFeedback());
+
+		fieldParser = new FieldParser("o af");
+		fieldParser.setActionType(ActionType.FIND);
+		field = fieldParser.getField();
+		assertNull(field.getCriteria());
+		assertEquals(FieldType.OVERDUE, field.getFieldType());
+		assertEquals(
+				String.format(GlobalConstants.INVALID_FIELD_CRITERIA, "af"),
+				fieldParser.getFeedback());
+
+		/* Completed status for FIND */
+		fieldParser = new FieldParser("c btw");
+		fieldParser.setActionType(ActionType.FIND);
+		field = fieldParser.getField();
+		assertNull(field.getCriteria());
+		assertEquals(FieldType.COMPLETED, field.getFieldType());
+		assertEquals(
+				String.format(GlobalConstants.INVALID_FIELD_CRITERIA, "btw"),
+				fieldParser.getFeedback());
+
+		fieldParser = new FieldParser("c bf");
+		fieldParser.setActionType(ActionType.FIND);
+		field = fieldParser.getField();
+		assertNull(field.getCriteria());
+		assertEquals(FieldType.COMPLETED, field.getFieldType());
+		assertEquals(
+				String.format(GlobalConstants.INVALID_FIELD_CRITERIA, "bf"),
+				fieldParser.getFeedback());
+	}
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\test\FieldParserTest.java
+
+
+
+
+

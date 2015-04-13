@@ -1,0 +1,1898 @@
+//@author: a0112971j
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\CommandActionListener.java
+	 */
+
+public class CommandActionListener implements ActionListener {
+    
+    private static final String STRING_EMPTY = "";
+    
+    private static final String USER_ENTERED_COMMAND = "user entered: %s";
+    
+    private static final Logger LOGGER = Logger.getLogger(CommandActionListener
+                                                          .class.getName());
+    
+    private JTextField _command;
+    private GUI _gui;
+
+    public CommandActionListener(JTextField command, GUI gui) {
+        _command = command;
+        _gui = gui;
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent arg0) {
+        String command = _command.getText();
+        
+        LOGGER.info(String.format(USER_ENTERED_COMMAND,command));
+        
+        _gui.addCommandToCommandHistory(command);
+        
+        if (_gui.executeCommand(command)) {
+            _command.setText(STRING_EMPTY);
+        }
+    }
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\CommandActionListener.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\CommandHistory.java
+	 */
+
+public class CommandHistory {
+    
+    private static final int INDEX_START = 0;
+
+    private static final String STRING_EMPTY = "";
+    
+    private List<String> _commands;
+    private int _currentIndex;
+    
+    public CommandHistory() {
+        _commands = new ArrayList<String>();
+        _currentIndex = INDEX_START;
+    }
+    
+    public String getPreviousCommand() {
+        if (_currentIndex == INDEX_START) {
+            if (_commands.isEmpty()) {
+                return STRING_EMPTY;
+            } else {
+                return _commands.get(_currentIndex);
+            }
+        } else {
+            _currentIndex--;
+            return _commands.get(_currentIndex);
+        }
+    }
+    
+    public String getNextCommand() {
+        if (_currentIndex < _commands.size()) { 
+            _currentIndex++;
+        }
+        
+        if (_currentIndex == _commands.size()) {
+            return STRING_EMPTY;
+        } else {
+            return _commands.get(_currentIndex);
+        }
+    }
+    
+    public void addCommand(String command) {
+        if (_currentIndex == _commands.size()) {
+            if (!command.trim().isEmpty()) {
+                _commands.add(command);
+            }
+        } else if (_currentIndex < _commands.size() &&
+                  !_commands.get(_currentIndex).equals(command)) {
+            if (!command.trim().isEmpty()) {
+                _commands.add(command);
+            }
+        }
+        _currentIndex = _commands.size();
+    }
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\CommandHistory.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\CommandKeyListener.java
+	 */
+
+public class CommandKeyListener implements KeyListener {
+    
+    private static final int KEY_UP = 38;
+    private static final int KEY_DOWN = 40;
+
+    private CommandHistory _commandHistory;
+    private JTextField _command;
+    
+    public CommandKeyListener(CommandHistory commandHistory, JTextField command) {
+        _commandHistory = commandHistory;
+        _command = command;
+    }
+        
+    @Override
+    public void keyPressed(KeyEvent e) {
+        
+        int keyCode = e.getKeyCode();
+        
+        if (keyCode == KEY_UP) {
+            _command.setText(_commandHistory.getPreviousCommand());
+        } else if (keyCode == KEY_DOWN) {
+            _command.setText(_commandHistory.getNextCommand());
+        }
+    }
+    
+    @Override
+    public void keyTyped(KeyEvent e) {     
+    }
+    
+    @Override
+    public void keyReleased(KeyEvent e) {
+    }
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\CommandKeyListener.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\CommandTips.java
+	 */
+
+public class CommandTips {
+    
+    private static final int INDEX_START = 0;
+    
+    private static final int COMMANDTYPE_INDEX_TIP = 2;
+    private static final int COMMANDTYPE_INDEX_SHORTCOMMAND = 1;
+    private static final int COMMANDTYPE_INDEX_FULLCOMMAND = 0;
+    
+    private static final int MATCH_SIZE_ONE = 1;
+    private static final int MATCH_INDEX_FIRST = 0;
+    
+    private static final int SPLIT_SIZE_NO_TOKEN = 0;
+    private static final int SPLIT_INDEX_START = 0;
+
+    private static final String STRING_SPACE = " ";
+    static final String NEXTLINE = "\r\n";
+    
+    private static final String[][] COMMANDTYPES = {
+            {"add", "a", "Add a task:\r\n" +
+                         "add\r\n" +
+                         "<task name>\\\r\n" +
+                         "[start <date time>]\r\n" + 
+                         "[due <date time>]\r\n" +
+                         "[priority <low/medium/high>]\r\n"},            
+            {"delete", "d", "Delete a task:\r\n" +
+                            "delete\r\n" +
+                            "<task number>\r\n"},
+            {"edit", "e", "Edit a task:\r\n" +
+                          "edit\r\n" +
+                          "<task number>\r\n" +
+                          "[name <new name> \\]\r\n" +
+                          "[start <date time>]\r\n" +
+                          "[due <date time>]\r\n" +
+                          "[priority <low/medium/high>]\r\n"},
+            {"find", "f", "Search for tasks:\r\n" +
+                          "find\r\n" +
+                          "[name <task name>\\]\r\n" +
+                          "[start [on/after/before/between] <date time>]\r\n" +
+                          "[due [on/after/before/between] <date time>]\r\n" +
+                          "[priority <low/medium/high>]\r\n" +
+                          "[overdue <yes/no>]\r\n" +
+                         "[completed <yes/no>]\r\n"},
+            {"load", "l", "Load tasks from a file:\r\n" +
+                          "load\r\n" +
+                          "<file name>\r\n"},
+            {"save", "s", "Save tasks to a file:\r\n" +
+                          "save\r\n" +
+                          "<file name>\r\n"},
+            {"cf", null, "Change file path:\r\n" +
+                         "cf\r\n" +
+                         "<file name>\r\n"},
+            {"sync", null, "Synchronise with Google services.\r\n" +
+                           "A browser will pop out for authentication.\r\n"},
+            {"logout", null, "Logout from Google services.\r\n"},
+        };
+    
+    
+    public CommandTips() {
+    }
+    
+    public String getTips(String userInput) {
+        if (userInput == null || userInput.trim().isEmpty()) {
+            return allCommands();
+        } else {
+            ArrayList<Integer> match = findCommandPartialMatch(userInput);
+            return getMatchedCommandTips(match);
+        }
+    }
+
+    private String getMatchedCommandTips(ArrayList<Integer> match) {
+        if (match.isEmpty()) {
+            return GlobalConstants.MESSAGE_INVALID_COMMAND;
+        } else if (match.size() == MATCH_SIZE_ONE) {
+            return COMMANDTYPES[match.get(MATCH_INDEX_FIRST)][COMMANDTYPE_INDEX_TIP];
+        } else {
+            return getAllMatchedCommands(match);
+        }
+    }
+
+    private String getAllMatchedCommands(ArrayList<Integer> match) {
+        StringBuilder commandList = new StringBuilder(GlobalConstants.MESSAGE_POSSIBLE_COMMANDS);
+        for (int i: match) {
+            commandList.append(NEXTLINE);
+            commandList.append(COMMANDTYPES[i][COMMANDTYPE_INDEX_FULLCOMMAND]);
+            if (COMMANDTYPES[i][COMMANDTYPE_INDEX_SHORTCOMMAND] != null) {
+                commandList.append(String.format(GlobalConstants.MESSAGE_COMMAND_BODY,
+                                   COMMANDTYPES[i][COMMANDTYPE_INDEX_SHORTCOMMAND]));
+            }
+        }
+        return commandList.toString();
+    }
+
+    private ArrayList<Integer> findCommandPartialMatch(String userInput) {
+        ArrayList<Integer> match = new ArrayList<Integer>();
+        for (int i = INDEX_START; i < COMMANDTYPES.length; ++i) {
+            String[] commands = COMMANDTYPES[i];
+            if (isMatch(commands[COMMANDTYPE_INDEX_FULLCOMMAND], userInput)) {
+                match.add(i);
+            } else if ((commands[COMMANDTYPE_INDEX_SHORTCOMMAND] != null) &&
+                       (isMatch(commands[COMMANDTYPE_INDEX_SHORTCOMMAND], userInput))) {
+                match.add(i);
+            }
+        }
+        return match;
+    }
+    
+    private boolean isMatch(String actualCommand, String userInput) {
+        userInput = userInput.toLowerCase();
+        
+        String userInputTrimmed = userInput.trim();
+        String[] userInputSplit = userInputTrimmed.split(STRING_SPACE);
+        if (userInputSplit.length == SPLIT_SIZE_NO_TOKEN) {
+            return true;
+        }
+        String userInputCommand = userInputSplit[SPLIT_INDEX_START];
+        if (actualCommand.startsWith(userInputCommand)) {
+            int commandPosition = userInput.indexOf(userInputCommand);
+            int nextCharacterPosition = commandPosition + userInputCommand.length();
+            if (userInput.length() > nextCharacterPosition) {
+                if (userInputCommand.equals(actualCommand)) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return true;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    private String allCommands() {
+        StringBuilder commandList = new StringBuilder(GlobalConstants.MESSAGE_AVAILABLE_COMMANDS);
+        for (String[] commands: COMMANDTYPES) {
+            commandList.append(NEXTLINE);
+            commandList.append(commands[COMMANDTYPE_INDEX_FULLCOMMAND]);
+            if (commands[COMMANDTYPE_INDEX_SHORTCOMMAND] != null) {
+                commandList.append(String.format(GlobalConstants.MESSAGE_COMMAND_BODY, commands[COMMANDTYPE_INDEX_SHORTCOMMAND]));
+            }
+        }
+        return commandList.toString();
+    }
+
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\CommandTips.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\GUI.java
+	 */
+
+public class GUI extends JFrame {
+    
+    private static final int CARET_DEFAULT_POSITION = 0;
+    
+    private static final int CALENDAR_FIRST_HOUR = 0;
+    private static final int CALENDAR_FIRST_MIN = 0;
+    private static final int CALENDAR_FIRST_SECOND = 0;
+    private static final int CALENDAR_FIRST_MILLISECOND = 0;
+    
+    private static final int CALENDAR_NEXT_MIN = 1;
+    
+    private static final int CONSTANT_COUNT_NO_TASK = 0;
+    private static final int CONSTANT_CALENDAR_COMPARE = 0;
+    
+    private static final int COORDINATE_OVERVIEW_LABEL_X = 0;
+    private static final int COORDINATE_OVERVIEW_LABEL_Y = 0;
+    private static final int COORDINATE_TASK_DETAILS_X = 0;
+    private static final int COORDINATE_TASK_DETAILS_Y = 2;
+    private static final int COORDINATE_SINGLETASK_PANE_X = 0;
+    private static final int COORDINATE_TASK_DETAILS_HEADER_Y = 1;
+    private static final int COORDINATE_TASK_DETAILS_HEADER_X = 0;
+    
+    private static final int DATE_INCREMENT = 1;
+    
+    private static final int DEFAULT_WINDOW_WIDTH = 800;
+    private static final int DEFAULT_WINDOW_HEIGHT = 600;
+    
+    private static final int FONT_SIZE = 15;
+ 
+    private static final int HEADER_COUNT_INIT = 0;
+    
+    private static final int MAX_DATE_HEADER_COUNT = 2;
+    
+    private static final int MIN_WINDOW_WIDTH = 600;
+    private static final int MIN_WINDOW_HEIGHT = 450;
+
+    private static final int MARGIN_OVERVIEW = 3;
+    
+    private static final int MARGIN_TIP_UP = 0;
+    private static final int MARGIN_TIP_DOWN = 3;
+    private static final int MARGIN_TIP_LEFT = 0;
+    private static final int MARGIN_TIP_RIGHT = 0;
+    
+    private static final int MARGIN_TASKDETAILS_UP = 0;
+    private static final int MARGIN_TASKDETAILS_DOWN = 3;
+    private static final int MARGIN_TASKDETAILS_LEFT = 3;
+    private static final int MARGIN_TASKDETAILS_RIGHT = 3;
+    
+    private static final int MARGIN_TASKDETAILS_HEADER_UP = 3;
+    private static final int MARGIN_TASKDETAILS_HEADER_DOWN = 3;
+    private static final int MARGIN_TASKDETAILS_HEADER_LEFT = 0;
+    private static final int MARGIN_TASKDETAILS_HEADER_RIGHT = 3;
+
+    private static final int OFFSET_COMMAND_WEST = 10;
+    private static final int OFFSET_COMMAND_EAST = -10;
+    private static final int OFFSET_COMMAND_SOUTH = -10;
+    
+    private static final int OFFSET_OVERVIEWPANE_NORTH = 10;
+    private static final int OFFSET_OVERVIEWPANE_EAST = -10;
+    private static final int OFFSET_OVERVIEWPANE_SOUTH = -10;
+
+    private static final int OFFSET_SINGLETASK = 5;
+    
+    private static final int OFFSET_STATUS_WEST = 10;
+    private static final int OFFSET_STATUS_EAST = -10;
+    private static final int OFFSET_STATUS_SOUTH = -10;
+
+
+    private static final int OFFSET_TASK_POSITION = 1;
+    
+    private static final int OFFSET_TASKLISTSCROLL_WEST = 10;
+    private static final int OFFSET_TASKLISTSCROLL_NORTH = 10;
+    private static final int OFFSET_TASKLISTSCROLL_SOUTH = -10;
+    private static final int OFFSET_TASKLISTSCROLL_EAST = -10;
+    
+    private static final int OFFSET_TIPSCROLL_WEST = 10;
+    private static final int OFFSET_TIPSCROLL_SOUTH = 0;
+    private static final int OFFSET_TIPSCROLL_EAST = -10;
+    
+    private static final int STARTING_TASK_POSITION = 1;
+    private static final int STARTING_TASK_INDEX = 1;
+    
+    private static final int TASK_LIST_FIRST_TASK = 0;
+    
+    private static final int TASK_DETAILS_LABEL_HEIGHT = 17;
+    private static final int TASK_DETAILS_LABEL_WIDTH = 0;
+    
+    private static final int WEIGHT_SINGLETASK_PANE_X = 1;
+
+    private static final int WEIGHT_TASK_DETAILS_X = 1;
+    private static final int WEIGHT_TASK_DETAILS_Y = 1;
+
+    private static final int WEIGHT_OVERVIEW_LABEL_X = 1;
+    
+    private static final String ACTION_UNDO = "Undo";
+    private static final String ACTION_REDO = "Redo";
+
+    private static final String FONT_STYLE = "Dialog";
+    
+    private static final String FORMAT_DATE = "dd/MM/yyyy";
+        
+    private static final String HOTKEY_UNDO = "control Z";
+    private static final String HOTKEY_REDO = "control Y";
+    
+    private static final String LOG_MESSAGE_CREATING_GUI = "creating GUI";
+    private static final String LOG_MESSAGE_CREATING_TASKLIST = "creating tasklist";
+    private static final String LOG_MESSAGE_CREATING_OVERVIEW = "creating overview panel";
+    private static final String LOG_MESSAGE_CREATING_TIP = "creating tip";
+    private static final String LOG_MESSAGE_CREATING_COMMAND_TEXT_FIELD = "creating command text field";
+    private static final String LOG_MESSAGE_ADDING_ACTION_LISTENER = "adding actionListener to command text field";
+    private static final String LOG_MESSAGE_ADDING_COMPONENTS = "adding components to main panel";
+    private static final String LOG_MESSAGE_SET_CONSTRAINTS = "set constraints for components";
+    private static final String LOG_MESSAGE_FINALIZING_GUI = "finalizing GUI";
+    private static final String LOG_MESSAGE_GET_TASK_LIST_FROM_QL_LOGIC = "get taskList from QLLogic";
+
+    private static final String STRING_EMPTY = "";
+    private static final String STATUS_NONE = " ";
+    
+    private static final Logger LOGGER = Logger.getLogger(GUI.class.getName());
+    
+    
+    private class UpdateUITask extends TimerTask {
+
+        @Override
+        public void run() {
+            updateUI();
+        }
+        
+    }
+    
+    private class CommandExecution implements Runnable {
+        private String _command;
+        
+        public CommandExecution(String command) {
+            _command = command;
+        }
+        
+        @Override
+        public void run() {
+            StringBuilder status = new StringBuilder();
+            _QLLogic.executeCommand(_command, status);
+            afterCommandExecution(status.toString());
+        }
+        
+    }
+    
+    private class commandDocumentListener implements DocumentListener {
+        public void changedUpdate(DocumentEvent e) {
+            showTips();
+        }
+
+        public void removeUpdate(DocumentEvent e) {
+            showTips();
+        }
+
+        public void insertUpdate(DocumentEvent e) {
+            showTips();
+        }
+    }
+
+    private JPanel _taskList;
+    private JPanel _overviewPane;
+    private JLabel _overview;
+    private JLabel _status;
+    private JTextArea _taskDetails;
+    private JTextArea _tip;
+    private JTextField _command;
+
+    private CommandTips _commandTips;
+    private CommandHistory _commandHistory;
+    private UpdateUITask _updateUITask;
+    private Timer _timer;
+    private Thread _executionThread;
+    
+    private Logic _QLLogic;
+    
+    public GUI() {
+        super(GlobalConstants.MESSAGE_TITLE);
+
+        LOGGER.info(LOG_MESSAGE_CREATING_GUI);
+
+        Container contentPane = this.getContentPane();
+        SpringLayout layout = new SpringLayout();
+
+        contentPane.setLayout(layout);
+
+        LOGGER.info(LOG_MESSAGE_CREATING_TASKLIST);
+        JComponent taskListScroll = setupTaskListPanel();
+
+        LOGGER.info(LOG_MESSAGE_CREATING_OVERVIEW);
+        JComponent overview = setupOverviewPanel();
+
+        LOGGER.info(LOG_MESSAGE_CREATING_TIP);
+        JComponent tipScroll = setupTip();
+
+        LOGGER.info(LOG_MESSAGE_CREATING_COMMAND_TEXT_FIELD);
+        setupCommand();
+
+        setupHotkeys();
+        
+        setupCommandTips();
+        
+        attachDocumentListenerToCommand();
+
+        _commandHistory = new CommandHistory();
+        _command.addKeyListener(new CommandKeyListener(_commandHistory,
+                _command));
+
+        _status = new JLabel(GlobalConstants.MESSAGE_APPLICATION_START);
+
+        LOGGER.info(LOG_MESSAGE_ADDING_COMPONENTS);
+        addComponents(taskListScroll, tipScroll, _command, overview, _status);
+
+        LOGGER.info(LOG_MESSAGE_SET_CONSTRAINTS);
+        setConstraintsForMainFrame(layout, contentPane, taskListScroll,
+                overview, tipScroll, _command, _status);
+
+        LOGGER.info(LOG_MESSAGE_FINALIZING_GUI);
+        setSize(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.setMinimumSize(new Dimension(MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT));
+        setVisible(true);
+        
+        _timer = new Timer(true);
+
+        LOGGER.info(LOG_MESSAGE_GET_TASK_LIST_FROM_QL_LOGIC);
+        _QLLogic = Logic.getInstance();
+        StringBuilder status = new StringBuilder();
+        _QLLogic.setup(status);
+        if (!status.toString().isEmpty()) {
+            setStatus(status.toString());
+        }
+        updateUI();
+        showTips();
+    }
+
+    private void attachDocumentListenerToCommand() {
+        _command.getDocument().addDocumentListener(new commandDocumentListener());
+        
+    }
+
+    private void setupCommandTips() {
+        _commandTips = new CommandTips();
+    }
+
+    private JComponent setupTaskListPanel() {
+        _taskList = new JPanel(new GridBagLayout());
+        JPanel taskListBorderPane = new JPanel(new BorderLayout());
+        taskListBorderPane.add(_taskList, BorderLayout.NORTH);
+        JScrollPane taskListScroll = new JScrollPane(taskListBorderPane);
+        return taskListScroll;
+    }
+
+    private JComponent setupOverviewPanel() {
+        _overviewPane = new JPanel(new GridBagLayout());
+
+        GridBagConstraints c = new GridBagConstraints();
+
+        setupOverviewLabel(c);
+        _overviewPane.add(_overview, c);
+
+        JLabel taskDetailsHeader = new JLabel(GlobalConstants.MESSAGE_HOVER_TASK_TITLE);
+        taskDetailsHeader.setBorder(BorderFactory
+                                    .createEmptyBorder(MARGIN_TASKDETAILS_HEADER_UP,
+                                                       MARGIN_TASKDETAILS_HEADER_DOWN,
+                                                       MARGIN_TASKDETAILS_HEADER_LEFT,
+                                                       MARGIN_TASKDETAILS_HEADER_RIGHT));
+        GridBagConstraints c2 = new GridBagConstraints();
+        c2.anchor = GridBagConstraints.NORTHWEST;
+        c2.gridx = COORDINATE_TASK_DETAILS_HEADER_X;
+        c2.gridy = COORDINATE_TASK_DETAILS_HEADER_Y;
+        _overviewPane.add(taskDetailsHeader, c2);
+
+        GridBagConstraints c3 = new GridBagConstraints();
+        _taskDetails = new JTextArea(TASK_DETAILS_LABEL_WIDTH, TASK_DETAILS_LABEL_HEIGHT);
+        _taskDetails.setBorder(BorderFactory
+                               .createEmptyBorder(MARGIN_TASKDETAILS_UP, MARGIN_TASKDETAILS_DOWN,
+                                                  MARGIN_TASKDETAILS_LEFT, MARGIN_TASKDETAILS_RIGHT));
+        _taskDetails.setBackground(_overviewPane.getBackground());
+        _taskDetails.setWrapStyleWord(true);
+        _taskDetails.setLineWrap(true);
+        _taskDetails.setEditable(false);
+        _taskDetails.setEnabled(false);
+        _taskDetails.setFont(_overview.getFont());
+        _taskDetails.setDisabledTextColor(_overview.getForeground());
+        c3.anchor = GridBagConstraints.NORTHWEST;
+        c3.gridx = COORDINATE_TASK_DETAILS_X;
+        c3.gridy = COORDINATE_TASK_DETAILS_Y;
+        c3.weightx = WEIGHT_TASK_DETAILS_X;
+        c3.weighty = WEIGHT_TASK_DETAILS_Y;
+        
+        _overviewPane.add(_taskDetails, c3);
+
+        JScrollPane overviewScroll = new JScrollPane(_overviewPane);
+
+        return overviewScroll;
+    }
+
+    private void setupOverviewLabel(GridBagConstraints con) {
+        _overview = new JLabel();
+        _overview.setBorder(BorderFactory.createEmptyBorder(MARGIN_OVERVIEW,
+                MARGIN_OVERVIEW, MARGIN_OVERVIEW, MARGIN_OVERVIEW));
+        con.anchor = GridBagConstraints.NORTHWEST;
+        con.fill = GridBagConstraints.HORIZONTAL;
+        con.gridx = COORDINATE_OVERVIEW_LABEL_X;
+        con.gridy = COORDINATE_OVERVIEW_LABEL_Y;
+        con.weightx = WEIGHT_OVERVIEW_LABEL_X;
+    }
+
+    private JComponent setupTip() {
+        _tip = new JTextArea();
+        _tip.setBorder(BorderFactory.createEmptyBorder(MARGIN_TIP_UP, MARGIN_TIP_DOWN,
+                                                       MARGIN_TIP_LEFT, MARGIN_TIP_RIGHT));
+        _tip.setEditable(false);
+        _tip.setLineWrap(true);
+        _tip.setWrapStyleWord(true);
+        JScrollPane tipScroll = new JScrollPane(_tip);
+        return tipScroll;
+    }
+
+    private void setupCommand() {
+        _command = new JTextField();
+        Font font = new Font(FONT_STYLE, Font.PLAIN, FONT_SIZE);
+
+        _command.setFont(font);
+        LOGGER.info(LOG_MESSAGE_ADDING_ACTION_LISTENER);
+        CommandActionListener c = new CommandActionListener(_command, this);
+        _command.addActionListener(c);
+    }
+
+    private void setupHotkeys() {
+        setupActionMap();
+        setupInputMap();
+    }
+
+    private void setupActionMap() {
+        Action undoAction = new HotkeysAction(ACTION_UNDO, this);
+        Action redoAction = new HotkeysAction(ACTION_REDO, this);
+        _command.getActionMap().put(ACTION_UNDO, undoAction);
+        _command.getActionMap().put(ACTION_REDO, redoAction);
+    }
+
+    private void setupInputMap() {
+        _command.getInputMap(JComponent.WHEN_FOCUSED).put(
+                KeyStroke.getKeyStroke(HOTKEY_UNDO), ACTION_UNDO);
+        _command.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
+                .put(KeyStroke.getKeyStroke(HOTKEY_UNDO), ACTION_UNDO);
+        _command.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+                KeyStroke.getKeyStroke(HOTKEY_UNDO), ACTION_UNDO);
+
+        _command.getInputMap(JComponent.WHEN_FOCUSED).put(
+                KeyStroke.getKeyStroke(HOTKEY_REDO), ACTION_REDO);
+        _command.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
+                .put(KeyStroke.getKeyStroke(HOTKEY_REDO), ACTION_REDO);
+        _command.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+                KeyStroke.getKeyStroke(HOTKEY_REDO), ACTION_REDO);
+    }
+
+    private void addComponents(JComponent taskListScroll, JComponent tipScroll,
+            JComponent command, JComponent overview, JComponent status) {
+        add(command);
+        add(taskListScroll);
+        add(tipScroll);
+        add(overview);
+        add(status);
+    }
+
+    private void setConstraintsForMainFrame(SpringLayout layout,
+            Container contentPane, JComponent taskListScroll,
+            JComponent overviewScroll, JComponent tipScroll,
+            JComponent commandTextField, JComponent status) {
+
+        setConstraintsForCommandTextField(layout, contentPane,
+                commandTextField, status);
+        setConstraintsForTaskListScroll(layout, contentPane, taskListScroll,
+                commandTextField, overviewScroll);
+        setConstraintsForOverviewPane(layout, contentPane, taskListScroll,
+                overviewScroll, tipScroll);
+        setConstraintsForTipScroll(layout, contentPane, taskListScroll,
+                overviewScroll, tipScroll);
+        setConstraintsForStatus(layout, contentPane, status);
+    }
+
+    private void setConstraintsForCommandTextField(SpringLayout layout,
+            Container contentPane, JComponent commandTextField,
+            JComponent status) {
+        layout.putConstraint(SpringLayout.WEST, commandTextField,
+                OFFSET_COMMAND_WEST, SpringLayout.WEST, contentPane);
+        layout.putConstraint(SpringLayout.EAST, commandTextField,
+                OFFSET_COMMAND_EAST, SpringLayout.EAST, contentPane);
+        layout.putConstraint(SpringLayout.SOUTH, commandTextField,
+                OFFSET_COMMAND_SOUTH, SpringLayout.NORTH, status);
+    }
+
+    private void setConstraintsForStatus(SpringLayout layout,
+            Container contentPane, JComponent status) {
+        layout.putConstraint(SpringLayout.WEST, status, OFFSET_STATUS_WEST,
+                SpringLayout.WEST, contentPane);
+        layout.putConstraint(SpringLayout.EAST, status, OFFSET_STATUS_EAST,
+                SpringLayout.EAST, contentPane);
+        layout.putConstraint(SpringLayout.SOUTH, status, OFFSET_STATUS_SOUTH,
+                SpringLayout.SOUTH, contentPane);
+    }
+
+    private void setConstraintsForTaskListScroll(SpringLayout layout,
+            Container contentPane, JComponent taskListScroll,
+            JComponent commandTextField, JComponent overviewScroll) {
+        layout.putConstraint(SpringLayout.WEST, taskListScroll,
+                OFFSET_TASKLISTSCROLL_WEST, SpringLayout.WEST, contentPane);
+        layout.putConstraint(SpringLayout.NORTH, taskListScroll,
+                OFFSET_TASKLISTSCROLL_NORTH, SpringLayout.NORTH, contentPane);
+        layout.putConstraint(SpringLayout.SOUTH, taskListScroll,
+                OFFSET_TASKLISTSCROLL_SOUTH, SpringLayout.NORTH,
+                commandTextField);
+        layout.putConstraint(SpringLayout.EAST, taskListScroll,
+                OFFSET_TASKLISTSCROLL_EAST, SpringLayout.WEST, overviewScroll);
+        layout.getConstraints(taskListScroll).setWidth(
+                Spring.max(Spring.constant(220),
+                        layout.getConstraints(taskListScroll).getWidth()));
+    }
+
+    private void setConstraintsForOverviewPane(SpringLayout layout,
+            Container contentPane, JComponent taskListScroll,
+            JComponent overviewScroll, JComponent tipScroll) {
+        layout.putConstraint(SpringLayout.NORTH, overviewScroll,
+                OFFSET_OVERVIEWPANE_NORTH, SpringLayout.NORTH, contentPane);
+        layout.putConstraint(SpringLayout.EAST, overviewScroll,
+                OFFSET_OVERVIEWPANE_EAST, SpringLayout.EAST, contentPane);
+        layout.putConstraint(SpringLayout.SOUTH, overviewScroll,
+                OFFSET_OVERVIEWPANE_SOUTH, SpringLayout.NORTH, tipScroll);
+        layout.getConstraints(overviewScroll).setWidth(Spring.constant(220));
+    }
+
+    private void setConstraintsForTipScroll(SpringLayout layout,
+            Container contentPane, JComponent taskListScroll,
+            JComponent overviewPane, JComponent tipScroll) {
+        layout.putConstraint(SpringLayout.WEST, tipScroll,
+                OFFSET_TIPSCROLL_WEST, SpringLayout.EAST, taskListScroll);
+        layout.putConstraint(SpringLayout.SOUTH, tipScroll,
+                OFFSET_TIPSCROLL_SOUTH, SpringLayout.SOUTH, taskListScroll);
+        layout.putConstraint(SpringLayout.EAST, tipScroll,
+                OFFSET_TIPSCROLL_EAST, SpringLayout.EAST, contentPane);
+        layout.getConstraints(tipScroll).setHeight(Spring.constant(180));
+    }
+
+    private void updateUI() {
+        List<Task> displayList = _QLLogic.getDisplayList();
+        updateTaskList(displayList);
+        updateOverview();
+        clearTaskDetails();
+        scheduleNextUpdate(displayList);
+    }
+
+    private void scheduleNextUpdate(List<Task> displayList) {
+        Calendar nextUpdate = findNextDueDate(displayList);
+        
+        scheduleUpdateUI(nextUpdate);
+    }
+
+    private void scheduleUpdateUI(Calendar nextUpdate) {
+        if (_updateUITask != null) {
+            _updateUITask.cancel();
+            _updateUITask = null;
+        }
+        
+        _timer.purge();
+        if (nextUpdate != null) {
+            _updateUITask = new UpdateUITask();
+            _timer.schedule(_updateUITask, nextUpdate.getTime());
+        }
+    }
+
+    private Calendar findNextDueDate(List<Task> displayList) {
+        Calendar now = Calendar.getInstance();
+        Calendar nextUpdate = null;
+        for (Task task : displayList) {
+            if (task.getDueDate() != null && task.getDueDate().compareTo(now) > CONSTANT_CALENDAR_COMPARE) {
+                nextUpdate = (Calendar)task.getDueDate().clone();
+                nextUpdate.add(Calendar.MINUTE, CALENDAR_NEXT_MIN);
+                nextUpdate.set(Calendar.SECOND, CALENDAR_FIRST_SECOND);
+                nextUpdate.set(Calendar.MILLISECOND, CALENDAR_FIRST_MILLISECOND);
+                break;
+            }
+        }
+        return nextUpdate;
+    }
+
+    private void clearTaskDetails() {
+        _taskDetails.setText(GlobalConstants.MESSAGE_HOVER_DISPLAY);
+    }
+
+    private void updateTaskList(List<Task> tasks) {
+        _taskList.removeAll();
+        int taskPosition = STARTING_TASK_POSITION, taskIndex = STARTING_TASK_INDEX;
+        int headerCount = HEADER_COUNT_INIT;
+        String currentHeader = STRING_EMPTY;
+        String previousHeader = STRING_EMPTY;
+        Calendar now = Calendar.getInstance();
+
+        for (Task task : tasks) {
+            GridBagConstraints con = new GridBagConstraints();
+            con.insets = new Insets(OFFSET_SINGLETASK, OFFSET_SINGLETASK,
+                    OFFSET_SINGLETASK, OFFSET_SINGLETASK);
+            con.weightx = WEIGHT_SINGLETASK_PANE_X;
+            con.anchor = GridBagConstraints.NORTHEAST;
+            con.fill = GridBagConstraints.HORIZONTAL;
+            con.gridx = COORDINATE_SINGLETASK_PANE_X;
+            con.gridy = taskPosition - OFFSET_TASK_POSITION;
+
+            if (task.getDueDate() != null) {
+                if (task.getDueDate().compareTo(now) < CONSTANT_CALENDAR_COMPARE) {
+                    currentHeader = GlobalConstants.MESSAGE_HEADER_OVERDUE;
+                } else {
+                    currentHeader = calendarToString(task.getDueDate());
+                }
+            } else {
+                currentHeader = GlobalConstants.MESSAGE_HEADER_NO_DUE_DATE;
+            }
+            
+            if ((!currentHeader.equals(GlobalConstants.MESSAGE_HEADER_OVERDUE)) &&
+                (!currentHeader.equals(previousHeader))) {
+                headerCount++;
+            }
+            
+            if ((headerCount > MAX_DATE_HEADER_COUNT) &&
+                (!currentHeader.equals(GlobalConstants.MESSAGE_HEADER_NO_DUE_DATE))) {
+                currentHeader = GlobalConstants.MESSAGE_HEADER_OTHERS;
+            }
+
+            if (!currentHeader.equals(previousHeader)) {
+                JLabel dateLabel = new JLabel(currentHeader);
+                _taskList.add(dateLabel, con);
+                taskPosition++;
+                con.gridy = taskPosition - OFFSET_TASK_POSITION;
+                previousHeader = currentHeader;
+            }
+            
+            TaskPanel singleTaskPane = new TaskPanel(task, taskIndex);
+
+            _taskList.add(singleTaskPane, con);
+            singleTaskPane.addMouseListener(new TaskMouseListener(task,
+                    _taskDetails));
+
+            taskPosition++;
+            taskIndex++;
+        }
+
+        _taskList.revalidate();
+        _taskList.repaint();
+    }
+
+    private String calendarToString(Calendar calendar) {
+        Calendar today = getCalendarToday();
+        Calendar tomorrow = getCalendarOneDayAfter(today);
+        Calendar twoDaysAfter = getCalendarOneDayAfter(tomorrow);
+        if ((calendar.compareTo(today) >= CONSTANT_CALENDAR_COMPARE) &&
+            (calendar.compareTo(tomorrow) < CONSTANT_CALENDAR_COMPARE)) {
+            return GlobalConstants.MESSAGE_HEADER_TODAY;
+        } else if (calendar.compareTo(twoDaysAfter) < CONSTANT_CALENDAR_COMPARE) {
+            return GlobalConstants.MESSAGE_HEADER_TOMORROW;
+        } else {
+            SimpleDateFormat sdf = new SimpleDateFormat(FORMAT_DATE);
+            return sdf.format(calendar.getTime());
+        }
+    }
+
+    private void updateOverview() {
+        Calendar now = Calendar.getInstance();
+        Calendar today = getCalendarToday();
+        Calendar tomorrow = getCalendarOneDayAfter(today);
+        Calendar twoDaysAfter = getCalendarOneDayAfter(tomorrow);
+
+        int dueToday = CONSTANT_COUNT_NO_TASK, dueTomorrow = CONSTANT_COUNT_NO_TASK,
+            overdue = CONSTANT_COUNT_NO_TASK, completed = CONSTANT_COUNT_NO_TASK;
+        
+        List<Task> allTasks = _QLLogic.getMasterList();
+        for (int j = TASK_LIST_FIRST_TASK; j < allTasks.size(); ++j) {
+            if (allTasks.get(j).getIsCompleted()) {
+                completed++;
+                continue;
+            }
+
+            Calendar due = allTasks.get(j).getDueDate();
+            if (due == null) {
+                continue;
+            }
+
+            if ((due.compareTo(today) >= CONSTANT_CALENDAR_COMPARE) &&
+                (due.compareTo(tomorrow) < CONSTANT_CALENDAR_COMPARE)) {
+                dueToday++;
+            } else if ((due.compareTo(tomorrow) >= CONSTANT_CALENDAR_COMPARE) &&
+                       (due.compareTo(twoDaysAfter) < CONSTANT_CALENDAR_COMPARE)) {
+                dueTomorrow++;
+            }
+
+            if (due.compareTo(now) < CONSTANT_CALENDAR_COMPARE) {
+                overdue++;
+            }
+        }
+
+        _overview.setText(String.format(GlobalConstants.MESSAGE_OVERVIEW, 
+                                        dueToday, dueTomorrow,
+                                        overdue, completed));
+    }
+
+    private Calendar getCalendarToday() {
+        Calendar today = Calendar.getInstance();
+        today.set(Calendar.HOUR_OF_DAY, CALENDAR_FIRST_HOUR);
+        today.set(Calendar.MINUTE, CALENDAR_FIRST_MIN);
+        today.set(Calendar.SECOND, CALENDAR_FIRST_SECOND);
+        today.set(Calendar.MILLISECOND, CALENDAR_FIRST_MILLISECOND);
+        return today;
+    }
+
+    private Calendar getCalendarOneDayAfter(Calendar day) {
+        Calendar tomorrow = (Calendar) day.clone();
+        tomorrow.add(Calendar.DATE, DATE_INCREMENT);
+        return tomorrow;
+    }
+    
+    // Method for actionListener
+    public boolean executeCommand(String command) {
+        if ((_executionThread == null) && (!command.trim().isEmpty())) {
+            CommandExecution exec = new CommandExecution(command);
+            _executionThread = new Thread(exec);
+            _executionThread.start();
+            setStatus(GlobalConstants.MESSAGE_STATUS_PROCESSING);
+            return true;
+        }
+        return false;
+    }
+    
+    public void afterCommandExecution(String status) {
+        if (!status.isEmpty()) {
+            setStatus(status.toString());
+        } else {
+            setStatus(STATUS_NONE);
+        }
+        updateUI();
+        _executionThread = null;
+    }
+
+    private void setStatus(String status) {
+        _status.setText(status);
+    }
+
+    public void addCommandToCommandHistory(String command) {
+        _commandHistory.addCommand(command);
+    }
+
+    public void showTips() {
+        String tips = _commandTips.getTips(_command.getText());
+        setTips(tips);
+    }
+
+    private void setTips(String tips) {
+        if (!_tip.getText().equals(tips)) {
+            _tip.setText(tips);
+            _tip.setCaretPosition(CARET_DEFAULT_POSITION);
+        }
+    }
+
+    public static void main(String[] args) {
+        GUI g = new GUI();
+    }
+
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\GUI.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\HotkeysAction.java
+	 */
+
+public class HotkeysAction extends AbstractAction {
+    
+    private static final String UNDO = "Undo";
+    private static final String REDO = "Redo";    
+    
+    private static final Logger LOGGER = Logger.getLogger(HotkeysAction
+                                                          .class.getName());
+
+    private String _keyPressed;
+    private GUI _instance;
+   
+    public HotkeysAction (String keyPressed, GUI gui) {
+        this._keyPressed = keyPressed;
+        _instance = gui;
+    }
+    
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        
+        LOGGER.info(_keyPressed);
+        
+        if (_keyPressed.equalsIgnoreCase(UNDO)) {
+            _instance.executeCommand(UNDO);
+        } else {
+            _instance.executeCommand(REDO);                
+        }
+    }    
+}
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\HotkeysAction.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\TaskMouseListener.java
+	 */
+
+public class TaskMouseListener implements MouseListener {
+    
+    private static final int CARET_DEFAULT_POSITION = 0;
+    
+    private static final String MESSAGE_TO = " - ";
+    private static final String MESSAGE_START = "starts ";
+    private static final String MESSAGE_DUE = "due ";
+
+    private static final String PRIORITY_NONE = "";
+    private static final String PRIORITY_LOW = "LOW";
+    private static final String PRIORITY_MEDIUM = "MEDIUM";
+    private static final String PRIORITY_HIGH = "HIGH";
+    private static final String PRIORITY_LOW_ABBREVIATION = "L";
+    private static final String PRIORITY_MEDIUM_ABBREVIATION = "M";
+    private static final String PRIORITY_HIGH_ABBREVIATION = "H";
+    
+    private static final String MESSAGE_DESCRIPTION = "Description:\r\n%s\r\n";
+    private static final String MESSAGE_PRIORITY = "Priority:\r\n%s\r\n";
+    private static final String MESSAGE_TIME = "Time:\r\n%s\r\n";
+    private static final String MESSAGE_TITLE = "Title:\r\n%s\r\n";
+    
+    private static final String FORMAT_DATE = "dd/MM/yyyy";
+    private static final String FORMAT_DATE_TIME = "dd/MM/yyyy HH:mm";
+    
+    private Task _task;
+    private JTextArea _taskDetails;
+    
+    public TaskMouseListener (Task task, JTextArea taskDetails) {
+        _task = task;
+        _taskDetails = taskDetails;
+    }
+    
+    public void mouseEntered(MouseEvent m) {
+        String title = _task.getName();
+            
+        String displayTime = getTimeString();
+        
+        String priority = getPriority();
+        
+        String description = getDescription();
+        
+        StringBuilder details = new StringBuilder();
+        details.append(String.format(MESSAGE_TITLE, title));
+        
+        if (!displayTime.isEmpty()) {
+            details.append(String.format(MESSAGE_TIME, displayTime));
+        }
+        
+        if (!priority.isEmpty()) {
+            details.append(String.format(MESSAGE_PRIORITY, priority));
+        }
+        
+        if (!description.isEmpty()) {
+            details.append(String.format(MESSAGE_DESCRIPTION, description));
+        }
+        
+        _taskDetails.setText(details.toString());
+        _taskDetails.setCaretPosition(CARET_DEFAULT_POSITION);
+    }
+
+    private String getPriority() {
+        String priority;
+        if (_task.getPriority() != null) {
+            switch (_task.getPriority()) {
+            case PRIORITY_HIGH_ABBREVIATION:
+                priority = PRIORITY_HIGH;
+                break;
+            case PRIORITY_MEDIUM_ABBREVIATION:
+                priority = PRIORITY_MEDIUM;
+                break;
+            case PRIORITY_LOW_ABBREVIATION:
+                priority = PRIORITY_LOW;
+                break;
+            default:
+                priority = PRIORITY_NONE;
+            }
+             
+        } else {
+            priority = PRIORITY_NONE;
+        }
+        return priority;
+    }
+
+    private String getTimeString() {
+        String start = getStartTimeString();
+        String due = getDueTimeString();
+        String displayTime = compoundStartAndDueTime(start, due);
+        return displayTime;
+    }
+
+    private String compoundStartAndDueTime(String start, String due) {
+        String displayTime = PRIORITY_NONE;
+        if (!start.isEmpty() && !due.isEmpty()) {
+            displayTime = (start + MESSAGE_TO + due);
+        } else if (!start.isEmpty()) {
+            displayTime = MESSAGE_START + start;
+        } else if (!due.isEmpty()) {
+            displayTime = MESSAGE_DUE + due;                
+        } else {
+            displayTime = PRIORITY_NONE;
+        }
+        return displayTime;
+    }
+
+    private String getDueTimeString() {
+        SimpleDateFormat date = new SimpleDateFormat(FORMAT_DATE);
+        SimpleDateFormat dateAndTime = new SimpleDateFormat(FORMAT_DATE_TIME);
+        String due = PRIORITY_NONE;
+        if (_task.getDueDate() != null && _task.getHasDueTime()) {
+            due = dateAndTime.format(_task.getDueDate().getTime());
+        } else if (_task.getDueDate() != null) {
+            due = date.format(_task.getDueDate().getTime());
+        }
+        return due;
+    }
+
+    private String getStartTimeString() {
+        SimpleDateFormat date = new SimpleDateFormat(FORMAT_DATE);
+        SimpleDateFormat dateAndTime = new SimpleDateFormat(FORMAT_DATE_TIME);
+        String start = PRIORITY_NONE;
+        if (_task.getStartDate() != null && _task.getHasStartTime()) {
+            start = dateAndTime.format(_task.getStartDate().getTime());
+        } else if (_task.getStartDate() != null) {
+            start = date.format(_task.getStartDate().getTime());
+        }
+        return start;
+    }
+
+    private String getDescription() {
+        String description;
+        if (_task.getDescription() != null) {
+            description = _task.getDescription();
+        } else {
+            description = PRIORITY_NONE;
+        }
+        return description;
+    }
+    
+    @Override
+    public void mouseExited(MouseEvent e) {
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) { 
+    }  
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\TaskMouseListener.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\TaskPanel.java
+	 */
+
+public class TaskPanel extends JPanel {
+    
+    private static final int OFFSET_COMMON_PADDING = 5;
+    private static final int OFFSET_INNER_PADDING = 10;
+    
+    private static final String MESSAGE_STARTS = "starts ";
+    private static final String MESSAGE_DUE = "due ";
+
+    private static final String PRIORITY_HIGH = "H";
+    private static final String PRIORITY_MEDIUM = "M";
+    private static final String PRIORITY_LOW = "L";
+
+    private static final String STRING_EMPTY = "";
+    private static final String STRING_DASH = " - ";
+    private static final String STRING_SPACE = " ";
+    
+    private static final String PREFIX_INDEX = "#";
+
+    private static final String FORMAT_DATE = "dd/MM/yyyy";
+    private static final String FORMAT_DATE_TIME = "dd/MM/yyyy HH:mm";
+    
+    private JPanel priorityColorPane;
+    private JLabel name;
+    private JLabel index;
+    private JLabel date;
+    private JLabel priority;
+    
+    public TaskPanel(Task task, int taskIndex) {
+        super(new SpringLayout());
+        
+        SpringLayout layout = (SpringLayout)this.getLayout();
+        
+        this.setBorder(new LineBorder(Color.BLACK));
+
+        priorityColorPane = new JPanel();
+        name = new JLabel(task.getName());
+        index = new JLabel(PREFIX_INDEX + taskIndex);
+        date = new JLabel(STRING_SPACE);
+        priority = new JLabel();         
+        
+        displayColoredPanel(task);        
+        displayDate(task);
+        displayPriority(task);
+
+        addComponents();
+        setLayout(layout);        
+    }
+    
+    private void displayColoredPanel(Task task) {
+        if (task.getIsCompleted()) {
+            this.setBackground(Color.CYAN);
+        } else if (task.getIsOverdue()) {
+            this.setBackground(Color.PINK);
+        }
+    }
+    
+    private void displayDate(Task task) {
+        String start = getStartDate(task);
+        String due = getDueDate(task);
+        
+        setDisplayDate(start, due);
+    }
+
+    private void displayPriority(Task task) {
+        if (task.getPriority() != null) {
+            priority.setText(task.getPriority());
+            setPriorityColor(task);
+        }
+    }
+
+    private void setPriorityColor(Task task) {
+        switch (task.getPriority()) {
+        case PRIORITY_HIGH:
+            priorityColorPane.setBackground(Color.RED);
+            break;
+        case PRIORITY_MEDIUM:
+            priorityColorPane.setBackground(Color.ORANGE);
+            break;
+        case PRIORITY_LOW:
+            priorityColorPane.setBackground(Color.YELLOW);
+            break;
+        default:
+            break;
+        }
+    }
+    
+    private void addComponents() {
+        this.add(priorityColorPane);
+        this.add(name);
+        this.add(index);
+        this.add(date);
+        this.add(priority);
+    }
+  
+    private void setLayout(SpringLayout layout) {
+        
+        setupTaskPaneConstraint(layout);
+
+        setupPriorityColorPaneConstraint(layout);
+
+        setupNameLabelConstraint(layout);
+
+        setupTaskIndexLabelConstraint(layout);
+
+        setupDateLabelConstraint(layout);
+
+        setupPriorityLabelConstraint(layout);
+    }
+
+    private void setupTaskPaneConstraint(SpringLayout layout) {
+        layout.putConstraint(SpringLayout.SOUTH, this, OFFSET_COMMON_PADDING,
+                SpringLayout.SOUTH, date);
+    }
+
+    private void setupPriorityLabelConstraint(SpringLayout layout) {
+        layout.putConstraint(SpringLayout.SOUTH, priority,
+                -OFFSET_COMMON_PADDING, SpringLayout.SOUTH, this);
+        layout.putConstraint(SpringLayout.EAST, priority,
+                -OFFSET_INNER_PADDING, SpringLayout.EAST, this);
+    }
+
+    private void setupDateLabelConstraint(SpringLayout layout) {
+        layout.putConstraint(SpringLayout.WEST, date, OFFSET_INNER_PADDING,
+                SpringLayout.EAST, priorityColorPane);
+        layout.putConstraint(SpringLayout.NORTH, date, OFFSET_COMMON_PADDING,
+                SpringLayout.SOUTH, name);
+        layout.putConstraint(SpringLayout.EAST, date, -OFFSET_COMMON_PADDING,
+                SpringLayout.WEST, priority);
+    }
+
+    private void setupTaskIndexLabelConstraint(SpringLayout layout) {
+        layout.putConstraint(SpringLayout.EAST, index, -OFFSET_INNER_PADDING,
+                SpringLayout.EAST, this);
+        layout.putConstraint(SpringLayout.NORTH, index, OFFSET_COMMON_PADDING,
+                SpringLayout.NORTH, this);
+    }
+
+    private void setupNameLabelConstraint(SpringLayout layout) {
+        layout.putConstraint(SpringLayout.WEST, name, OFFSET_INNER_PADDING,
+                SpringLayout.EAST, priorityColorPane);
+        layout.putConstraint(SpringLayout.NORTH, name, OFFSET_COMMON_PADDING,
+                SpringLayout.NORTH, this);
+        layout.putConstraint(SpringLayout.EAST, name, -OFFSET_COMMON_PADDING,
+                SpringLayout.WEST, index);
+    }
+
+    private void setupPriorityColorPaneConstraint(SpringLayout layout) {
+        layout.putConstraint(SpringLayout.WEST, priorityColorPane,
+                OFFSET_COMMON_PADDING, SpringLayout.WEST, this);
+        layout.putConstraint(SpringLayout.NORTH, priorityColorPane,
+                OFFSET_COMMON_PADDING, SpringLayout.NORTH, this);
+        layout.putConstraint(SpringLayout.SOUTH, priorityColorPane,
+                -OFFSET_COMMON_PADDING, SpringLayout.SOUTH, this);
+    }
+    
+    private String getStartDate(Task task) {
+        SimpleDateFormat dateOnly = new SimpleDateFormat(FORMAT_DATE); 
+        SimpleDateFormat dateAndTime = new SimpleDateFormat(FORMAT_DATE_TIME); 
+        
+        String start = STRING_EMPTY;
+        
+        if (task.getStartDate() != null && task.getHasStartTime()) {
+            start = dateAndTime.format(task.getStartDate().getTime());
+        } else if (task.getStartDate() != null) {
+            start = dateOnly.format(task.getStartDate().getTime());
+        }
+        return start;
+    }
+    
+    private String getDueDate(Task task) {
+        SimpleDateFormat dateOnly = new SimpleDateFormat(FORMAT_DATE); 
+        SimpleDateFormat dateAndTime = new SimpleDateFormat(FORMAT_DATE_TIME); 
+        
+        String due = STRING_EMPTY;
+        
+        if (task.getDueDate() != null && task.getHasDueTime()) {
+            due = dateAndTime.format(task.getDueDate().getTime());
+        } else if (task.getDueDate() != null) {
+            due = dateOnly.format(task.getDueDate().getTime());
+        }
+        return due;
+    }
+    
+    private void setDisplayDate(String start, String due) {
+        if ((!start.isEmpty()) && (!due.isEmpty())) {
+            date.setText(start + STRING_DASH + due);
+        } else if (!start.isEmpty()) {
+            date.setText(MESSAGE_STARTS + start);
+        } else if (!due.isEmpty()) {
+            date.setText(MESSAGE_DUE + due);
+        }
+    }
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\quicklyst\TaskPanel.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\test\CommandHistoryTest.java
+	 */
+
+public class CommandHistoryTest {
+    private CommandHistory _instance;
+
+    @Before
+    public void setUp() throws Exception {
+        _instance = new CommandHistory();
+    }
+    
+    @Test
+    public void testGetPreviousCommand() {
+        _instance.addCommand("a");
+        _instance.addCommand("ab");
+        _instance.addCommand("abc");
+        _instance.addCommand("abcd");
+        
+        assertEquals("abcd", _instance.getPreviousCommand());
+        assertEquals("abc", _instance.getPreviousCommand());
+        assertEquals("ab", _instance.getPreviousCommand());
+        assertEquals("a", _instance.getPreviousCommand());                
+    }
+    
+    @Test
+    public void testGetNextCommand() {
+        _instance.addCommand("a");
+        _instance.addCommand("ab");
+        _instance.addCommand("abc");
+        _instance.addCommand("abcd");
+                
+        _instance.getPreviousCommand();
+        _instance.getPreviousCommand();
+        _instance.getPreviousCommand();
+        _instance.getPreviousCommand();
+        
+        assertEquals("ab", _instance.getNextCommand());
+        assertEquals("abc", _instance.getNextCommand());
+        assertEquals("abcd", _instance.getNextCommand());
+        assertEquals("", _instance.getNextCommand());
+    }
+    
+    @Test
+    public void testGetPreviousCommandRandomCharacters() {
+        _instance.addCommand("abcdeft");
+        _instance.addCommand("a@#R%");
+        _instance.addCommand("ab %");
+        _instance.addCommand("  cde t");
+        _instance.addCommand("azZZEcdeft");
+        _instance.addCommand("acdeIEFft");
+        
+        assertEquals("acdeIEFft", _instance.getPreviousCommand());        
+        assertEquals("azZZEcdeft", _instance.getPreviousCommand());
+        assertEquals("  cde t", _instance.getPreviousCommand());
+        assertEquals("ab %", _instance.getPreviousCommand());
+        assertEquals("a@#R%", _instance.getPreviousCommand());
+        assertEquals("abcdeft", _instance.getPreviousCommand());
+    }
+    
+    @Test
+    public void testGetNextCommandRandomCharacters() {
+        _instance.addCommand("abcdeft");
+        _instance.addCommand("a@#R%");
+        _instance.addCommand("ab %");
+        _instance.addCommand("  cde t");
+        _instance.addCommand("azZZEcdeft");
+        _instance.addCommand("acdeIEFft");
+        
+        _instance.getPreviousCommand();
+        _instance.getPreviousCommand();
+        _instance.getPreviousCommand();
+        _instance.getPreviousCommand();
+        _instance.getPreviousCommand();
+        _instance.getPreviousCommand();
+        
+        assertEquals("a@#R%", _instance.getNextCommand());
+        assertEquals("ab %", _instance.getNextCommand());
+        assertEquals("  cde t", _instance.getNextCommand());
+        assertEquals("azZZEcdeft", _instance.getNextCommand());
+        assertEquals("acdeIEFft", _instance.getNextCommand());
+        assertEquals("", _instance.getNextCommand());         
+    }
+    
+    @Test
+    public void testEmptyHistory() {
+        assertEquals("", _instance.getNextCommand());
+        assertEquals("", _instance.getNextCommand());
+        assertEquals("", _instance.getNextCommand());
+        assertEquals("", _instance.getPreviousCommand());
+        assertEquals("", _instance.getPreviousCommand());
+        assertEquals("", _instance.getNextCommand());
+        assertEquals("", _instance.getPreviousCommand());
+        assertEquals("", _instance.getPreviousCommand());
+        assertEquals("", _instance.getNextCommand());
+        assertEquals("", _instance.getPreviousCommand());
+        assertEquals("", _instance.getNextCommand());
+        assertEquals("", _instance.getPreviousCommand());
+        assertEquals("", _instance.getPreviousCommand());
+    }
+    
+    @Test
+    public void testRepeatedCommand() {
+        _instance.addCommand("add");
+        _instance.addCommand("delete");
+        _instance.addCommand("find");
+        _instance.addCommand("edit");
+        _instance.addCommand("sync");
+        
+        _instance.getPreviousCommand();
+        _instance.getPreviousCommand();
+        
+        _instance.addCommand("edit");
+        assertEquals("sync", _instance.getPreviousCommand()); 
+    }
+    
+    @Test
+    public void testAddingEmptyCommand() {
+        _instance.addCommand("add");
+        _instance.addCommand("a");
+        _instance.addCommand("      ");
+        _instance.addCommand(" ");
+        _instance.addCommand("");
+        
+        assertEquals("a",_instance.getPreviousCommand());
+    }
+    
+    @Test
+    public void testNonRepeatedCommand() {
+        _instance.addCommand("add");
+        _instance.addCommand("delete");
+        _instance.addCommand("find");
+        _instance.addCommand("edit");
+        _instance.addCommand("sync");
+        
+        _instance.getPreviousCommand();
+        _instance.getPreviousCommand();
+        
+        _instance.addCommand("logout");
+        assertEquals("logout", _instance.getPreviousCommand());
+    }
+    
+    @Test
+    public void testLimit() {
+        _instance.addCommand("a");
+        _instance.addCommand("ab");
+        _instance.addCommand("abc");
+        _instance.addCommand("abcd");
+        
+        assertEquals("abcd", _instance.getPreviousCommand());
+        assertEquals("abc", _instance.getPreviousCommand());
+        assertEquals("ab", _instance.getPreviousCommand());
+        assertEquals("a", _instance.getPreviousCommand());
+        assertEquals("a", _instance.getPreviousCommand());
+        assertEquals("a", _instance.getPreviousCommand());
+        assertEquals("a", _instance.getPreviousCommand());
+        
+        assertEquals("ab", _instance.getNextCommand());
+        assertEquals("abc", _instance.getNextCommand());
+        assertEquals("abcd", _instance.getNextCommand());
+        assertEquals("", _instance.getNextCommand());
+        assertEquals("", _instance.getNextCommand());
+        assertEquals("", _instance.getNextCommand());
+        
+        assertEquals("abcd", _instance.getPreviousCommand());
+        assertEquals("abc", _instance.getPreviousCommand());
+    }
+    
+    @Test
+    public void testAddReset() {
+        _instance.addCommand("a");
+        _instance.getPreviousCommand();
+        _instance.addCommand("ab");
+        assertEquals("ab", _instance.getPreviousCommand());
+        _instance.addCommand("abc");
+        assertEquals("abc", _instance.getPreviousCommand());
+        assertEquals("ab", _instance.getPreviousCommand());
+        _instance.addCommand("abcd");
+        assertEquals("abcd", _instance.getPreviousCommand());
+        assertEquals("abc", _instance.getPreviousCommand());
+        assertEquals("ab", _instance.getPreviousCommand());
+        assertEquals("a", _instance.getPreviousCommand());
+    }
+
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\test\CommandHistoryTest.java
+
+
+
+
+
+	/**
+	 * origin: C:\Users\Kaya\Desktop\main\quicklyst\src\test\CommandTipsTest.java
+	 */
+
+public class CommandTipsTest {
+    
+    private static final String STRING_EMPTY = " ";
+    
+    private CommandTips instance = new CommandTips();
+
+    @Test
+    public void testShowAllCommandTips() {
+        String userInput1 = STRING_EMPTY;
+        
+        String expectedOutput = "Available commands:\r\nadd (a)\r\ndelete (d)\r\n" +
+                                "edit (e)\r\nfind (f)\r\nload (l)\r\nsave (s)\r\n" +
+                                "cf\r\nsync\r\nlogout";
+        assertEquals(expectedOutput, instance.getTips(userInput1));
+        
+        String userInput2 = STRING_EMPTY + STRING_EMPTY;
+        assertEquals(expectedOutput, instance.getTips(userInput2));
+    }
+    
+    @Test
+    public void testShowAddCommandTips() {
+        String expectedOutput = "Add a task:\r\nadd\r\n<task name>\\\r\n" + 
+                                "[start <date time>]\r\n[due <date time>]\r\n" + 
+                                "[priority <low/medium/high>]\r\n";
+        
+        String userInput1 = "a";
+        assertEquals(expectedOutput, instance.getTips(userInput1));
+        
+        String userInput2 = " a";
+        assertEquals(expectedOutput, instance.getTips(userInput2));
+        
+        String userInput3 = " a ";
+        assertEquals(expectedOutput, instance.getTips(userInput3));
+        
+        String userInput4 = "    a    ";
+        assertEquals(expectedOutput, instance.getTips(userInput4));
+        
+        String userInput5 = "ad";
+        assertEquals(expectedOutput, instance.getTips(userInput5));
+        
+        String userInput6 = "a d";
+        assertEquals(expectedOutput, instance.getTips(userInput6));
+        
+        String userInput7 = " a  d ";
+        assertEquals(expectedOutput, instance.getTips(userInput7));
+        
+        String userInput8 = "add";
+        assertEquals(expectedOutput, instance.getTips(userInput8));
+        
+        String userInput9 = " a   d    d ";
+        assertEquals(expectedOutput, instance.getTips(userInput9));
+        
+        String userInput10 = "     ADd ";
+        assertEquals(expectedOutput, instance.getTips(userInput10));
+        
+        String userInput11 = "     add d";
+        assertEquals(expectedOutput, instance.getTips(userInput11));
+        
+        String userInput12 = "ad d";
+        assertEquals(GlobalConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput12)); 
+    }
+    
+    @Test
+    public void testShowDeleteCommandTips() {
+        String expectedOutput = "Delete a task:\r\ndelete\r\n<task number>\r\n";
+        
+        String userInput1 = "d";
+        assertEquals(expectedOutput, instance.getTips(userInput1));
+        
+        String userInput2 = " d ";
+        assertEquals(expectedOutput, instance.getTips(userInput2));
+        
+        String userInput3 = "de";
+        assertEquals(expectedOutput, instance.getTips(userInput3));
+        
+        String userInput4 = "dele";
+        assertEquals(expectedOutput, instance.getTips(userInput4));
+        
+        String userInput5 = "DElet";
+        assertEquals(expectedOutput, instance.getTips(userInput5));
+        
+        String userInput6 = "delete";
+        assertEquals("Delete a task:\r\ndelete\r\n<task number>\r\n",
+                     instance.getTips(userInput6));
+        
+        String userInput7 = "  delete    ";
+        assertEquals(expectedOutput, instance.getTips(userInput7)); 
+        
+        String userInput11 = "deleted";
+        assertEquals(GlobalConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput11));
+        
+        String userInput12 = "dl";
+        assertEquals(GlobalConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput12));
+    }
+    
+    @Test
+    public void testShowEditCommandTips() {
+        String expectedOutput = "Edit a task:\r\nedit\r\n<task number>\r\n" +
+                                "[name <new name> \\]\r\n[start <date time>]\r\n" +
+                                "[due <date time>]\r\n[priority <low/medium/high>]\r\n";
+        
+        String userInput1 = "e";
+        assertEquals(expectedOutput, instance.getTips(userInput1));
+        
+        String userInput2 = "eD";
+        assertEquals(expectedOutput, instance.getTips(userInput2));
+        
+        String userInput3 = "edi";
+        assertEquals(expectedOutput, instance.getTips(userInput3));
+        
+        String userInput4 = "edit";
+        assertEquals(expectedOutput, instance.getTips(userInput4));
+        
+        String userInput5 = "   edit  ";
+        assertEquals(expectedOutput, instance.getTips(userInput5));
+    }
+    
+    @Test
+    public void testShowFindCommandTips() {
+        String expectedOutput = "Search for tasks:\r\nfind\r\n[name <task name>\\]\r\n" +
+                                "[start [on/after/before/between] <date time>]\r\n" +
+                                "[due [on/after/before/between] <date time>]\r\n" +
+                                "[priority <low/medium/high>]\r\n[overdue <yes/no>]\r\n" +
+                                "[completed <yes/no>]\r\n";
+        
+        String userInput1 = "f";
+        assertEquals(expectedOutput, instance.getTips(userInput1));
+        
+        String userInput2 = " f ";
+        assertEquals(expectedOutput, instance.getTips(userInput2));
+        
+        String userInput3 = "  fi";
+        assertEquals(expectedOutput, instance.getTips(userInput3));
+        
+        String userInput4 = "  fin";
+        assertEquals(expectedOutput, instance.getTips(userInput4));
+        
+        String userInput5 = "  find ";
+        assertEquals(expectedOutput, instance.getTips(userInput5));
+        
+        String userInput6 = "FIND";
+        assertEquals(expectedOutput, instance.getTips(userInput6));
+        
+        String userInput7 = "find a";
+        assertEquals(expectedOutput, instance.getTips(userInput7));
+        
+        String userInput8 = "fi ";
+        assertEquals(GlobalConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput8));
+    }
+    
+    @Test
+    public void testShowLoadCommandTips() {
+        String expectedOutput = "Load tasks from a file:\r\nload\r\n<file name>\r\n";
+        String userInput1 = "l";
+        assertEquals("Possible commands:\r\nload (l)\r\nlogout",
+                     instance.getTips(userInput1));
+        
+        String userInput2 = "lo";
+        assertEquals("Possible commands:\r\nload (l)\r\nlogout",
+                     instance.getTips(userInput2));
+        
+        String userInput3 = "loa";
+        assertEquals(expectedOutput, instance.getTips(userInput3));
+        
+        String userInput4 = "load";
+        assertEquals(expectedOutput, instance.getTips(userInput4));
+        
+        String userInput5 = " load ";
+        assertEquals(expectedOutput, instance.getTips(userInput5));
+        
+        String userInput6 = "load a";
+        assertEquals(expectedOutput, instance.getTips(userInput6));
+        
+        String userInput7 = "  LOAD a";
+        assertEquals(expectedOutput, instance.getTips(userInput7));
+        
+        String userInput8 = "lo ad";
+        assertEquals(GlobalConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput8));
+    }
+    
+    @Test
+    public void testShowSaveCommandTips() {
+        String expectedOutput = "Save tasks to a file:\r\nsave\r\n<file name>\r\n";
+        
+        String userInput1 = "s";
+        assertEquals("Possible commands:\r\nsave (s)\r\nsync",
+                     instance.getTips(userInput1));
+        
+        String userInput2 = "sa";
+        assertEquals(expectedOutput, instance.getTips(userInput2));
+        
+        String userInput3 = "sav";
+        assertEquals(expectedOutput, instance.getTips(userInput3));
+        
+        String userInput4 = "save";
+        assertEquals(expectedOutput, instance.getTips(userInput4));
+        
+        String userInput5 = "  save ";
+        assertEquals(expectedOutput, instance.getTips(userInput5));
+        
+        String userInput6 = "sA";
+        assertEquals(expectedOutput, instance.getTips(userInput6));
+        
+        String userInput7 = "saved";
+        assertEquals(GlobalConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput7));
+        
+
+    }
+    
+    @Test
+    public void testShowCfCommandTips() {
+        String expectedOutput = "Change file path:\r\ncf\r\n<file name>\r\n";
+        
+        String userInput1 = "c";
+        assertEquals(expectedOutput, instance.getTips(userInput1));
+        
+        String userInput2 = "cf";
+        assertEquals(expectedOutput, instance.getTips(userInput2));
+        
+        String userInput3 = " cF ";
+        assertEquals(expectedOutput, instance.getTips(userInput3));
+        
+        String userInput4 = " c f ";
+        assertEquals(GlobalConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput4));
+        
+        String userInput5 = "c ";
+        assertEquals(GlobalConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput5));
+    }
+    
+    @Test
+    public void testShowSynCommandTips() {
+        String expectedOutput = "Synchronise with"
+                + " Google services.\r\n" +
+                                "A browser will pop out for authentication.\r\n";
+        
+        String userInput1 = "s";
+        assertEquals("Possible commands:\r\nsave (s)\r\nsync",
+                     instance.getTips(userInput1));
+        
+        String userInput2 = "sy";
+        assertEquals(expectedOutput, instance.getTips(userInput2));
+        
+        String userInput3 = "syn";
+        assertEquals(expectedOutput, instance.getTips(userInput3));
+        
+        String userInput4 = "sync";
+        assertEquals(expectedOutput, instance.getTips(userInput4));
+        
+        String userInput5 = "sync a";
+        assertEquals(expectedOutput, instance.getTips(userInput5));
+        
+        String userInput6 = " sYnc  a";
+        assertEquals(expectedOutput, instance.getTips(userInput6));
+        
+        String userInput7 = " syncd";
+        assertEquals(GlobalConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput7));
+    }
+    
+    @Test
+    public void testShowLogoutCommandTips() {
+        String expectedOutput = "Logout from Google services.\r\n";
+        String userInput1 = "l";
+        assertEquals("Possible commands:\r\nload (l)\r\nlogout",
+                     instance.getTips(userInput1));
+        
+        String userInput2 = "lo";
+        assertEquals("Possible commands:\r\nload (l)\r\nlogout",
+                     instance.getTips(userInput2));
+        
+        String userInput3 = "log";
+        assertEquals(expectedOutput, instance.getTips(userInput3));
+        
+        String userInput4 = "logo";
+        assertEquals(expectedOutput, instance.getTips(userInput4));
+        
+        String userInput5 = "logou";
+        assertEquals(expectedOutput, instance.getTips(userInput5));
+        
+        String userInput6 = "logout";
+        assertEquals(expectedOutput, instance.getTips(userInput6));
+        
+        String userInput7 = "logout a";
+        assertEquals(expectedOutput, instance.getTips(userInput7));
+        
+        String userInput8 = "lo ";
+        assertEquals(GlobalConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput8));
+    }
+    
+    @Test
+    public void testShowInvalidCommandTips() {
+        String userInput1 = "abcd";
+        assertEquals(GlobalConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput1));
+              
+        String userInput2 = "daege";
+        assertEquals(GlobalConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput2));
+        
+        String userInput3 = "!@$%";
+        assertEquals(GlobalConstants.MESSAGE_INVALID_COMMAND, instance.getTips(userInput3));   
+        
+    }
+}
+
+	// End of segment: C:\Users\Kaya\Desktop\main\quicklyst\src\test\CommandTipsTest.java
+
+
+
+
+
