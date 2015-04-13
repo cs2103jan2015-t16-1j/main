@@ -4,20 +4,59 @@ import java.util.ArrayList;
 
 //@author A0112971J
 public class CommandTips {
-    private static final String NEXTLINE = System.lineSeparator();
+    
+    private static final int INDEX_START = 0;
+    
     private static final int COMMANDTYPE_INDEX_TIP = 2;
     private static final int COMMANDTYPE_INDEX_SHORTCOMMAND = 1;
     private static final int COMMANDTYPE_INDEX_FULLCOMMAND = 0;
+    
+    private static final int MATCH_SIZE_ONE = 1;
+    private static final int MATCH_INDEX_FIRST = 0;
+    
+    private static final int SPLIT_SIZE_NO_TOKEN = 0;
+    private static final int SPLIT_INDEX_START = 0;
+
+    private static final String STRING_SPACE = " ";
+    static final String NEXTLINE = "\r\n";
+    
     private static final String[][] commandTypes = {
-            {"add", "a", "Add a task:NEXTLINEadd\r\n<task name>\\\r\n[start <date time>]\r\n[due <date time>]\r\n[priority <low/medium/high>]\r\n"},            
-            {"delete", "d", "Delete a task:\r\ndelete\r\n<task number>\r\n"},
-            {"edit", "e", "Edit a task:\r\nedit\r\n<task number>\r\n[name <new name> \\]\r\n[start <date time>\\\r\n[due <date time>\r\n[priority <low/medium/high>\r\n"},
-            {"find", "f", "Search for tasks:\r\nfind\r\n[name <task name>\\]\r\n[start [on/after/before/between] <date time>]\r\n[due [on/after/before/between] <date time>\r\n[priority <low/medium/high>\r\n[overdue <yes/no>]\r\n[completed <yes/no>\r\n"},
-            {"load", "l", "Load tasks from a file:\r\nload\r\n<file name>\r\n"},
-            {"save", "s", "Save tasks to a file:\r\nsave\r\n<file name>\r\n"},
-            {"cd", null, "Change directory:\r\ncd\r\n<file name>\r\n"},
-            {"push", null, "push"},
-            {"pull", null, "pull"},
+            {"add", "a", "Add a task:\r\n" +
+                         "add\r\n" +
+                         "<task name>\\\r\n" +
+                         "[start <date time>]\r\n" + 
+                         "[due <date time>]\r\n" +
+                         "[priority <low/medium/high>]\r\n"},            
+            {"delete", "d", "Delete a task:\r\n" +
+                            "delete\r\n" +
+                            "<task number>\r\n"},
+            {"edit", "e", "Edit a task:\r\n" +
+                          "edit\r\n" +
+                          "<task number>\r\n" +
+                          "[name <new name> \\]\r\n" +
+                          "[start <date time>]\r\n" +
+                          "[due <date time>]\r\n" +
+                          "[priority <low/medium/high>]\r\n"},
+            {"find", "f", "Search for tasks:\r\n" +
+                          "find\r\n" +
+                          "[name <task name>\\]\r\n" +
+                          "[start [on/after/before/between] <date time>]\r\n" +
+                          "[due [on/after/before/between] <date time>]\r\n" +
+                          "[priority <low/medium/high>]\r\n" +
+                          "[overdue <yes/no>]\r\n" +
+                         "[completed <yes/no>]\r\n"},
+            {"load", "l", "Load tasks from a file:\r\n" +
+                          "load\r\n" +
+                          "<file name>\r\n"},
+            {"save", "s", "Save tasks to a file:\r\n" +
+                          "save\r\n" +
+                          "<file name>\r\n"},
+            {"cf", null, "Change file path:\r\n" +
+                         "cf\r\n" +
+                         "<file name>\r\n"},
+            {"sync", null, "Synchronise with Google services.\r\n" +
+                           "A browser will pop out for authentication.\r\n"},
+            {"logout", null, "Logout from Google services.\r\n"},
         };
     
     
@@ -35,21 +74,22 @@ public class CommandTips {
 
     private String getMatchedCommandTips(ArrayList<Integer> match) {
         if (match.isEmpty()) {
-            return "Invalid command";
-        } else if (match.size() == 1) {
-            return commandTypes[match.get(0)][COMMANDTYPE_INDEX_TIP];
+            return MessageConstants.MESSAGE_INVALID_COMMAND;
+        } else if (match.size() == MATCH_SIZE_ONE) {
+            return commandTypes[match.get(MATCH_INDEX_FIRST)][COMMANDTYPE_INDEX_TIP];
         } else {
             return getAllMatchedCommands(match);
         }
     }
 
     private String getAllMatchedCommands(ArrayList<Integer> match) {
-        StringBuilder commandList = new StringBuilder("Possible commands:");
+        StringBuilder commandList = new StringBuilder(MessageConstants.MESSAGE_POSSIBLE_COMMANDS);
         for (int i: match) {
             commandList.append(NEXTLINE);
             commandList.append(commandTypes[i][COMMANDTYPE_INDEX_FULLCOMMAND]);
             if (commandTypes[i][COMMANDTYPE_INDEX_SHORTCOMMAND] != null) {
-                commandList.append(String.format(" (%s)", commandTypes[i][COMMANDTYPE_INDEX_SHORTCOMMAND]));
+                commandList.append(String.format(MessageConstants.MESSAGE_COMMAND_BODY,
+                                   commandTypes[i][COMMANDTYPE_INDEX_SHORTCOMMAND]));
             }
         }
         return commandList.toString();
@@ -57,29 +97,32 @@ public class CommandTips {
 
     private ArrayList<Integer> findCommandPartialMatch(String userInput) {
         ArrayList<Integer> match = new ArrayList<Integer>();
-        for (int i = 0; i < commandTypes.length; ++i) {
-            String[] s = commandTypes[i];
-            if (isMatch(s[COMMANDTYPE_INDEX_FULLCOMMAND], userInput)) {
+        for (int i = INDEX_START; i < commandTypes.length; ++i) {
+            String[] commands = commandTypes[i];
+            if (isMatch(commands[COMMANDTYPE_INDEX_FULLCOMMAND], userInput)) {
                 match.add(i);
-            } else if ((s[COMMANDTYPE_INDEX_SHORTCOMMAND] != null) && (isMatch(s[COMMANDTYPE_INDEX_SHORTCOMMAND], userInput))) {
+            } else if ((commands[COMMANDTYPE_INDEX_SHORTCOMMAND] != null) &&
+                       (isMatch(commands[COMMANDTYPE_INDEX_SHORTCOMMAND], userInput))) {
                 match.add(i);
             }
         }
         return match;
     }
     
-    private boolean isMatch(String actual, String userInput) {
+    private boolean isMatch(String actualCommand, String userInput) {
+        userInput = userInput.toLowerCase();
+        
         String userInputTrimmed = userInput.trim();
-        String[] userInputSplit = userInputTrimmed.split(" ");
-        if (userInputSplit.length == 0) {
+        String[] userInputSplit = userInputTrimmed.split(STRING_SPACE);
+        if (userInputSplit.length == SPLIT_SIZE_NO_TOKEN) {
             return true;
         }
-        String userInputCommand = userInputSplit[0];
-        if (actual.startsWith(userInputCommand)) {
+        String userInputCommand = userInputSplit[SPLIT_INDEX_START];
+        if (actualCommand.startsWith(userInputCommand)) {
             int commandPosition = userInput.indexOf(userInputCommand);
             int nextCharacterPosition = commandPosition + userInputCommand.length();
             if (userInput.length() > nextCharacterPosition) {
-                if (userInputCommand.equals(actual)) {
+                if (userInputCommand.equals(actualCommand)) {
                     return true;
                 } else {
                     return false;
@@ -93,12 +136,12 @@ public class CommandTips {
     }
 
     private String allCommands() {
-        StringBuilder commandList = new StringBuilder("Available commands:");
-        for (String[] s: commandTypes) {
+        StringBuilder commandList = new StringBuilder(MessageConstants.MESSAGE_AVAILABLE_COMMANDS);
+        for (String[] commands: commandTypes) {
             commandList.append(NEXTLINE);
-            commandList.append(s[COMMANDTYPE_INDEX_FULLCOMMAND]);
-            if (s[COMMANDTYPE_INDEX_SHORTCOMMAND] != null) {
-                commandList.append(String.format(" (%s)", s[COMMANDTYPE_INDEX_SHORTCOMMAND]));
+            commandList.append(commands[COMMANDTYPE_INDEX_FULLCOMMAND]);
+            if (commands[COMMANDTYPE_INDEX_SHORTCOMMAND] != null) {
+                commandList.append(String.format(MessageConstants.MESSAGE_COMMAND_BODY, commands[COMMANDTYPE_INDEX_SHORTCOMMAND]));
             }
         }
         return commandList.toString();

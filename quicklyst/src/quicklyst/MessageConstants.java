@@ -73,4 +73,9 @@ public class MessageConstants {
 	//Storage
 	public static final String ERROR_READ_SETTINGS = "Error reading settings. ";
 	public static final String ERROR_WRITE_SETTINGS = "Error writing settings. ";
+	
+	public static final String MESSAGE_COMMAND_BODY = " (%s)";
+	public static final String MESSAGE_POSSIBLE_COMMANDS = "Possible commands:";
+	public static final String MESSAGE_AVAILABLE_COMMANDS = "Available commands:";
+	public static final String MESSAGE_INVALID_COMMAND = "Invalid command";
 }
