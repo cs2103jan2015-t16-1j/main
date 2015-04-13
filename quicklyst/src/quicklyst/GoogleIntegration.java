@@ -647,4 +647,294 @@ public class GoogleIntegration {
             return null;
         }
     }
+    
+    //@author A0112707N-unused
+    //push, pull changed to a more user-friendly sync
+    /*
+    public void syncFrom(List<Task> taskList) {
+        try {
+
+            if (!isInitiated()) {
+                init();
+            }
+
+            String calId = PRIMARY_CALENDAR_ID;
+            String taskListId = PRIMARY_TASKS_ID;
+
+            syncGoogleToTaskList(taskList, _googleCalendar, _googleTasks,
+                    calId, taskListId);
+
+        } catch (GeneralSecurityException e) {
+            LOGGER.severe(String.format(LOG_EXCEPTION, e.getClass().getName()));
+            throw new Error(
+                    MessageConstants.ERROR_SECURE_CONNECTION_UNAVAILABLE);
+        } catch (IOException e) {
+            LOGGER.severe(String.format(LOG_EXCEPTION, e.getClass().getName()));
+            throw new Error(MessageConstants.ERROR_SYNC);
+        }
+    }
+
+    public void syncTo(List<Task> taskList) {
+        try {
+
+            if (!isInitiated()) {
+                init();
+            }
+
+            String calId = PRIMARY_CALENDAR_ID;
+            String taskListId = PRIMARY_TASKS_ID;
+
+            syncTaskListToGoogle(taskList, _googleCalendar, _googleTasks,
+                    calId, taskListId);
+
+        } catch (GeneralSecurityException e) {
+            LOGGER.severe(String.format(LOG_EXCEPTION, e.getClass().getName()));
+            throw new Error(
+                    MessageConstants.ERROR_SECURE_CONNECTION_UNAVAILABLE);
+        } catch (IOException e) {
+            LOGGER.severe(String.format(LOG_EXCEPTION, e.getClass().getName()));
+            throw new Error(MessageConstants.ERROR_SYNC);
+        }
+    }
+    
+    private void syncGoogleToTaskList(List<Task> taskList,
+            GoogleCalConn googleCalendar, GoogleTaskConn googleTasks,
+            String calId, String taskListId) throws IOException {
+
+        Map<String, Task> calendarTask = new HashMap<String, Task>();
+        Map<String, Task> tasksTask = new HashMap<String, Task>();
+
+        createMapsForSync(taskList, calendarTask, tasksTask);
+
+        syncGoogleCalendarToTaskList(taskList, googleCalendar, calId,
+                calendarTask);
+
+        syncGoogleTasksToTaskList(taskList, googleTasks, taskListId, tasksTask);
+    }
+    
+    private void syncGoogleTasksToTaskList(List<Task> taskList,
+            GoogleTaskConn googleTasks, String taskListId,
+            Map<String, Task> tasksTask) throws IOException {
+        if (taskListId.isEmpty()) {
+            return;
+        }
+        List<com.google.api.services.tasks.model.Task> tasks = googleTasks
+                .getTasks(taskListId).getItems();
+        if (tasks != null) {
+            for (com.google.api.services.tasks.model.Task t : tasks) {
+                Task matchingTask = tasksTask.remove(PREFIX_GOOGLEID_TASKS
+                        + t.getId());
+                if (matchingTask == null) {
+                    if (!isEmptyGoogleTask(t)) {
+                        Task newTask = new Task("");
+                        updateTaskWithGoogleTask(newTask, t);
+                        taskList.add(newTask);
+                    }
+                } else {
+                    updateTaskWithGoogleTask(matchingTask, t);
+                }
+            }
+        }
+        for (Task t : tasksTask.values()) {
+            taskList.remove(t);
+        }
+    }
+
+    private void syncGoogleCalendarToTaskList(List<Task> taskList,
+            GoogleCalConn googleCalendar, String calId,
+            Map<String, Task> calendarTask) throws IOException {
+        if (calId.isEmpty())
+            return;
+        List<Event> events = googleCalendar.getEvents(calId).getItems();
+        if (events != null) {
+            for (Event e : events) {
+                Task matchingTask = calendarTask
+                        .remove(PREFIX_GOOGLEID_CALENDAR + e.getId());
+                if (e.getRecurrence() != null) {
+                    continue;
+                }
+                if (matchingTask == null) {
+                    Task newTask = new Task("");
+                    updateTaskWithGoogleEvent(newTask, e);
+                    taskList.add(newTask);
+                } else {
+                    updateTaskWithGoogleEvent(matchingTask, e);
+                }
+            }
+        }
+
+        for (Task t : calendarTask.values()) {
+            taskList.remove(t);
+        }
+
+    }
+
+    private String createNewTaskListIfNotExist(String listName,
+            GoogleTaskConn googleTasks, String taskListId) throws IOException {
+        if (taskListId.equals("")) {
+            taskListId = googleTasks.createTaskList(
+                    new TaskList().setTitle(listName)).getId();
+        }
+        return taskListId;
+    }
+
+    private String createNewCalendarIfNotExist(String listName,
+            GoogleCalConn googleCalendar, String calId) throws IOException {
+        if (calId.equals("")) {
+            calId = googleCalendar.createCalendar(
+                    new com.google.api.services.calendar.model.Calendar()
+                    .setSummary(listName)).getId();
+        }
+        return calId;
+    }
+
+    private void syncTaskListToGoogle(List<Task> taskList,
+            GoogleCalConn googleCalendar, GoogleTaskConn googleTasks,
+            String calId, String taskListId) throws IOException {
+        Events events = googleCalendar.getEvents(calId);
+        Tasks tasks = googleTasks.getTasks(taskListId);
+        Set<String> existingIds = new HashSet<String>();
+        Set<String> currentEvents = new HashSet<String>();
+        Set<String> currentTasks = new HashSet<String>();
+        if ((events != null) && (events.getItems() != null)) {
+            for (Event e : events.getItems()) {
+                currentEvents.add(e.getId());
+            }
+        }
+        if ((tasks != null) && (tasks.getItems() != null)) {
+            for (com.google.api.services.tasks.model.Task t : tasks.getItems()) {
+                currentTasks.add(t.getId());
+            }
+        }
+
+        for (Task t : taskList) {
+            if ((t.getGoogleId() != null) && (!t.getGoogleId().isEmpty())) {
+                existingIds.add(t.getGoogleId().substring(
+                        OFFSET_GOOGLEID_PREFIX));
+            }
+            if (isCalendarEvent(t)) {
+                syncTaskToGoogleCalendar(googleCalendar, googleTasks, calId,
+                        taskListId, t, currentEvents);
+            } else {
+                syncTaskToGoogleTasks(googleCalendar, googleTasks, calId,
+                        taskListId, t, currentTasks);
+            }
+        }
+
+        currentEvents.removeAll(existingIds);
+        currentTasks.removeAll(existingIds);
+
+        for (String id : currentEvents) {
+            googleCalendar.deleteEvent(calId, id);
+        }
+        for (String id : currentTasks) {
+            googleTasks.deleteTask(taskListId, id);
+        }
+    }
+
+    private void syncTaskToGoogleTasks(GoogleCalConn googleCalendar,
+            GoogleTaskConn googleTasks, String calId, String taskListId,
+            Task t, Set<String> currentTasks) throws IOException {
+        if ((t.getGoogleId() != null) && (!t.getGoogleId().isEmpty())) {
+            if (t.getGoogleId().startsWith(PREFIX_GOOGLEID_TASKS)) {
+                if (currentTasks.contains(t.getGoogleId().substring(
+                        OFFSET_GOOGLEID_PREFIX))) {
+                    updateTaskToGoogleTasks(t, googleTasks, taskListId);
+                } else {
+                    createNewTaskToGoogleTasks(t, googleTasks, taskListId);
+                }
+            } else {
+                changeGoogleCalendarToGoogleTasks(t, googleCalendar,
+                        googleTasks, calId, taskListId);
+            }
+        } else {
+            createNewTaskToGoogleTasks(t, googleTasks, taskListId);
+        }
+    }
+    
+    private void syncTaskToGoogleCalendar(GoogleCalConn googleCalendar,
+            GoogleTaskConn googleTasks, String calId, String taskListId,
+            Task t, Set<String> currentEvents) throws IOException {
+        if ((t.getGoogleId() != null) && (!t.getGoogleId().isEmpty())) {
+            if (t.getGoogleId().startsWith(PREFIX_GOOGLEID_CALENDAR)) {
+                if (currentEvents.contains(t.getGoogleId().substring(
+                        OFFSET_GOOGLEID_PREFIX))) {
+                    updateEventToGoogleCalendar(t, googleCalendar, calId);
+                } else {
+                    createNewEventToGoogleCalendar(t, googleCalendar, calId);
+                }
+            } else {
+                changeGoogleTaskToGoogleCalendar(t, googleCalendar,
+                        googleTasks, calId, taskListId);
+            }
+        } else {
+            createNewEventToGoogleCalendar(t, googleCalendar, calId);
+        }
+    }
+
+    private String getCalendarIdByName(String calendarName,
+            GoogleCalConn googleCalendar) throws IOException {
+        List<CalendarListEntry> calendars = googleCalendar.getCalendars()
+                .getItems();
+        String id = "";
+        for (CalendarListEntry c : calendars) {
+            if (c.getSummary().equals(calendarName)) {
+                id = c.getId();
+                break;
+            }
+        }
+        return id;
+    }
+
+    private String getTaskListIdByName(String taskListName,
+            GoogleTaskConn googleTasks) throws IOException {
+        List<TaskList> taskLists = googleTasks.getTaskLists().getItems();
+        String id = "";
+        for (TaskList t : taskLists) {
+            if (t.getTitle().equals(taskListName)) {
+                id = t.getId();
+                break;
+            }
+        }
+        return id;
+    }
+    
+    private void deleteFromGoogle(List<String> deletedIds,
+                                  GoogleCalConn googleCalendar, 
+                                  GoogleTaskConn googleTasks,
+                                  String calId, String taskListId) {
+        Iterator<String> iter = deletedIds.iterator();
+        while (iter.hasNext()) {
+            String id = iter.next();
+            try {
+                if (id.startsWith(PREFIX_GOOGLEID_CALENDAR)) {
+                    googleCalendar.deleteEvent(calId,
+                            id.substring(OFFSET_GOOGLEID_PREFIX));
+                    iter.remove();
+
+                } else if (id.startsWith(PREFIX_GOOGLEID_TASKS)) {
+                    googleTasks.deleteTask(taskListId,
+                            id.substring(OFFSET_GOOGLEID_PREFIX));
+                    iter.remove();
+                }
+            } catch (IOException e) {
+
+            }
+        }
+    }
+    
+    private void createMapsForSync(List<Task> taskList,
+                                   Map<String, Task> calendarTask, 
+                                   Map<String, Task> tasksTask) {
+        for (Task t : taskList) {
+            if ((t.getGoogleId() != null) && (!t.getGoogleId().isEmpty())) {
+                if (t.getGoogleId().startsWith(PREFIX_GOOGLEID_CALENDAR)) {
+                    calendarTask.put(t.getGoogleId(), t);
+                } else {
+                    tasksTask.put(t.getGoogleId(), t);
+                }
+            }
+        }
+    }
+    */
 }
