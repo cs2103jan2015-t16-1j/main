@@ -12,9 +12,6 @@ import com.google.gson.JsonSyntaxException;
 //@author A01112707N
 public class Settings {
 	
-    private static final String FILEPATH_SETTINGS = "settings.json";
-	private static final String FILEPATH_DEFAULT_SAVE = "save.json";
-	
     public static Settings _instance;
     
     private String _settingsPath;
@@ -39,7 +36,7 @@ public class Settings {
     }
     
     private Settings() {
-        _settingsPath = FILEPATH_SETTINGS;
+        _settingsPath = MessageConstants.FILEPATH_SETTINGS;
         _prefFilePath = null;
         isLoaded = false;
     }
@@ -52,7 +49,7 @@ public class Settings {
     }
     
     public String getDefaultFilePath() {
-        return FILEPATH_DEFAULT_SAVE;
+        return MessageConstants.FILEPATH_DEFAULT_SAVE;
     }
     
     public void updatePrefFilePath(String filePath) {

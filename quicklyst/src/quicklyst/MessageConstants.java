@@ -70,10 +70,14 @@ public class MessageConstants {
 	public static final String ERROR_SYNC = "Unable to sync with Google services. ";
 	public static final String ERROR_SECURE_CONNECTION_UNAVAILABLE = "Unable to initialise secure connection. ";
 	
-	//Storage
+	//Settings
 	public static final String ERROR_READ_SETTINGS = "Error reading settings. ";
 	public static final String ERROR_WRITE_SETTINGS = "Error writing settings. ";
 	
+	public static final String FILEPATH_SETTINGS = "settings.json";
+	public static final String FILEPATH_DEFAULT_SAVE = "save.json";
+	
+	//CommandTips
 	public static final String MESSAGE_COMMAND_BODY = " (%s)";
 	public static final String MESSAGE_POSSIBLE_COMMANDS = "Possible commands:";
 	public static final String MESSAGE_AVAILABLE_COMMANDS = "Available commands:";
