@@ -10,21 +10,35 @@ import javax.swing.border.LineBorder;
 
 //@author A0112971J
 public class TaskPanel extends JPanel {
-    private static final String TO = " - ";
-    private static final String STRING_ONE_SPACE = " ";
-    private static final String PREFIX_INDEX = "#";
+    
+    private static final int OFFSET_COMMON_PADDING = 5;
+    private static final int OFFSET_INNER_PADDING = 10;
+    
+    private static final String MESSAGE_STARTS = "starts ";
+    private static final String MESSAGE_DUE = "due ";
+
+    private static final String PRIORITY_HIGH = "H";
+    private static final String PRIORITY_MEDIUM = "M";
+    private static final String PRIORITY_LOW = "L";
+
     private static final String STRING_EMPTY = "";
+    private static final String STRING_DASH = " - ";
+    private static final String STRING_SPACE = " ";
+    
+    private static final String PREFIX_INDEX = "#";
+
     private static final String FORMAT_DATE = "dd/MM/yyy";
     private static final String FORMAT_DATE_TIME = "dd/MM/yyy HH:mm";
     
-    JPanel priorityColorPane;
-    JLabel name;
-    JLabel index;
-    JLabel date;
-    JLabel priority;
+    private JPanel priorityColorPane;
+    private JLabel name;
+    private JLabel index;
+    private JLabel date;
+    private JLabel priority;
     
     public TaskPanel(Task task, int taskIndex) {
         super(new SpringLayout());
+        
         SpringLayout layout = (SpringLayout)this.getLayout();
         
         this.setBorder(new LineBorder(Color.BLACK));
@@ -32,10 +46,10 @@ public class TaskPanel extends JPanel {
         priorityColorPane = new JPanel();
         name = new JLabel(task.getName());
         index = new JLabel(PREFIX_INDEX + taskIndex);
-        date = new JLabel(STRING_ONE_SPACE);
+        date = new JLabel(STRING_SPACE);
         priority = new JLabel();         
         
-        displayPanelColor(task);        
+        displayColoredPanel(task);        
         displayDate(task);
         displayPriority(task);
 
@@ -43,7 +57,7 @@ public class TaskPanel extends JPanel {
         setLayout(layout);        
     }
     
-    private void displayPanelColor(Task task) {
+    private void displayColoredPanel(Task task) {
         if (task.getIsCompleted()) {
             this.setBackground(Color.CYAN);
         } else if (task.getIsOverdue()) {
@@ -60,22 +74,24 @@ public class TaskPanel extends JPanel {
 
     private void displayPriority(Task task) {
         if (task.getPriority() != null) {
-
             priority.setText(task.getPriority());
+            setPriorityColor(task);
+        }
+    }
 
-            switch (task.getPriority()) {
-            case "H":
-                priorityColorPane.setBackground(Color.RED);
-                break;
-            case "M":
-                priorityColorPane.setBackground(Color.ORANGE);
-                break;
-            case "L":
-                priorityColorPane.setBackground(Color.YELLOW);
-                break;
-            default:
-                break;
-            }
+    private void setPriorityColor(Task task) {
+        switch (task.getPriority()) {
+        case PRIORITY_HIGH:
+            priorityColorPane.setBackground(Color.RED);
+            break;
+        case PRIORITY_MEDIUM:
+            priorityColorPane.setBackground(Color.ORANGE);
+            break;
+        case PRIORITY_LOW:
+            priorityColorPane.setBackground(Color.YELLOW);
+            break;
+        default:
+            break;
         }
     }
     
@@ -88,39 +104,64 @@ public class TaskPanel extends JPanel {
     }
   
     private void setLayout(SpringLayout layout) {
-        layout.putConstraint(SpringLayout.SOUTH, this,
-                5, SpringLayout.SOUTH, date);
+        
+        setupTaskPaneConstraint(layout);
 
-        layout.putConstraint(SpringLayout.WEST,
-                priorityColorPane, 5, SpringLayout.WEST, this);
-        layout.putConstraint(SpringLayout.NORTH,
-                priorityColorPane, 5, SpringLayout.NORTH, this);
-        layout.putConstraint(SpringLayout.SOUTH,
-                priorityColorPane, -5, SpringLayout.SOUTH, this);
+        setupPriorityColorPaneConstraint(layout);
 
-        layout.putConstraint(SpringLayout.WEST, name, 10,
+        setupNameLabelConstraint(layout);
+
+        setupTaskIndexLabelConstraint(layout);
+
+        setupDateLabelConstraint(layout);
+
+        setupPriorityLabelConstraint(layout);
+    }
+
+    private void setupTaskPaneConstraint(SpringLayout layout) {
+        layout.putConstraint(SpringLayout.SOUTH, this, OFFSET_COMMON_PADDING,
+                SpringLayout.SOUTH, date);
+    }
+
+    private void setupPriorityLabelConstraint(SpringLayout layout) {
+        layout.putConstraint(SpringLayout.SOUTH, priority,
+                -OFFSET_COMMON_PADDING, SpringLayout.SOUTH, this);
+        layout.putConstraint(SpringLayout.EAST, priority,
+                -OFFSET_INNER_PADDING, SpringLayout.EAST, this);
+    }
+
+    private void setupDateLabelConstraint(SpringLayout layout) {
+        layout.putConstraint(SpringLayout.WEST, date, OFFSET_INNER_PADDING,
                 SpringLayout.EAST, priorityColorPane);
-        layout.putConstraint(SpringLayout.NORTH, name, 5,
-                SpringLayout.NORTH, this);
-        layout.putConstraint(SpringLayout.EAST, name, -5,
-                SpringLayout.WEST, index);
-
-        layout.putConstraint(SpringLayout.EAST, index, -10,
-                SpringLayout.EAST, this);
-        layout.putConstraint(SpringLayout.NORTH, index, 5,
-                SpringLayout.NORTH, this);
-
-        layout.putConstraint(SpringLayout.WEST, date, 10,
-                SpringLayout.EAST, priorityColorPane);
-        layout.putConstraint(SpringLayout.NORTH, date, 5,
+        layout.putConstraint(SpringLayout.NORTH, date, OFFSET_COMMON_PADDING,
                 SpringLayout.SOUTH, name);
-        layout.putConstraint(SpringLayout.EAST, date, -5,
+        layout.putConstraint(SpringLayout.EAST, date, -OFFSET_COMMON_PADDING,
                 SpringLayout.WEST, priority);
+    }
 
-        layout.putConstraint(SpringLayout.SOUTH, priority, -5,
-                SpringLayout.SOUTH, this);
-        layout.putConstraint(SpringLayout.EAST, priority, -10,
+    private void setupTaskIndexLabelConstraint(SpringLayout layout) {
+        layout.putConstraint(SpringLayout.EAST, index, -OFFSET_INNER_PADDING,
                 SpringLayout.EAST, this);
+        layout.putConstraint(SpringLayout.NORTH, index, OFFSET_COMMON_PADDING,
+                SpringLayout.NORTH, this);
+    }
+
+    private void setupNameLabelConstraint(SpringLayout layout) {
+        layout.putConstraint(SpringLayout.WEST, name, OFFSET_INNER_PADDING,
+                SpringLayout.EAST, priorityColorPane);
+        layout.putConstraint(SpringLayout.NORTH, name, OFFSET_COMMON_PADDING,
+                SpringLayout.NORTH, this);
+        layout.putConstraint(SpringLayout.EAST, name, -OFFSET_COMMON_PADDING,
+                SpringLayout.WEST, index);
+    }
+
+    private void setupPriorityColorPaneConstraint(SpringLayout layout) {
+        layout.putConstraint(SpringLayout.WEST, priorityColorPane,
+                OFFSET_COMMON_PADDING, SpringLayout.WEST, this);
+        layout.putConstraint(SpringLayout.NORTH, priorityColorPane,
+                OFFSET_COMMON_PADDING, SpringLayout.NORTH, this);
+        layout.putConstraint(SpringLayout.SOUTH, priorityColorPane,
+                -OFFSET_COMMON_PADDING, SpringLayout.SOUTH, this);
     }
     
     private String getStartDate(Task task) {
@@ -153,11 +194,11 @@ public class TaskPanel extends JPanel {
     
     private void setDisplayDate(String start, String due) {
         if ((!start.isEmpty()) && (!due.isEmpty())) {
-            date.setText(start + TO + due);
+            date.setText(start + STRING_DASH + due);
         } else if (!start.isEmpty()) {
-            date.setText("starts " + start);
+            date.setText(MESSAGE_STARTS + start);
         } else if (!due.isEmpty()) {
-            date.setText("due " + due);
+            date.setText(MESSAGE_DUE + due);
         }
     }
 }
