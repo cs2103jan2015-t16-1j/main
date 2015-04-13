@@ -188,7 +188,9 @@ public class StorageTest {
         } catch (Error e) {
             caught = e;
         }
-        assertNull(caught);
+        if (caught != null) {
+            assertNotEquals(String.format(MessageConstants.ERROR_WRITE_FILE, _filename), caught.getMessage());
+        }
     }
     
     @Test
