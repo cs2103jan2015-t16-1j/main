@@ -13,25 +13,31 @@ import javax.swing.KeyStroke;
 
 //@author A0112971J
 public class CommandActionListener implements ActionListener {
+    
     private static final String STRING_EMPTY = "";
-    private final static Logger LOGGER = Logger
-            .getLogger(CommandActionListener.class.getName());
+    
+    private static final String USER_ENTERED_COMMAND = "user entered: %s";
+    
+    private static final Logger LOGGER = Logger.getLogger(CommandActionListener
+                                                          .class.getName());
     
     private JTextField _command;
-    private GUI _guiInstance;
+    private GUI _gui;
 
     public CommandActionListener(JTextField command, GUI gui) {
         _command = command;
-        _guiInstance = gui;
+        _gui = gui;
     }
 
     @Override
     public void actionPerformed(ActionEvent arg0) {
-        // TODO Auto-generated method stub
-        LOGGER.info(String.format("user entered: %s",
-                _command.getText()));
-        _guiInstance.addCommandToCommandHistory(_command.getText());
-        if (_guiInstance.executeCommand(_command.getText())) {
+        String command = _command.getText();
+        
+        LOGGER.info(String.format(USER_ENTERED_COMMAND,command));
+        
+        _gui.addCommandToCommandHistory(command);
+        
+        if (_gui.executeCommand(command)) {
             _command.setText(STRING_EMPTY);
         }
     }
