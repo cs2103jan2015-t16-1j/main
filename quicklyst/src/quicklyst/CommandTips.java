@@ -20,7 +20,7 @@ public class CommandTips {
     private static final String STRING_SPACE = " ";
     static final String NEXTLINE = "\r\n";
     
-    private static final String[][] commandTypes = {
+    private static final String[][] COMMANDTYPES = {
             {"add", "a", "Add a task:\r\n" +
                          "add\r\n" +
                          "<task name>\\\r\n" +
@@ -76,7 +76,7 @@ public class CommandTips {
         if (match.isEmpty()) {
             return GlobalConstants.MESSAGE_INVALID_COMMAND;
         } else if (match.size() == MATCH_SIZE_ONE) {
-            return commandTypes[match.get(MATCH_INDEX_FIRST)][COMMANDTYPE_INDEX_TIP];
+            return COMMANDTYPES[match.get(MATCH_INDEX_FIRST)][COMMANDTYPE_INDEX_TIP];
         } else {
             return getAllMatchedCommands(match);
         }
@@ -86,10 +86,10 @@ public class CommandTips {
         StringBuilder commandList = new StringBuilder(GlobalConstants.MESSAGE_POSSIBLE_COMMANDS);
         for (int i: match) {
             commandList.append(NEXTLINE);
-            commandList.append(commandTypes[i][COMMANDTYPE_INDEX_FULLCOMMAND]);
-            if (commandTypes[i][COMMANDTYPE_INDEX_SHORTCOMMAND] != null) {
+            commandList.append(COMMANDTYPES[i][COMMANDTYPE_INDEX_FULLCOMMAND]);
+            if (COMMANDTYPES[i][COMMANDTYPE_INDEX_SHORTCOMMAND] != null) {
                 commandList.append(String.format(GlobalConstants.MESSAGE_COMMAND_BODY,
-                                   commandTypes[i][COMMANDTYPE_INDEX_SHORTCOMMAND]));
+                                   COMMANDTYPES[i][COMMANDTYPE_INDEX_SHORTCOMMAND]));
             }
         }
         return commandList.toString();
@@ -97,8 +97,8 @@ public class CommandTips {
 
     private ArrayList<Integer> findCommandPartialMatch(String userInput) {
         ArrayList<Integer> match = new ArrayList<Integer>();
-        for (int i = INDEX_START; i < commandTypes.length; ++i) {
-            String[] commands = commandTypes[i];
+        for (int i = INDEX_START; i < COMMANDTYPES.length; ++i) {
+            String[] commands = COMMANDTYPES[i];
             if (isMatch(commands[COMMANDTYPE_INDEX_FULLCOMMAND], userInput)) {
                 match.add(i);
             } else if ((commands[COMMANDTYPE_INDEX_SHORTCOMMAND] != null) &&
@@ -137,7 +137,7 @@ public class CommandTips {
 
     private String allCommands() {
         StringBuilder commandList = new StringBuilder(GlobalConstants.MESSAGE_AVAILABLE_COMMANDS);
-        for (String[] commands: commandTypes) {
+        for (String[] commands: COMMANDTYPES) {
             commandList.append(NEXTLINE);
             commandList.append(commands[COMMANDTYPE_INDEX_FULLCOMMAND]);
             if (commands[COMMANDTYPE_INDEX_SHORTCOMMAND] != null) {
